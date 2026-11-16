@@ -1,0 +1,254 @@
+name: CI
+
+# Not triggered by feature-branch pushes: macOS minutes are metered (10x on private repos).
+on:
+  pull_request:
+    paths-ignore: ['docs/**', '**/*.md']
+  push:
+    branches: [main]
+    paths-ignore: ['docs/**', '**/*.md']
+  workflow_dispatch:
+    inputs:
+      job:
+        description: Jobs to run (macOS minutes bill at 10x)
+        type: choice
+        options: [all, mac-unit, mac-ui, ios-ui]
+        default: all
+
+# The event is part of the key: a push to main must not cancel a manual dispatch (mac-ui-tests).
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build-test:
+    if: github.event_name != 'workflow_dispatch' || inputs.job == 'all'
+    runs-on: macos-26
+    timeout-minutes: 45
+    env:
+      HOMEBREW_NO_AUTO_UPDATE: '1'
+      HOMEBREW_NO_INSTALL_CLEANUP: '1'
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Select Xcode 26.6
+        run: |
+          if [ ! -d /Applications/Xcode_26.6.app ]; then
+            echo "::error::/Applications/Xcode_26.6.app not found. Installed:"
+            ls -d /Applications/Xcode* || true
+            exit 1
+          fi
+          sudo xcode-select -s /Applications/Xcode_26.6.app
+          xcodebuild -version
+
+      - name: Install tools
+        run: brew install xcodegen actionlint sevenzip
+
+      - name: Generate project
+        run: xcodegen generate
+
+      - name: Test KernirCore
+        env:
+          KERNIR_REQUIRE_INTEROP: "1"
+        run: swift test --package-path Packages/KernirCore
+
+      - name: Build KernirIOS
+        run: |
+          xcodebuild build -project Kernir.xcodeproj -scheme KernirIOS \
+            -destination 'generic/platform=iOS Simulator' CODE_SIGN_IDENTITY=-
+
+      # The suite's real Release archive of KernirMac covers the macOS build.
+      - name: Script tests
+        run: scripts/tests/run.sh --all
+
+  # Hosted unit tests (KernirMacTests in the KernirMac scheme's test action) launch Lutik.app
+  # as the test host, so they run here, not on a developer's Mac. Manual runs only.
+  # Blocking since run 42723197994 passed (145/145).
+  mac-unit-tests:
+    if: github.event_name == 'workflow_dispatch' && (inputs.job == 'all' || inputs.job == 'mac-unit')
+    runs-on: macos-26
+    timeout-minutes: 45
+    env:
+      HOMEBREW_NO_AUTO_UPDATE: '1'
+      HOMEBREW_NO_INSTALL_CLEANUP: '1'
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+
+      - name: Select Xcode 26.6
+        run: |
+          if [ ! -d /Applications/Xcode_26.6.app ]; then
+            echo "::error::/Applications/Xcode_26.6.app not found. Installed:"
+            ls -d /Applications/Xcode* || true
+            exit 1
+          fi
+          sudo xcode-select -s /Applications/Xcode_26.6.app
+          xcodebuild -version
+
+      - name: Install tools
+        run: brew install xcodegen
+
+      - name: Generate project
+        run: xcodegen generate
+
+      - name: Test KernirMacTests
+        run: |
+          xcodebuild test -project Kernir.xcodeproj -scheme KernirMac \
+            -destination 'platform=macOS' CODE_SIGN_IDENTITY=- \
+            -resultBundlePath "$RUNNER_TEMP/KernirMacTests.xcresult"
+
+  # KernirMacUITests drive the real keyboard and mouse, so they run here, not on a
+  # developer's Mac. Without TEST_RUNNER_KERNIR_MAC_UI_TESTS=1
+  # every test skips. Blocking since run 42717053198 passed. Manual runs only
+  # (Actions > CI > Run workflow): macOS minutes are limited.
+  mac-ui-tests:
+    if: github.event_name == 'workflow_dispatch' && (inputs.job == 'all' || inputs.job == 'mac-ui')
+    runs-on: macos-26
+    timeout-minutes: 45
+    env:
+      HOMEBREW_NO_AUTO_UPDATE: '1'
+      HOMEBREW_NO_INSTALL_CLEANUP: '1'
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+
+      - name: Select Xcode 26.6
+        run: |
+          if [ ! -d /Applications/Xcode_26.6.app ]; then
+            echo "::error::/Applications/Xcode_26.6.app not found. Installed:"
+            ls -d /Applications/Xcode* || true
+            exit 1
+          fi
+          sudo xcode-select -s /Applications/Xcode_26.6.app
+          xcodebuild -version
+
+      - name: Install tools
+        run: brew install xcodegen
+
+      - name: Generate project
+        run: xcodegen generate
+
+      # A full volume (0 KiB free) and a read-only one for OwnerChecksUITests, both -nobrowse.
+      # The sandboxed UI test runner can't run hdiutil, so this happens outside it.
+      - name: Attach test volumes
+        run: scripts/fixtures/mac-ui-volumes.sh attach "$RUNNER_TEMP/volumes"
+
+      - name: Free disk space
+        run: df -h "$RUNNER_TEMP" "$RUNNER_TEMP/volumes/full" "$RUNNER_TEMP/volumes/readonly"
+
+      - name: Test KernirMacUITests
+        env:
+          TEST_RUNNER_KERNIR_MAC_UI_TESTS: "1"
+          TEST_RUNNER_KERNIR_MAC_UI_VOLUMES: ${{ runner.temp }}/volumes
+        run: |
+          xcodebuild test -project Kernir.xcodeproj -scheme KernirMacUITests \
+            -destination 'platform=macOS' CODE_SIGN_IDENTITY=- \
+            -resultBundlePath "$RUNNER_TEMP/KernirMacUITests.xcresult"
+
+      - name: Detach test volumes
+        if: always()
+        run: scripts/fixtures/mac-ui-volumes.sh detach "$RUNNER_TEMP/volumes"
+
+      # Window captures (XCTAttachments, e.g. mac-light / mac-dark) for the App Store set.
+      # Raw attachments for the App Store screenshot set.
+      - name: Export screenshot attachments
+        if: always()
+        run: |
+          if [ -d "$RUNNER_TEMP/KernirMacUITests.xcresult" ]; then
+            xcrun xcresulttool export attachments --path "$RUNNER_TEMP/KernirMacUITests.xcresult" \
+              --output-path "$RUNNER_TEMP/mac-screenshots"
+          fi
+
+      - name: Upload screenshot attachments
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mac-screenshots
+          path: ${{ runner.temp }}/mac-screenshots
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Upload test results
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: KernirMacUITests.xcresult
+          path: ${{ runner.temp }}/KernirMacUITests.xcresult
+          retention-days: 7
+
+  # The iOS QA UI tests on an iPhone and an iPad simulator (QALayoutUITests rotates and
+  # switches to accessibility text sizes). The helpers read Fixtures/ from this checkout via
+  # #filePath (the simulator shares the runner's file system), so run from the checkout.
+  # The app's own iOS UI tests and the Files app test aren't run here. Manual runs only.
+  ios-ui-tests:
+    if: github.event_name == 'workflow_dispatch' && (inputs.job == 'all' || inputs.job == 'ios-ui')
+    runs-on: macos-26
+    timeout-minutes: 60
+    env:
+      HOMEBREW_NO_AUTO_UPDATE: '1'
+      HOMEBREW_NO_INSTALL_CLEANUP: '1'
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+
+      - name: Select Xcode 26.6
+        run: |
+          if [ ! -d /Applications/Xcode_26.6.app ]; then
+            echo "::error::/Applications/Xcode_26.6.app not found. Installed:"
+            ls -d /Applications/Xcode* || true
+            exit 1
+          fi
+          sudo xcode-select -s /Applications/Xcode_26.6.app
+          xcodebuild -version
+
+      - name: Install tools
+        run: brew install xcodegen
+
+      - name: Generate project
+        run: xcodegen generate
+
+      - name: List simulators
+        run: xcrun simctl list devices available | grep -E 'iPhone 17 Pro|iPad Pro 13-inch \(M5\)' || true
+
+      - name: Test KernirIOSUITests (QA classes)
+        run: |
+          xcodebuild test -project Kernir.xcodeproj -scheme KernirIOS \
+            -destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=latest' \
+            -destination 'platform=iOS Simulator,name=iPad Pro 13-inch (M5),OS=latest' \
+            -only-testing:KernirIOSUITests/QABrowseUITests \
+            -only-testing:KernirIOSUITests/QAErrorUITests \
+            -only-testing:KernirIOSUITests/QAPasswordUITests \
+            -only-testing:KernirIOSUITests/QALayoutUITests \
+            CODE_SIGN_IDENTITY=- \
+            -resultBundlePath "$RUNNER_TEMP/KernirIOSUITests.xcresult"
+
+      - name: Export screenshot attachments
+        if: always()
+        run: |
+          if [ -d "$RUNNER_TEMP/KernirIOSUITests.xcresult" ]; then
+            xcrun xcresulttool export attachments --path "$RUNNER_TEMP/KernirIOSUITests.xcresult" \
+              --output-path "$RUNNER_TEMP/ios-screenshots"
+          fi
+
+      - name: Upload screenshot attachments
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-screenshots
+          path: ${{ runner.temp }}/ios-screenshots
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Upload test results
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: KernirIOSUITests.xcresult
+          path: ${{ runner.temp }}/KernirIOSUITests.xcresult
+          retention-days: 7

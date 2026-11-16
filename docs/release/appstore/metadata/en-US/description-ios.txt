@@ -1,0 +1,33 @@
+Open a ZIP, 7z, TAR or RAR file from Files or the Share sheet. Preview any file in it, take out just the file you need, add or remove files, and save the archive back in place.
+
+Why I made Lutik
+I kept running into the same problem with archives: the built-in tools weren't enough for what I needed. I wanted to look inside an archive, take out one file, drop in another and save it back, without unpacking everything first. So I built Lutik for myself, and now I'm sharing it with everyone, for free.
+
+No subscription, no in-app purchases, no ads, no account. Open source under the MIT license.
+
+What you can do
+- Browse an archive folder by folder, with the size of each file. Sort by name, date, size or kind, and search.
+- Preview any file inside an archive without extracting it first, and swipe to the next one.
+- Add files with the plus button.
+- Remove and rename files, and make new folders inside an archive.
+- Extract the selection, or everything, to a folder you choose or right next to the archive.
+- On iPad, drag files out of an archive into Files.
+- Create a new archive and add files to it.
+- Read and edit the comment of a ZIP archive.
+- Save changes back in place, and undo what you changed.
+
+Formats
+- Read: ZIP, 7z, TAR, GZ, BZ2, XZ, ISO and RAR, including multi-part RAR and split ZIP sets.
+- Write: ZIP, 7z and the TAR family. RAR is read-only.
+- Password-protected ZIP archives ask for the password when you open them.
+- Save a ZIP with a password, using AES-256 encryption.
+- Pick the text encoding when an older archive shows garbled file names.
+- Leave out the hidden __MACOSX and ._ files when you save.
+
+Built like part of the system
+Lutik uses only standard Apple controls and follows your light or dark appearance and accent color. On iPhone and iPad, open archives from Files or the Share sheet.
+
+Free and private
+Lutik is free, with no Pro version. It does not collect any data and has no analytics.
+
+Lutik is named after our dog. In loving memory of Lutik, a loyal companion whose warmth, joy, and gentle presence brought light into every day. Though Lutik is no longer with us, the love we shared and the memories we made will stay in our hearts forever. Run free across the rainbow bridge, sweet Lutik.

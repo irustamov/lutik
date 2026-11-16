@@ -1,0 +1,19 @@
+#!/bin/bash
+# Fake `xcrun notarytool` for tests. Never contacts Apple.
+# Env: FAKE_NOTARY_STATUS (default Accepted), FAKE_LOG (argv log file).
+printf 'notarytool %s\n' "$*" >> "${FAKE_LOG:-/dev/null}"
+case "${1:-}" in
+  submit)
+    [ -f "${2:-}" ] || { echo "fake notarytool: no such file: ${2:-}" >&2; exit 2; }
+    status="${FAKE_NOTARY_STATUS:-Accepted}"
+    # FAKE_NOTARY_FAIL_ON=dmg: only .dmg submissions come back Invalid.
+    case "$2" in *.dmg) [ "${FAKE_NOTARY_FAIL_ON:-}" = dmg ] && status=Invalid ;; esac
+    printf '{"id":"fake-submission-id","status":"%s","message":"Processing complete"}\n' "$status"
+    # FAKE_NOTARY_EXIT_NONZERO=1: exit non-zero even though JSON was printed.
+    if [ "$status" != Accepted ] && [ "${FAKE_NOTARY_EXIT_NONZERO:-}" = 1 ]; then exit 1; fi
+    ;;
+  log)
+    printf '{"logFormatVersion":1,"status":"Invalid","issues":[{"message":"FAKE NOTARY LOG: binary is not signed with a valid Developer ID certificate"}]}\n'
+    ;;
+  *) echo "fake notarytool: unsupported: $*" >&2; exit 2 ;;
+esac

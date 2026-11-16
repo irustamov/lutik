@@ -1,0 +1,2134 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "About %@": {
+      "comment": "App menu command that shows the About window. %@ = the app's name (Lutik).",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "About %@"
+          }
+        }
+      }
+    },
+    "Acknowledgements": {
+      "comment": "Heading of the open-source notices in the About window's credits.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acknowledgements"
+          }
+        }
+      }
+    },
+    "Other…": {
+      "comment": "Last item of the rows' context-menu Open With submenu: opens a panel to pick any app to open the clicked (or selected) files in, as in Finder.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Other…"
+          }
+        }
+      }
+    },
+    "Settings…": {
+      "comment": "App menu command (⌘,) that opens the Settings window.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Settings…"
+          }
+        }
+      }
+    },
+    "Settings": {
+      "comment": "Title of the Settings window.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Settings"
+          }
+        }
+      }
+    },
+    "If another app shows archive previews when you press Space, turn it off in Login Items & Extensions → Quick Look.": {
+      "comment": "Settings, Quick Look section. “Login Items & Extensions” and “Quick Look” are the names System Settings uses: translate them as System Settings does in your language.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "If another app shows archive previews when you press Space, turn it off in Login Items & Extensions → Quick Look."
+          }
+        }
+      }
+    },
+    "In Extensions, click ⓘ next to Quick Look and turn off other archive apps.": {
+      "comment": "Settings, Quick Look section, second line. ⓘ is the Info button System Settings shows; keep the symbol. “Extensions” and “Quick Look” are System Settings names: use its wording in your language.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In Extensions, click ⓘ next to Quick Look and turn off other archive apps."
+          }
+        }
+      }
+    },
+    "In Extensions, click the Info button next to Quick Look and turn off other archive apps.": {
+      "comment": "VoiceOver label of “In Extensions, click ⓘ next to Quick Look…” in Settings: the same text with the ⓘ symbol spelled out as “the Info button”.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "In Extensions, click the Info button next to Quick Look and turn off other archive apps."
+          }
+        }
+      }
+    },
+    "Open Login Items & Extensions…": {
+      "comment": "Settings, Quick Look section: button that opens System Settings > General > Login Items & Extensions. Use System Settings' own name for that pane in your language.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Login Items & Extensions…"
+          }
+        }
+      }
+    },
+    "Services": {
+      "comment": "App menu: the Services submenu (as in every Mac app).",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Services"
+          }
+        }
+      }
+    },
+    "Hide %@": {
+      "comment": "App menu command (⌘H) that hides the app. %@ = the app's name (Lutik).",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hide %@"
+          }
+        }
+      }
+    },
+    "Hide Others": {
+      "comment": "App menu command (⌥⌘H) that hides all other apps.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hide Others"
+          }
+        }
+      }
+    },
+    "Share…": {
+      "comment": "Context-menu item of the archive's rows: extracts the clicked item (or the selected items) to temporary copies and shows the system Share menu for them.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share…"
+          }
+        }
+      }
+    },
+    "Show All": {
+      "comment": "App menu command that shows all hidden apps.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show All"
+          }
+        }
+      }
+    },
+    "Quit %@": {
+      "comment": "App menu command (⌘Q). %@ = the app's name (Lutik).",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quit %@"
+          }
+        }
+      }
+    },
+    "File": {
+      "comment": "Menu bar: the File menu.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "File"
+          }
+        }
+      }
+    },
+    "New": {
+      "comment": "File menu command (⌘N) that makes a new, empty archive.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New"
+          }
+        }
+      }
+    },
+    "Open…": {
+      "comment": "File menu command (⌘O) that opens an archive from a file panel.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open…"
+          }
+        }
+      }
+    },
+    "Open Recent": {
+      "comment": "File menu: the submenu of recently opened archives.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Recent"
+          }
+        }
+      }
+    },
+    "Clear Menu": {
+      "comment": "File > Open Recent: the command that empties the list of recent archives.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Clear Menu"
+          }
+        }
+      }
+    },
+    "Close": {
+      "comment": "File menu command (⌘W) that closes the window.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Close"
+          }
+        }
+      }
+    },
+    "Save": {
+      "comment": "Save (a verb), in two places: the File menu command (⌘S) that saves the archive, and the default button of the folder panel opened by “Save to Another Folder…” after Finder's “Compress with Lutik” couldn't save the new archive in its folder.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save"
+          }
+        }
+      }
+    },
+    "Save As…": {
+      "comment": "File menu command (⇧⌘S) that saves the archive under a new name or format.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save As…"
+          }
+        }
+      }
+    },
+    "Revert to Saved": {
+      "comment": "File menu command that discards unsaved edits to the archive.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revert to Saved"
+          }
+        }
+      }
+    },
+    "Add Files…": {
+      "comment": "File menu command that opens a panel to add files to the archive.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add Files…"
+          }
+        }
+      }
+    },
+    "New Folder": {
+      "comment": "New Folder (a command): the File menu command (⇧⌘N) and the context-menu item that add a new, empty folder inside the archive and show its name field so it can be named at once.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New Folder"
+          }
+        }
+      }
+    },
+    "Rename": {
+      "comment": "Rename (a verb): the File menu command and the context-menu item that show an editable name field on the selected item of the archive, to rename that file or folder inside the archive.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rename"
+          }
+        }
+      }
+    },
+    "Extract…": {
+      "comment": "File menu command (⌘E) and context-menu item: opens a folder panel to extract the selected items (or the whole archive) into.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Extract…"
+          }
+        }
+      }
+    },
+    "Quick Look": {
+      "comment": "File menu command (⌘Y) and context-menu item that previews the selected item with Quick Look, and the title of the Quick Look section in Settings. Quick Look is the macOS feature name: use Apple's name for it in your language.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Quick Look"
+          }
+        }
+      }
+    },
+    "Get Info": {
+      "comment": "File menu command (⌘I) and tooltip of the toolbar's Info button: shows the archive's Info popover (format, size, items, comment), as Finder's Get Info.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Get Info"
+          }
+        }
+      }
+    },
+    "Info": {
+      "comment": "Toolbar button and its VoiceOver label: shows the archive's Info popover (format, size, items, comment).",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Info"
+          }
+        }
+      }
+    },
+    "The comment of a split archive can’t be changed.": {
+      "comment": "Info popover, under the read-only comment of a split (multi-part) ZIP archive.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The comment of a split archive can’t be changed."
+          }
+        }
+      }
+    },
+    "%@ archives can’t have a comment.": {
+      "comment": "Save panel note: the chosen format (%@: 7z, TAR…) has no archive comment; it is left out.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ archives can’t have a comment."
+          }
+        }
+      }
+    },
+    "This comment can’t be changed in Lutik.": {
+      "comment": "Info popover, under a read-only archive comment that Lutik can't write back.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This comment can’t be changed in Lutik."
+          }
+        }
+      }
+    },
+    "Edit": {
+      "comment": "Menu bar: the Edit menu.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit"
+          }
+        }
+      }
+    },
+    "Undo": {
+      "comment": "Edit menu command (⌘Z). AppKit shows it with the action name after it (e.g. “Undo Add”) when there is one.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Undo"
+          }
+        }
+      }
+    },
+    "Redo": {
+      "comment": "Edit menu command (⇧⌘Z). AppKit shows it with the action name after it (e.g. “Redo Add”) when there is one.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Redo"
+          }
+        }
+      }
+    },
+    "Cut": {
+      "comment": "Edit menu command (⌘X).",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cut"
+          }
+        }
+      }
+    },
+    "Copy": {
+      "comment": "Edit menu command (⌘C), and the context-menu item that copies the archive rows under it.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copy"
+          }
+        }
+      }
+    },
+    "Paste": {
+      "comment": "Edit menu command (⌘V), and the context-menu item that pastes into the folder row under it, or into the archive's top level on empty space.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Paste"
+          }
+        }
+      }
+    },
+    "Delete": {
+      "comment": "Delete (a verb), in three places: the Edit menu command and context-menu item that remove the selected items from the archive, the label of the toolbar's － button doing the same, and a button of the alert about a file saved next to a file opened from the archive, which deletes that saved file.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete"
+          }
+        }
+      }
+    },
+    "Select All": {
+      "comment": "Edit menu command (⌘A).",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Select All"
+          }
+        }
+      }
+    },
+    "Find": {
+      "comment": "Edit menu command (⌘F) that moves to the search field of the archive window.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Find"
+          }
+        }
+      }
+    },
+    "View": {
+      "comment": "Menu bar: the View menu.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "View"
+          }
+        }
+      }
+    },
+    "Show Toolbar": {
+      "comment": "View menu command that shows or hides the window's toolbar (AppKit switches it to Hide Toolbar).",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show Toolbar"
+          }
+        }
+      }
+    },
+    "Enter Full Screen": {
+      "comment": "View menu command (⌃⌘F) that puts the window in full screen, and the label and tooltip of the preview window's toolbar button doing the same (it reads Exit Full Screen once the window is in full screen).",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter Full Screen"
+          }
+        }
+      }
+    },
+    "Window": {
+      "comment": "Menu bar: the Window menu.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Window"
+          }
+        }
+      }
+    },
+    "Minimize": {
+      "comment": "Window menu command (⌘M).",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Minimize"
+          }
+        }
+      }
+    },
+    "Zoom": {
+      "comment": "Window menu command that zooms the window (not a magnification).",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zoom"
+          }
+        }
+      }
+    },
+    "Bring All to Front": {
+      "comment": "Window menu command.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bring All to Front"
+          }
+        }
+      }
+    },
+    "Help": {
+      "comment": "Menu bar: the Help menu.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Help"
+          }
+        }
+      }
+    },
+    "Wrong password. Try again.": {
+      "comment": "Password sheet: error shown under the password field after a wrong password.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wrong password. Try again."
+          }
+        }
+      }
+    },
+    "Saving “%@”…": {
+      "comment": "Title of the progress sheet while the archive is saved. %@ = the file name it is saved to.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saving “%@”…"
+          }
+        }
+      }
+    },
+    "“%@” was saved, but Lutik couldn't open it again.": {
+      "comment": "Alert after a save: the saved archive couldn't be reopened. %@ = the saved file's name. Lutik is the app name.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” was saved, but Lutik couldn't open it again."
+          }
+        }
+      }
+    },
+    "%@ archives can't be saved with this encryption.": {
+      "comment": "Save alert reason: ⌘S on an encrypted archive saves in a format that has no such encryption (an encrypted ZIP whose file is named .tar, say). %@ = that format's name (e.g. “TAR”, “TAR.GZ”).",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ archives can't be saved with this encryption."
+          }
+        }
+      }
+    },
+    "Use Save As to save it as ZIP or 7z, or without a password.": {
+      "comment": "Save alert recovery, after “%@ archives can't be saved with this encryption.”. “Save As” is the File menu command; ZIP and 7z are format names that keep the encryption; “without a password” = turning off “Encrypt with password” in the save panel.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use Save As to save it as ZIP or 7z, or without a password."
+          }
+        }
+      }
+    },
+    "Saving to “%@” would replace this archive or files being added to it. Choose another name.": {
+      "comment": "Save panel error: the chosen folder or name is, holds or lies inside the archive being saved or a file being added to it. %@ = the chosen name.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saving to “%@” would replace this archive or files being added to it. Choose another name."
+          }
+        }
+      }
+    },
+    "Lutik couldn't replace “%@”.": {
+      "comment": "Alert title after a save into split volumes couldn't put the new volumes in place of the earlier folder. %@ = that folder's name. Lutik is the app name.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lutik couldn't replace “%@”."
+          }
+        }
+      }
+    },
+    "The earlier folder is now at “%@”.": {
+      "comment": "Line of the alert after “Lutik couldn't replace “%@”.”: where the earlier folder was moved. %@ = its full path.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The earlier folder is now at “%@”."
+          }
+        }
+      }
+    },
+    "The earlier folder is in the Trash.": {
+      "comment": "Line of the alert after “Lutik couldn't replace “%@”.”: the earlier folder was moved to the Trash.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The earlier folder is in the Trash."
+          }
+        }
+      }
+    },
+    "The earlier folder may be in the Trash.": {
+      "comment": "Line of the alert after “Lutik couldn't replace “%@”.”: the earlier folder may have been moved to the Trash.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The earlier folder may be in the Trash."
+          }
+        }
+      }
+    },
+    "The new volumes are in “%@”.": {
+      "comment": "Line of the alert after “Lutik couldn't replace “%@”.”: where the new split volumes were kept. %@ = that folder's full path (a temporary folder).",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The new volumes are in “%@”."
+          }
+        }
+      }
+    },
+    "Move the earlier folder and the new volumes to another folder to keep them. Temporary folders can be cleared at any time.": {
+      "comment": "Last line of the alert after “Lutik couldn't replace “%@”.” when the earlier folder was moved too: both are in places that can be emptied.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move the earlier folder and the new volumes to another folder to keep them. Temporary folders can be cleared at any time."
+          }
+        }
+      }
+    },
+    "Move them to another folder to keep them. Temporary folders can be cleared at any time.": {
+      "comment": "Last line of the alert after “Lutik couldn't replace “%@”.”: “them” = the new volumes, which are in a temporary folder.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move them to another folder to keep them. Temporary folders can be cleared at any time."
+          }
+        }
+      }
+    },
+    "Cancel": {
+      "comment": "Cancel button of the password sheet, the progress sheet (stops the operation), the read-only volume alert, and the alert after a Finder service (“Extract Here with Lutik”, “Compress with Lutik”) couldn't write in its folder.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel"
+          }
+        }
+      }
+    },
+    "Name": {
+      "comment": "Archive list: header of the Name column; also the VoiceOver label of the name field shown in that column while an item is renamed, and its placeholder when the field is emptied.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Name"
+          }
+        }
+      }
+    },
+    "Size": {
+      "comment": "Archive list: header of the Size column (each item's uncompressed size).",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Size"
+          }
+        }
+      }
+    },
+    "Kind": {
+      "comment": "Archive list: header of the Kind column (Folder, Document, PDF document…).",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kind"
+          }
+        }
+      }
+    },
+    "Date Modified": {
+      "comment": "Archive list: header of the Date Modified column.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Date Modified"
+          }
+        }
+      }
+    },
+    "Unknown size": {
+      "comment": "Archive list, Size column: shown for an item whose size the archive doesn't record.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unknown size"
+          }
+        }
+      }
+    },
+    "Add": {
+      "comment": "Add (a verb): the label and VoiceOver label of the toolbar's ＋ button, and the default button of the file panel that adds the chosen files to the archive.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add"
+          }
+        }
+      }
+    },
+    "Extract": {
+      "comment": "Extract (a verb): the label and VoiceOver label of the toolbar's Extract button, and the default button of the folder panels that pick where to extract (also the panel opened by “Extract to Another Folder…” after Finder's “Extract Here with Lutik” couldn't write in the archive's folder).",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Extract"
+          }
+        }
+      }
+    },
+    "%@ can only be read. Save As ZIP or 7z to edit.": {
+      "comment": "Tooltip of the ＋ and － buttons of an archive that can't be edited. %@ = the archive format's name (e.g. “RAR”). “Save As” is the File menu command; ZIP and 7z are format names.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ can only be read. Save As ZIP or 7z to edit."
+          }
+        }
+      }
+    },
+    "Drag Files Here": {
+      "comment": "Title of the empty archive window.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Drag Files Here"
+          }
+        }
+      }
+    },
+    "Add files with ＋ or drag them into this window.": {
+      "comment": "Text under “Drag Files Here” in the empty archive window. ＋ is the toolbar's Add button: keep the symbol.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add files with ＋ or drag them into this window."
+          }
+        }
+      }
+    },
+    "Add files with the Add button or drag them into this window.": {
+      "comment": "VoiceOver label of “Add files with ＋ or drag them into this window.”: the same text with ＋ spelled out as “the Add button”.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add files with the Add button or drag them into this window."
+          }
+        }
+      }
+    },
+    "Can’t Read Archive": {
+      "comment": "Title of the archive window when the archive couldn't be listed; the error's text shows under it.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Can’t Read Archive"
+          }
+        }
+      }
+    },
+    "“%@” is password-protected.": {
+      "comment": "Password sheet title. %@ = the archive's file name.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” is password-protected."
+          }
+        }
+      }
+    },
+    "Password": {
+      "comment": "Placeholder of the password field: in the password sheet and in the save options.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Password"
+          }
+        }
+      }
+    },
+    "Remember in Keychain": {
+      "comment": "Password sheet checkbox: saves the password in the user's keychain. Keychain is Apple's name for the password store: use Apple's name for it in your language.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remember in Keychain"
+          }
+        }
+      }
+    },
+    "Open": {
+      "comment": "Open (a verb), in three places: the default button of the password sheet (opens the encrypted archive), the context-menu item that opens the selected items, and the hidden ⌘↓ command doing the same.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open"
+          }
+        }
+      }
+    },
+    "Replace": {
+      "comment": "Replace (a verb): button of the alerts about an item with the same name when adding, extracting or moving (replaces the existing item), and of the alert about a changed file opened from the archive (replaces the archive's item of that name with it).",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Replace"
+          }
+        }
+      }
+    },
+    "Stop": {
+      "comment": "Button of the alerts about an item with the same name when adding, extracting or moving, also pressed with Esc: stops the whole add, extraction or move.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stop"
+          }
+        }
+      }
+    },
+    "An item named “%@” already exists in this location. Do you want to replace it?": {
+      "comment": "Alert title before adding a file to the archive, or moving an item inside it, over an item with the same name. %@ = that item's name; “this location” is the folder inside the archive. Buttons: Replace, Stop.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "An item named “%@” already exists in this location. Do you want to replace it?"
+          }
+        }
+      }
+    },
+    "%lld items already exist in this location. Do you want to replace them?": {
+      "comment": "Alert title before adding files to the archive, or moving items inside it, over items with the same names (two or more). %lld = number of those items. Never shown for a single item; in languages whose ‘one’ form also covers 21, 31…, it still means several items.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld item already exists in this location. Do you want to replace it?"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld items already exist in this location. Do you want to replace them?"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Extracting “%@”…": {
+      "comment": "Title of the progress sheet while extracting. %@ = the archive's name.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Extracting “%@”…"
+          }
+        }
+      }
+    },
+    "Compressing “%@”…": {
+      "comment": "Title of the progress panel while Finder's “Compress with Lutik” runs on one file or folder. %@ = its name, as Finder shows it.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compressing “%@”…"
+          }
+        }
+      }
+    },
+    "Compressing %lld items…": {
+      "comment": "Title of the progress panel while Finder's “Compress with Lutik” runs on several files and folders. %lld = number of those items (two or more). Never shown for a single item; in languages whose ‘one’ form also covers 21, 31…, it still means several items.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Compressing %lld item…"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Compressing %lld items…"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Allow": {
+      "comment": "Default button of the folder panel that gives Lutik permission to write in the chosen folder: to extract into it, or (Finder's “Compress with Lutik”) to save a new archive there.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Allow"
+          }
+        }
+      }
+    },
+    "Lutik needs permission to extract into “%@”.": {
+      "comment": "Message at the top of the folder panel that asks for access. %@ = the destination folder's name, as Finder shows it.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lutik needs permission to extract into “%@”."
+          }
+        }
+      }
+    },
+    "Lutik needs permission to save the archive in “%@”.": {
+      "comment": "Message at the top of the folder panel that asks for access before Finder's “Compress with Lutik” writes the new archive. %@ = the destination folder's name, as Finder shows it.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lutik needs permission to save the archive in “%@”."
+          }
+        }
+      }
+    },
+    "That folder doesn't contain “%@”.": {
+      "comment": "Alert title after the user picked a folder that doesn't contain the destination. %@ = the destination folder's name.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "That folder doesn't contain “%@”."
+          }
+        }
+      }
+    },
+    "Choose “%@” or a folder that contains it.": {
+      "comment": "Alert text under “That folder doesn't contain…”. %@ = the destination folder's name; the folder panel opens again after this alert.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose “%@” or a folder that contains it."
+          }
+        }
+      }
+    },
+    "“%@” is on a read-only volume.": {
+      "comment": "Alert title when the folder to extract into can't be written to (a disk image, say). Also the reason text under “Couldn't extract …” or “Couldn't compress …” after Finder's “Extract Here with Lutik” or “Compress with Lutik”: the folder it writes in (to extract into, or to save a new archive in) is on a read-only volume. %@ = that folder's name.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” is on a read-only volume."
+          }
+        }
+      }
+    },
+    "Choose another folder to extract into.": {
+      "comment": "Alert text under “… is on a read-only volume.”",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose another folder to extract into."
+          }
+        }
+      }
+    },
+    "Choose Another Folder…": {
+      "comment": "Default button of the read-only volume alert: opens a folder panel to pick where to extract.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose Another Folder…"
+          }
+        }
+      }
+    },
+    "Couldn't extract “%@”.": {
+      "comment": "Alert title when Finder's “Extract Here with Lutik” fails. %@ = the archive's name, as Finder shows it. The reason follows below it.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't extract “%@”."
+          }
+        }
+      }
+    },
+    "Couldn't compress “%@”.": {
+      "comment": "Alert title when Finder's “Compress with Lutik” fails for one file or folder. %@ = its name, as Finder shows it. The reason follows below it.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't compress “%@”."
+          }
+        }
+      }
+    },
+    "Couldn't compress %lld items.": {
+      "comment": "Alert title when Finder's “Compress with Lutik” fails for several files and folders. %lld = number of those items (two or more). Never shown for a single item; in languages whose ‘one’ form also covers 21, 31…, it still means several items.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Couldn't compress %lld item."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Couldn't compress %lld items."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "The archive is empty.": {
+      "comment": "Alert text under “Couldn't extract “…”.” when Finder's “Extract Here with Lutik” gets an archive with nothing in it.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The archive is empty."
+          }
+        }
+      }
+    },
+    "Lutik doesn't have permission to write in “%@”.": {
+      "comment": "Alert text under a failed Finder Service (“Extract Here with Lutik”, “Compress with Lutik”): the folder's permissions don't let Lutik write there. %@ = that folder's name, as Finder shows it.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lutik doesn't have permission to write in “%@”."
+          }
+        }
+      }
+    },
+    "Couldn't find a free name for the archive in “%@”.": {
+      "comment": "Alert text under “Couldn't compress …”: every name Lutik tried for the new archive (“Archive.zip”, “Archive 2.zip”, …) was taken. %@ = the folder's name, as Finder shows it.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't find a free name for the archive in “%@”."
+          }
+        }
+      }
+    },
+    "Couldn't find a free name for the extracted items in “%@”.": {
+      "comment": "Alert text under “Couldn't extract …”: every name Lutik tried for the extracted items was taken. %@ = the folder's name, as Finder shows it.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't find a free name for the extracted items in “%@”."
+          }
+        }
+      }
+    },
+    "The files couldn't be written in “%@”.": {
+      "comment": "Alert text under a failed Finder Service when the system's own message names a hidden working folder. %@ = the destination folder's name, as Finder shows it.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The files couldn't be written in “%@”."
+          }
+        }
+      }
+    },
+    "Some jobs couldn't be finished.": {
+      "comment": "Alert title after several Finder Service jobs (“Extract Here with Lutik”, “Compress with Lutik”) failed. The text lists each failure: its title and reason.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Some jobs couldn't be finished."
+          }
+        }
+      }
+    },
+    "%@ %@": {
+      "comment": "One failure in the list under “Some jobs couldn't be finished.”: %1$@ = its title (e.g. “Couldn't extract “a.zip”.”), %2$@ = its reason. Only the space between them may change.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ %2$@"
+          }
+        }
+      }
+    },
+    "Extract to Another Folder…": {
+      "comment": "Button in the alert after Finder's “Extract Here with Lutik” couldn't write in the archive's folder: opens a folder panel to pick another one.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Extract to Another Folder…"
+          }
+        }
+      }
+    },
+    "Choose where to extract “%@”.": {
+      "comment": "Message at the top of the folder panel that “Extract to Another Folder…” opens. %@ = the archive's name, as Finder shows it.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose where to extract “%@”."
+          }
+        }
+      }
+    },
+    "Save to Another Folder…": {
+      "comment": "Button in the alert after Finder's “Compress with Lutik” couldn't write the new archive in its folder: opens a folder panel to pick another one.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Save to Another Folder…"
+          }
+        }
+      }
+    },
+    "Choose where to save the archive of “%@”.": {
+      "comment": "Message at the top of the folder panel that “Save to Another Folder…” opens. %@ = the name of the one file or folder being compressed, as Finder shows it.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose where to save the archive of “%@”."
+          }
+        }
+      }
+    },
+    "Choose where to save the archive of %lld items.": {
+      "comment": "Message at the top of the folder panel that “Save to Another Folder…” opens. %lld = number of files and folders being compressed (two or more). Never shown for a single item; in languages whose ‘one’ form also covers 21, 31…, it still means several items.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Choose where to save the archive of %lld item."
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Choose where to save the archive of %lld items."
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Lutik received no files or folders.": {
+      "comment": "Error a Finder Service (“Extract Here with Lutik”, “Compress with Lutik”) returns when it was sent nothing it can use: no files or folders, only web links, say.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lutik received no files or folders."
+          }
+        }
+      }
+    },
+    "None of the selected items is an archive Lutik can extract.": {
+      "comment": "Error Finder's “Extract Here with Lutik” returns when none of the selected files is an archive.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "None of the selected items is an archive Lutik can extract."
+          }
+        }
+      }
+    },
+    "Format": {
+      "comment": "Save options: label of the archive format picker (ZIP, 7z, TAR…).",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Format"
+          }
+        }
+      }
+    },
+    "Compression": {
+      "comment": "Save options: label of the compression level picker (Fastest, Normal, Best).",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Compression"
+          }
+        }
+      }
+    },
+    "Encrypt with password": {
+      "comment": "Save options: checkbox that encrypts the saved archive with a password.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Encrypt with password"
+          }
+        }
+      }
+    },
+    "Verify": {
+      "comment": "Save options: placeholder of the second password field, where the password is typed again to confirm it.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verify"
+          }
+        }
+      }
+    },
+    "Encryption": {
+      "comment": "Save options: label of the encryption method picker (e.g. AES-256).",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Encryption"
+          }
+        }
+      }
+    },
+    "Comment": {
+      "comment": "Archive Info popover: title of the section showing the ZIP archive's comment, and the VoiceOver label of the comment field. Also the window footer's button that opens the comment: its label, tooltip and VoiceOver label.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comment"
+          }
+        }
+      }
+    },
+    "Advanced": {
+      "comment": "Save options: title of the collapsible group with the compression method and Solid archive.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Advanced"
+          }
+        }
+      }
+    },
+    "Method": {
+      "comment": "Save options, Advanced: label of the compression method picker (e.g. Deflate, LZMA2, Store).",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Method"
+          }
+        }
+      }
+    },
+    "Solid archive": {
+      "comment": "Save options, Advanced: checkbox that compresses all files as one block (a 7z “solid” archive). Use the usual term for a solid archive in your language.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solid archive"
+          }
+        }
+      }
+    },
+    "Fastest (%lld)": {
+      "comment": "Save options, Compression picker: the lowest level. %lld = the level's number (e.g. 1).",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fastest (%lld)"
+          }
+        }
+      }
+    },
+    "Best (%lld)": {
+      "comment": "Save options, Compression picker: the highest level (smallest archive). %lld = the level's number (e.g. 9).",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Best (%lld)"
+          }
+        }
+      }
+    },
+    "Normal (%lld)": {
+      "comment": "Save options, Compression picker: the format's default level. %lld = the level's number (e.g. 6).",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Normal (%lld)"
+          }
+        }
+      }
+    },
+    "%@ (compatible, weak)": {
+      "comment": "Save options, Encryption picker: an encryption every app can open but that is easy to break. %@ = the encryption's name (e.g. “ZipCrypto”): do not translate it.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ (compatible, weak)"
+          }
+        }
+      }
+    },
+    "If the password is right, the archive may be damaged.": {
+      "comment": "Password sheet: second note under “Wrong password. Try again.”, shown from the second wrong password in a row and only for a 7z archive, whose passwords can't be checked: damaged data in it looks like a wrong password too.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "If the password is right, the archive may be damaged."
+          }
+        }
+      }
+    },
+    "%@ · %@": {
+      "comment": "Archive window subtitle. %1$@ = archive format (e.g. “ZIP”), %2$@ = file size (e.g. “4.2 MB”).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ · %2$@"
+          }
+        }
+      }
+    },
+    "%@ — Edited": {
+      "comment": "Archive window subtitle while there are unsaved changes. %@ = format and size (e.g. “ZIP · 4.2 MB”), or just one of them.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ — Edited"
+          }
+        }
+      }
+    },
+    "Edited": {
+      "comment": "Archive window subtitle of a document with unsaved changes when neither its format nor its size is known.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edited"
+          }
+        }
+      }
+    },
+    "An item named “%@” already exists in this location. Do you want to replace it with the one you're extracting?": {
+      "comment": "Alert title when an extracted item would overwrite one with the same name in the folder. %@ = that item's name; “this location” is the folder being extracted into. Buttons: Replace, Stop, Keep Both.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "An item named “%@” already exists in this location. Do you want to replace it with the one you're extracting?"
+          }
+        }
+      }
+    },
+    "“%@” and “%@” would get the same name in this location. Do you want to replace “%@” with “%@”?": {
+      "comment": "Alert title when two items in the archive differ only in letter case (Readme / README) and are extracted to a volume that ignores case, so the later one would take the earlier one's name. Neither is in the folder yet. %1$@ and %4$@ = the later item's name, %2$@ and %3$@ = the earlier item's name; either may be a file or a folder (or a path, when the names alone read the same). “this location” is the folder being extracted into. Buttons: Replace, Stop, Keep Both.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%1$@” and “%2$@” would get the same name in this location. Do you want to replace “%3$@” with “%4$@”?"
+          }
+        }
+      }
+    },
+    "Keep Both": {
+      "comment": "Keep Both (a button): in the alert about an extracted item with the same name, keeps the existing item and extracts the new one under a new name; in the alert about a file saved next to a file opened from the archive, adds the file to the archive under a new name.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep Both"
+          }
+        }
+      }
+    },
+    "Apply to All": {
+      "comment": "Checkbox of the alert about an extracted item with the same name: gives the same answer for every later item with a taken name in this extraction.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apply to All"
+          }
+        }
+      }
+    },
+    "“%@” was changed in another app. Update the archive?": {
+      "comment": "Alert title: a file opened from the archive was edited in another app. %@ = the file's name. Buttons: Update, Don't Update.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” was changed in another app. Update the archive?"
+          }
+        }
+      }
+    },
+    "“%@” was saved in the folder of a file opened from this archive. Update the archive?": {
+      "comment": "Alert title: another app saved a new file next to a file opened from the archive (in Lutik's temporary folder). %@ = the new file's name.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” was saved in the folder of a file opened from this archive. Update the archive?"
+          }
+        }
+      }
+    },
+    "Update": {
+      "comment": "Update (a verb): button of the alert about a file opened from the archive and changed in another app; puts the changed file into the archive.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Update"
+          }
+        }
+      }
+    },
+    "Don't Update": {
+      "comment": "Button of the alert about a file opened from the archive and changed in another app: leaves the archive as it is (Esc).",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Don't Update"
+          }
+        }
+      }
+    },
+    "Show in Finder": {
+      "comment": "Alert button that opens a Finder window with the item selected.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show in Finder"
+          }
+        }
+      }
+    },
+    "“%@” was changed in another app, but this archive can't be updated.": {
+      "comment": "Alert title: a file opened from a read-only archive was edited in another app. %@ = the file's name.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” was changed in another app, but this archive can't be updated."
+          }
+        }
+      }
+    },
+    "“%@” was saved in the folder of a file opened from this archive, but this archive can't be updated.": {
+      "comment": "Alert title: another app saved a new file next to a file opened from a read-only archive. %@ = the new file's name.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” was saved in the folder of a file opened from this archive, but this archive can't be updated."
+          }
+        }
+      }
+    },
+    "“%@” was saved in the folder of a file opened from this archive, and the archive already has an item with that name.": {
+      "comment": "Alert title: another app saved a new file next to a file opened from the archive, under a name the archive already uses. %@ = the new file's name.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” was saved in the folder of a file opened from this archive, and the archive already has an item with that name."
+          }
+        }
+      }
+    },
+    "Keep Both adds it under a new name. Unless you update the archive with it or move it, it's deleted when the archive closes.": {
+      "comment": "Alert text under “… and the archive already has an item with that name.”. Keep Both is the alert's button: use its translation.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep Both adds it under a new name. Unless you update the archive with it or move it, it's deleted when the archive closes."
+          }
+        }
+      }
+    },
+    "“%@” was changed in another app, and the archive already has a different item with that name.": {
+      "comment": "Alert title: a file opened from the archive was edited in another app, and the archive now has another item with its name. %@ = the file's name.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” was changed in another app, and the archive already has a different item with that name."
+          }
+        }
+      }
+    },
+    "Keep Both adds it under a new name.": {
+      "comment": "Alert text under “… and the archive already has a different item with that name.”. Keep Both is the alert's button: use its translation.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Keep Both adds it under a new name."
+          }
+        }
+      }
+    },
+    "Show it in Finder to keep your changes. It's deleted when the archive closes.": {
+      "comment": "Alert text under “… but this archive can't be updated.” for an edited file: it is in a temporary folder.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show it in Finder to keep your changes. It's deleted when the archive closes."
+          }
+        }
+      }
+    },
+    "Unless you update the archive with it or move it, it's deleted when the archive closes.": {
+      "comment": "Alert text under “… was saved in the folder of a file opened from this archive. Update the archive?”: the new file is in a temporary folder.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unless you update the archive with it or move it, it's deleted when the archive closes."
+          }
+        }
+      }
+    },
+    "Show it in Finder to keep it. Unless you move it, it's deleted when the archive closes.": {
+      "comment": "Alert text under “… but this archive can't be updated.” for a newly saved file: it is in a temporary folder.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show it in Finder to keep it. Unless you move it, it's deleted when the archive closes."
+          }
+        }
+      }
+    },
+    "Grant Access…": {
+      "comment": "Button in the window of a split archive whose parts Lutik can't read: opens a folder panel to give Lutik access to the folder that holds the parts. Not the panel's own button “Grant Access”.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grant Access…"
+          }
+        }
+      }
+    },
+    "Grant Access": {
+      "comment": "Default button of the folder panel that “Grant Access…” opens: gives Lutik access to the chosen folder of archive parts. No “…”, as it acts at once.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grant Access"
+          }
+        }
+      }
+    },
+    "“%@” is a part of this archive. Choose another name.": {
+      "comment": "Save panel error: Save As chose one of the split archive's own parts. %@ = the chosen file name.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” is a part of this archive. Choose another name."
+          }
+        }
+      }
+    },
+    "Split archives can only be read. Save As to edit.": {
+      "comment": "Tooltip of the toolbar's ＋ and － buttons for a split (multi-part) archive. “Save As” is the File menu command.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Split archives can only be read. Save As to edit."
+          }
+        }
+      }
+    },
+    "“%@” changed while saving.": {
+      "comment": "Split save alert title: replacing an earlier split archive in its own folder (a network share) stopped because the folder changed while the new volumes were written. %@ = the folder's name.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” changed while saving."
+          }
+        }
+      }
+    },
+    "Nothing was replaced.": {
+      "comment": "Split save alert text, after the title “%@ changed while saving.”: the earlier split archive is as it was, and the new volumes were removed.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nothing was replaced."
+          }
+        }
+      }
+    },
+    "“%@” was only partly replaced.": {
+      "comment": "Split save alert title: replacing an earlier split archive in its own folder (a network share) removed earlier volumes, then stopped. %@ = the folder's name.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” was only partly replaced."
+          }
+        }
+      }
+    },
+    "The items couldn’t be copied because their archive was closed.": {
+      "comment": "Alert title when items dragged from another archive window can't be copied in: that window closed while they were being copied.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The items couldn’t be copied because their archive was closed."
+          }
+        }
+      }
+    },
+    "The new volumes are in the folder “Lutik Recovered” inside it. Some earlier volumes may have been moved to the Trash or deleted.": {
+      "comment": "Split save alert text, after the title “%@ was only partly replaced.”. “Lutik Recovered” is the name of the folder Lutik made inside the split archive's folder (not translated: it is the folder's name on disk); “it” = that split archive's folder.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The new volumes are in the folder “Lutik Recovered” inside it. Some earlier volumes may have been moved to the Trash or deleted."
+          }
+        }
+      }
+    },
+    "OK": {
+      "comment": "Alert button that only closes the alert.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OK"
+          }
+        }
+      }
+    },
+    "%@ — %lld of %lld": {
+      "comment": "Preview window title for a multi-item preview: %@ = the shown file's name, then its position and the number of items previewed (e.g. “photo.jpg — 2 of 5”).",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ — %lld of %lld"
+          }
+        }
+      }
+    },
+    "Open With": {
+      "comment": "Preview window toolbar button (and its menu), and the archive rows' context-menu submenu: opens the file in an app; the menu lists every app that can open it.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open With"
+          }
+        }
+      }
+    },
+    "Open with %@": {
+      "comment": "Tooltip of the preview window's Open With button: %@ = the default app's name (e.g. “Preview”).",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open with %@"
+          }
+        }
+      }
+    },
+    "%@ (default)": {
+      "comment": "Open With menu (preview window toolbar and the archive rows' context menu): the file's default app; %@ = its name (e.g. “TextEdit (default)”).",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ (default)"
+          }
+        }
+      }
+    },
+    "Share": {
+      "comment": "Preview window toolbar button and its VoiceOver label: shares the previewed file (the system Share menu).",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Share"
+          }
+        }
+      }
+    },
+    "Index Sheet": {
+      "comment": "Preview window toolbar button and its VoiceOver label: shows all previewed items as a grid of thumbnails, as Quick Look's Index Sheet.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Index Sheet"
+          }
+        }
+      }
+    },
+    "Exit Full Screen": {
+      "comment": "Label and tooltip of the preview window's full-screen toolbar button while the preview is in full screen.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exit Full Screen"
+          }
+        }
+      }
+    },
+    "%lld items": {
+      "comment": "Preview window title over the index sheet (grid of thumbnails): the number of items previewed.",
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld item"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "%lld items"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Move To…": {
+      "comment": "Context-menu item of the archive's rows: opens a sheet listing the archive's folders, to move the clicked item (or the selected items) into one of them, inside the archive.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move To…"
+          }
+        }
+      }
+    },
+    "Move": {
+      "comment": "Move (a verb): the default button of the Move To… sheet, which moves the items into the folder chosen in the archive's folder list.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move"
+          }
+        }
+      }
+    },
+    "Move “%@” to:": {
+      "comment": "Heading of the Move To… sheet when one item moves, above the list of the archive's folders to move it into. %@ = the item's name.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move “%@” to:"
+          }
+        }
+      }
+    },
+    "Move %lld items to:": {
+      "comment": "Heading of the Move To… sheet when two or more items move, above the list of the archive's folders to move them into. %lld = number of those items. Never shown for a single item; in languages whose ‘one’ form also covers 21, 31…, it still means several items.",
+      "localizations": {
+        "en": {
+          "variations": {
+            "plural": {
+              "one": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Move %lld item to:"
+                }
+              },
+              "other": {
+                "stringUnit": {
+                  "state": "translated",
+                  "value": "Move %lld items to:"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Already in this folder.": {
+      "comment": "VoiceOver hint of a disabled folder row in the Move To… sheet's list of the archive's folders: the items to move are all in that folder already, so they can't move into it.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Already in this folder."
+          }
+        }
+      }
+    },
+    "Can’t move a folder into itself.": {
+      "comment": "VoiceOver hint of a disabled folder row in the Move To… sheet's list of the archive's folders: the row is one of the folders being moved, or a folder inside one, so the items can't move into it.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Can’t move a folder into itself."
+          }
+        }
+      }
+    },
+    "Show this window when %@ opens": {
+      "comment": "Mac Welcome window: checkbox at the bottom; on, the window opens at launches with no document. %@ = the app's name.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show this window when %@ opens"
+          }
+        }
+      }
+    },
+    "%@ is now the default app for archives.": {
+      "comment": "Mac Welcome window: shown in place of the “Make … the Default App for Archives” button right after it worked. %@ = the app's name.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ is now the default app for archives."
+          }
+        }
+      }
+    },
+    "%@ is the default app for archives.": {
+      "comment": "Mac Welcome window: shown in place of the “Make … the Default App for Archives” button when the app already opens every archive type. %@ = the app's name.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ is the default app for archives."
+          }
+        }
+      }
+    },
+    "Make %@ the Default App for Archives": {
+      "comment": "Mac Welcome window: button that makes the app the default app for every archive type it opens. %@ = the app's name.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Make %@ the Default App for Archives"
+          }
+        }
+      }
+    },
+    "Open Archive…": {
+      "comment": "Mac Welcome window: default button; shows the standard Open panel.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Archive…"
+          }
+        }
+      }
+    },
+    "New Archive": {
+      "comment": "Mac Welcome window: button under the hero art; makes a new, empty archive (File > New).",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New Archive"
+          }
+        }
+      }
+    },
+    "Default": {
+      "comment": "Settings > Default App for Archives: a format row's state when the app opens that format by default.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Default"
+          }
+        }
+      }
+    },
+    "Make Default": {
+      "comment": "Settings > Default App for Archives: a format row's button; makes the app the default app for that format.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Make Default"
+          }
+        }
+      }
+    },
+    "Make Default for %@": {
+      "comment": "VoiceOver label of a Settings format row's Make Default button. %@ = the row's format names, e.g. “ZIP” or “TAR, TAR.GZ”.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Make Default for %@"
+          }
+        }
+      }
+    },
+    "Make Default for All": {
+      "comment": "Settings > Default App for Archives: button that makes the app the default app for every archive format listed except ISO (disk images keep mounting in Finder).",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Make Default for All"
+          }
+        }
+      }
+    },
+    "Default App for Archives": {
+      "comment": "Settings: header of the section listing archive formats and whether the app opens them by default.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Default App for Archives"
+          }
+        }
+      }
+    },
+    "Formats marked Default open in %@ when you double-click them in Finder. Make Default for All skips ISO, so Finder keeps mounting disk images.": {
+      "comment": "Settings > Default App for Archives: footer under the format rows. “Default” is the state shown on a format row when the app already opens it (the “Default” label). “Make Default for All” is the button above; ISO is a format row of its own. %@ = the app’s name.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Formats marked Default open in %@ when you double-click them in Finder. Make Default for All skips ISO, so Finder keeps mounting disk images."
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

@@ -1,0 +1,1758 @@
+{
+    "sourceLanguage": "en",
+    "strings": {
+        "%@ (compatible, weak)": {
+            "comment": "Label of an encryption scheme in the Encryption picker of the save options sheet when the scheme is old and weak but opens in more apps. %@ = the scheme's name (e.g. ZipCrypto), not translated.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "%@ (compatible, weak)"
+                    }
+                }
+            }
+        },
+        "%@ copy": {
+            "comment": "Default file name of a copy made with Save As Copy, without the extension (the app appends it). %@ = the original archive's name without its extension. Must stay a valid file name: no slashes or colons.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "%@ copy"
+                    }
+                }
+            }
+        },
+        "%@\n%lld of %lld": {
+            "comment": "Alert message of an extraction conflict question when there are several: %1$@ = the question's text (already translated, e.g. “Do you want to replace it with the one you’re extracting?”), then a new line and the position of this question: %2$lld = its number, %3$lld = how many conflicts there are in all (e.g. “2 of 5”).",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "%1$@\n%2$lld of %3$lld"
+                    }
+                }
+            }
+        },
+        "%lld dropped items didn't provide files to copy.": {
+            "comment": "Alert message under “Couldn't add %lld items” when dropped items (e.g. a text snippet or a link) offered no file to copy; any other dropped items are still added. %lld = number of those items. The English “one” form leaves the number out. Other languages’ “one” form can also cover 21, 31… and must then keep %lld.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "variations": {
+                        "plural": {
+                            "one": {
+                                "stringUnit": {
+                                    "state": "translated",
+                                    "value": "The dropped item didn't provide a file to copy."
+                                }
+                            },
+                            "other": {
+                                "stringUnit": {
+                                    "state": "translated",
+                                    "value": "%lld dropped items didn't provide files to copy."
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "%lld items from Photos didn't provide files to copy.": {
+            "comment": "Alert message under “Couldn't add %lld items” when items picked in the Photos picker offered no file to copy; any other picked items are still added. %lld = number of those items. The English “one” form leaves the number out. Other languages’ “one” form can also cover 21, 31… and must then keep %lld.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "variations": {
+                        "plural": {
+                            "one": {
+                                "stringUnit": {
+                                    "state": "translated",
+                                    "value": "The item from Photos didn't provide a file to copy."
+                                }
+                            },
+                            "other": {
+                                "stringUnit": {
+                                    "state": "translated",
+                                    "value": "%lld items from Photos didn't provide files to copy."
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "%lld objects": {
+            "comment": "Row detail of a folder in the item list (and its VoiceOver text): how many items it holds. %lld = number of items. In languages whose “one” form also covers 21, 31…, it must keep %lld.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "variations": {
+                        "plural": {
+                            "one": {
+                                "stringUnit": {
+                                    "state": "translated",
+                                    "value": "%lld object"
+                                }
+                            },
+                            "other": {
+                                "stringUnit": {
+                                    "state": "translated",
+                                    "value": "%lld objects"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "Acknowledgements": {
+            "comment": "Title of the screen listing open-source licenses and credits, and of the bar button that opens it. Noun.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Acknowledgements"
+                    }
+                }
+            }
+        },
+        "Add": {
+            "comment": "Toolbar menu (plus icon) at the bottom of an archive folder that adds files or photos to the archive. Verb.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Add"
+                    }
+                }
+            }
+        },
+        "Adding files…": {
+            "comment": "Progress sheet title while files dropped on the archive are copied in. The ellipsis shows work in progress.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Adding files…"
+                    }
+                }
+            }
+        },
+        "Adding photos…": {
+            "comment": "Progress sheet title while photos and videos picked in the Photos picker are copied into the archive. The ellipsis shows work in progress.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Adding photos…"
+                    }
+                }
+            }
+        },
+        "Advanced": {
+            "comment": "Disclosure group in the save options sheet that shows the less common settings (method, solid archive). Adjective used as a heading.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Advanced"
+                    }
+                }
+            }
+        },
+        "An item named “%@” already exists in “%@”.": {
+            "comment": "Alert title of an extraction conflict when an item to extract has the same name as one already in the destination folder. %1$@ = the item's name, %2$@ = the destination folder's name. The message under it asks whether to replace it.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "An item named “%1$@” already exists in “%2$@”."
+                    }
+                }
+            }
+        },
+        "Ascending": {
+            "comment": "A choice in More > Sort By: A to Z, oldest first, smallest first.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Ascending"
+                    }
+                }
+            }
+        },
+        "Continue": {
+            "comment": "iOS Welcome sheet: the button that closes the sheet and shows the file browser.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Continue"
+                    }
+                }
+            }
+        },
+        "Couldn't add the folder": {
+            "comment": "Alert title when adding a new folder to the archive (New Folder) fails; the reason is shown below it.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Couldn't add the folder"
+                    }
+                }
+            }
+        },
+        "Couldn't rename “%@”": {
+            "comment": "Alert title when renaming an item in the archive fails; the reason is shown below it. %@ = the item's name before the rename.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Couldn't rename “%@”"
+                    }
+                }
+            }
+        },
+        "Date Modified": {
+            "comment": "A choice in More > Sort By: order the list by the items' modification dates.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Date Modified"
+                    }
+                }
+            }
+        },
+        "Descending": {
+            "comment": "A choice in More > Sort By: Z to A, newest first, largest first.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Descending"
+                    }
+                }
+            }
+        },
+        "Kind": {
+            "comment": "A choice in More > Sort By: order the list by the items' kinds (PNG image, Folder…).",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Kind"
+                    }
+                }
+            }
+        },
+        "Name": {
+            "comment": "Placeholder of the text field in the Rename and New Folder alerts, where the item's new name is typed. Also a choice in More > Sort By: order the list by name.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Name"
+                    }
+                }
+            }
+        },
+        "New Folder": {
+            "comment": "Adds an empty folder to the archive, in the folder on screen: button in the ＋ menu, Shift-Command-N key command, and title of the alert that then asks for the new folder's name.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "New Folder"
+                    }
+                }
+            }
+        },
+        "Open archives right here, or from Files: touch and hold an archive, tap Share, then choose %@.": {
+            "comment": "iOS Welcome sheet: how to open an archive, under the feature rows. “Right here” is the app’s own file browser, shown when the sheet closes. Files is the iOS Files app; Share is its menu item. %@ = the app’s name.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Open archives right here, or from Files: touch and hold an archive, tap Share, then choose %@."
+                    }
+                }
+            }
+        },
+        "Rename": {
+            "comment": "Renames the item in the archive: button in a row's context menu, item in the File menu for the one item selected in Select mode, and title of the alert that asks for the new name.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Rename"
+                    }
+                }
+            }
+        },
+        "SampleArchive.line1 %@": {
+            "comment": "First line of the sample archive's read-me. %@ = the app's name.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Welcome to %@."
+                    }
+                }
+            }
+        },
+        "SampleArchive.line2 %@": {
+            "comment": "Second line of the sample archive's read-me. %@ = the app's name.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "In Files, touch and hold an archive, then tap Share and choose %@."
+                    }
+                }
+            }
+        },
+        "SampleArchive.line3 %@": {
+            "comment": "Third line of the sample archive's read-me. %@ = the app's name.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Or open %@ and browse to the archive."
+                    }
+                }
+            }
+        },
+        "SampleArchive.name": {
+            "comment": "File name of the sample archive put into the app's folder on first launch, without the extension (it becomes “Sample Archive.zip”). Avoid “/” and “:”.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Sample Archive"
+                    }
+                }
+            }
+        },
+        "SampleArchive.readMeName": {
+            "comment": "Name of the text file inside the sample archive, without the extension (it becomes “Read Me.txt”). Avoid “/” and “:”.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Read Me"
+                    }
+                }
+            }
+        },
+        "Size": {
+            "comment": "A choice in More > Sort By: order the list by size. Files go by their size; folders by the number of objects in them (the count their row shows), not by the total size of their contents as on the Mac.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Size"
+                    }
+                }
+            }
+        },
+        "Sort By": {
+            "comment": "Bar menu in More, and the title of its list of keys: how the folder list is ordered (Name, Date Modified, Size, Kind). Same on every level, kept across launches.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Sort By"
+                    }
+                }
+            }
+        },
+        "Sort Order": {
+            "comment": "The direction choices in More > Sort By (Ascending, Descending). Not shown as a title in the menu, but VoiceOver may read it.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Sort Order"
+                    }
+                }
+            }
+        },
+        "“%@” and “%@” would get the same name in “%@”.": {
+            "comment": "Alert title when two items in the archive differ only in letter case (Readme / README) and are extracted to a folder that ignores case, so the later one would take the earlier one's name. Neither is in the folder yet. %1$@ = the later item's name, %2$@ = the earlier item's name (either may be a file or a folder, or a path when the names alone read the same), %3$@ = the folder's name.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "“%1$@” and “%2$@” would get the same name in “%3$@”."
+                    }
+                }
+            }
+        },
+        "Best (%lld)": {
+            "comment": "Compression level of a ZIP or 7z archive in the Compression picker: the highest level, slowest and smallest result. %lld = the level number (e.g. 9). Keep the number in parentheses.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Best (%lld)"
+                    }
+                }
+            }
+        },
+        "Cancel": {
+            "comment": "Cancel button of alerts and sheets. It dismisses them without doing the action in the replace confirmation, the Extract Here alerts, the Mac metadata question, the password sheet, the new-archive and Save a Copy options sheet and the Text Encoding sheet, and it stops the running operation in the progress sheet. Verb.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Cancel"
+                    }
+                }
+            }
+        },
+        "Choose Another Folder…": {
+            "comment": "Button in the Extract Here alert when the chosen folder is on a read-only volume: opens the folder picker again. The ellipsis shows a picker follows.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Choose Another Folder…"
+                    }
+                }
+            }
+        },
+        "Choose Files…": {
+            "comment": "Item in the Add menu: opens the Files picker to choose files to add to the archive. The ellipsis shows a picker follows.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Choose Files…"
+                    }
+                }
+            }
+        },
+        "Choose Folder…": {
+            "comment": "Button on the screen shown when a split archive's other parts can't be read: opens the folder picker to grant access to the folder that holds all the parts. The ellipsis shows a picker follows.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Choose Folder…"
+                    }
+                }
+            }
+        },
+        "Choose another folder to extract into.": {
+            "comment": "Alert message under “%@ is on a read-only volume.” in Extract Here: nothing can be written there, so the user picks a different destination.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Choose another folder to extract into."
+                    }
+                }
+            }
+        },
+        "Choose “%@” or a folder that contains it.": {
+            "comment": "Extract Here alert message: %@ is the archive's folder as Files names it",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Choose “%@” or a folder that contains it."
+                    }
+                }
+            }
+        },
+        "Close": {
+            "comment": "Command in the menu bar of the archive window (⌘W) that closes the archive. Verb.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Close"
+                    }
+                }
+            }
+        },
+        "Comment": {
+            "comment": "Info sheet: title of the section showing the ZIP archive's comment, and the VoiceOver label of the comment field.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Comment"
+                    }
+                }
+            }
+        },
+        "Compression": {
+            "comment": "Pop-up in the save options sheet to choose how strongly the archive is compressed (a level). Noun.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Compression"
+                    }
+                }
+            }
+        },
+        "Couldn't add %lld items": {
+            "comment": "Alert title when dropped or picked items couldn't be added to the archive: the archive was busy (being saved or read again), or the items offered no file to copy. %lld = number of items. In languages whose “one” form also covers 21, 31…, it must keep %lld. The message under it says why.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "variations": {
+                        "plural": {
+                            "one": {
+                                "stringUnit": {
+                                    "state": "translated",
+                                    "value": "Couldn't add %lld item"
+                                }
+                            },
+                            "other": {
+                                "stringUnit": {
+                                    "state": "translated",
+                                    "value": "Couldn't add %lld items"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "Couldn't add files": {
+            "comment": "Alert title when adding files (from Files, Photos or a drop) to the archive failed. The message under it is the system's error.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Couldn't add files"
+                    }
+                }
+            }
+        },
+        "Couldn't add “%@”": {
+            "comment": "Alert title when a single item couldn't be added to the archive because it was busy (being saved or read again). %@ = the item's name. The message under it says to try again.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Couldn't add “%@”"
+                    }
+                }
+            }
+        },
+        "Couldn't create the archive": {
+            "comment": "Alert title when creating a new, empty archive failed. The message under it is the error.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Couldn't create the archive"
+                    }
+                }
+            }
+        },
+        "Couldn't extract": {
+            "comment": "Alert title when the folder picker failed while choosing where to extract. The message under it is the system's error.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Couldn't extract"
+                    }
+                }
+            }
+        },
+        "Couldn't extract %lld items": {
+            "comment": "Alert title when extracting several items failed. %lld = number of items. Never shown for a single item; in languages whose “one” form also covers 21, 31…, it still means several items.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "variations": {
+                        "plural": {
+                            "one": {
+                                "stringUnit": {
+                                    "state": "translated",
+                                    "value": "Couldn't extract %lld item"
+                                }
+                            },
+                            "other": {
+                                "stringUnit": {
+                                    "state": "translated",
+                                    "value": "Couldn't extract %lld items"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "Couldn't extract “%@”": {
+            "comment": "Alert title when extracting a single item failed. %@ = the item's name.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Couldn't extract “%@”"
+                    }
+                }
+            }
+        },
+        "Couldn't open the folder": {
+            "comment": "Alert title when the folder picker failed while choosing the folder that holds a split archive's other parts. The message under it is the system's error.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Couldn't open the folder"
+                    }
+                }
+            }
+        },
+        "Couldn't open “%@”": {
+            "comment": "Alert title when the archive couldn't be opened or read. %@ = the archive's file name.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Couldn't open “%@”"
+                    }
+                }
+            }
+        },
+        "Couldn't preview “%@”": {
+            "comment": "Alert title when an item in the archive couldn't be extracted to be previewed. %@ = the item's name.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Couldn't preview “%@”"
+                    }
+                }
+            }
+        },
+        "Couldn't save a copy of “%@”": {
+            "comment": "Alert title when Save As Copy failed. %@ = the archive's file name.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Couldn't save a copy of “%@”"
+                    }
+                }
+            }
+        },
+        "Couldn't save “%@”": {
+            "comment": "Alert title when saving the changes to the archive failed. %@ = the archive's file name.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Couldn't save “%@”"
+                    }
+                }
+            }
+        },
+        "Couldn't share %lld items": {
+            "comment": "Alert title when preparing several items to share failed. %lld = number of items. Never shown for a single item; in languages whose “one” form also covers 21, 31…, it still means several items.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "variations": {
+                        "plural": {
+                            "one": {
+                                "stringUnit": {
+                                    "state": "translated",
+                                    "value": "Couldn't share %lld item"
+                                }
+                            },
+                            "other": {
+                                "stringUnit": {
+                                    "state": "translated",
+                                    "value": "Couldn't share %lld items"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "Couldn't share “%@”": {
+            "comment": "Alert title when preparing a single item to share failed. %@ = the item's name.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Couldn't share “%@”"
+                    }
+                }
+            }
+        },
+        "Create": {
+            "comment": "Confirm button of the save options sheet when creating a new archive. Verb. Starts the creation.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Create"
+                    }
+                }
+            }
+        },
+        "Delete": {
+            "comment": "Remove the selected items from the archive: the Delete menu command (⌘⌫) and the Delete buttons of the item's menu and the toolbar. Verb. Not a permanent delete: it can be undone.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Delete"
+                    }
+                }
+            }
+        },
+        "Do you want to replace it with the one you’re extracting?": {
+            "comment": "Alert message of an extraction conflict when an item with the same name already exists in the destination. “it” = the existing item, named in the title. Buttons: Keep Both, Replace, Stop.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Do you want to replace it with the one you’re extracting?"
+                    }
+                }
+            }
+        },
+        "Do you want to replace “%@” with “%@”?": {
+            "comment": "Alert message under the case-only twin title (Readme / README). %1$@ = the earlier item's name, %2$@ = the later item's name; either may be a file or a folder. Buttons: Keep Both, Replace, Stop.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Do you want to replace “%1$@” with “%2$@”?"
+                    }
+                }
+            }
+        },
+        "Done": {
+            "comment": "Button that closes a sheet (Info, Acknowledgements) or leaves Select mode in the archive's toolbar. Verb.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Done"
+                    }
+                }
+            }
+        },
+        "Encrypt with password": {
+            "comment": "Switch in the save options sheet. On = the archive asks for a password to open.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Encrypt with password"
+                    }
+                }
+            }
+        },
+        "Encryption": {
+            "comment": "Pop-up in the save options sheet to choose the encryption scheme (e.g. AES-256). Noun.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Encryption"
+                    }
+                }
+            }
+        },
+        "Enter Password": {
+            "comment": "Navigation title of the sheet that asks for the password of an encrypted archive.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Enter Password"
+                    }
+                }
+            }
+        },
+        "Extract": {
+            "comment": "Toolbar menu in the archive's bottom bar that offers Extract Here and Extract To…. Verb. Extracts the selected items, or everything when none is selected.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Extract"
+                    }
+                }
+            }
+        },
+        "Extract Here": {
+            "comment": "Command that extracts the items next to the archive, into the folder that holds it. Verb. A menu item and a menu bar command.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Extract Here"
+                    }
+                }
+            }
+        },
+        "Extract To…": {
+            "comment": "Menu item that asks for a destination folder and extracts the items there. Verb. The ellipsis shows a picker follows.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Extract To…"
+                    }
+                }
+            }
+        },
+        "Extracting %lld items…": {
+            "comment": "Progress sheet title while several items are extracted. %lld = number of items. Never shown for a single item; in languages whose “one” form also covers 21, 31…, it still means several items. The ellipsis shows work in progress.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "variations": {
+                        "plural": {
+                            "one": {
+                                "stringUnit": {
+                                    "state": "translated",
+                                    "value": "Extracting %lld item…"
+                                }
+                            },
+                            "other": {
+                                "stringUnit": {
+                                    "state": "translated",
+                                    "value": "Extracting %lld items…"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "Extracting “%@”…": {
+            "comment": "Progress sheet title while a single item is extracted. %@ = the item's name. The ellipsis shows work in progress.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Extracting “%@”…"
+                    }
+                }
+            }
+        },
+        "Fastest (%lld)": {
+            "comment": "Compression level of a ZIP or 7z archive in the Compression picker: the lowest level, fastest and largest result. %lld = the level number (e.g. 0). Keep the number in parentheses.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Fastest (%lld)"
+                    }
+                }
+            }
+        },
+        "Finder adds __MACOSX folders and ._ files to archives made on a Mac. Other apps don’t need them. Remove them, along with any .DS_Store files, when saving? Removed files can’t be restored. Lutik remembers your choice for this archive.": {
+            "comment": "__MACOSX, ._ and .DS_Store are file names; don't translate.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Finder adds __MACOSX folders and ._ files to archives made on a Mac. Other apps don’t need them. Remove them, along with any .DS_Store files, when saving? Removed files can’t be restored. Lutik remembers your choice for this archive."
+                    }
+                }
+            }
+        },
+        "Format": {
+            "comment": "Pop-up in the save options sheet to choose the archive format (ZIP, 7z, …). Noun.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Format"
+                    }
+                }
+            }
+        },
+        "Get Info": {
+            "comment": "File menu command (⌘I) on iPad: opens the archive's Info sheet (format, size, items, comment), as Finder's Get Info.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Get Info"
+                    }
+                }
+            }
+        },
+        "If the password is right, the archive may be damaged.": {
+            "comment": "Hint under the “wrong password” error after the second wrong password in a row on a 7z archive: 7z has no password check, so damage looks like a wrong password.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "If the password is right, the archive may be damaged."
+                    }
+                }
+            }
+        },
+        "Info": {
+            "comment": "Bar button (in More on iPhone) and its VoiceOver label, and the title of the sheet it opens: the archive's format, size, items and comment.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Info"
+                    }
+                }
+            }
+        },
+        "Keep": {
+            "comment": "Button in the “… contains Mac metadata” alert: saves the archive and keeps the Mac metadata (__MACOSX folders and ._ files) in it. Verb; the default button.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Keep"
+                    }
+                }
+            }
+        },
+        "Keep Both": {
+            "comment": "Button in the extraction conflict alert: extract the item under a new name and keep the existing one. Verb.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Keep Both"
+                    }
+                }
+            }
+        },
+        "Keep Both for All": {
+            "comment": "Button in the extraction conflict alert: keep both for this and every remaining conflict in this extraction, without asking again.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Keep Both for All"
+                    }
+                }
+            }
+        },
+        "Method": {
+            "comment": "Pop-up in the Advanced part of the save options sheet to choose the compression method (e.g. Deflate, LZMA2). Noun.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Method"
+                    }
+                }
+            }
+        },
+        "New Archive": {
+            "comment": "Button that creates a new, empty archive: the primary action of the document browser, its create-document button, and the title of the save options sheet while creating. Verb phrase.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "New Archive"
+                    }
+                }
+            }
+        },
+        "No Items": {
+            "comment": "Title shown when an archive folder is empty. Noun phrase.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "No Items"
+                    }
+                }
+            }
+        },
+        "Normal (%lld)": {
+            "comment": "Compression level of a ZIP or 7z archive in the Compression picker: the default level. %lld = the level number (e.g. 6). Keep the number in parentheses.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Normal (%lld)"
+                    }
+                }
+            }
+        },
+        "Not saved yet": {
+            "comment": "VoiceOver label of the plus badge on an item that was added to the archive but not saved yet.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Not saved yet"
+                    }
+                }
+            }
+        },
+        "OK": {
+            "comment": "Button that confirms an alert and goes on: the error alert, the Extract Here alert (picks the folder again) and the new-archive error alert.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "OK"
+                    }
+                }
+            }
+        },
+        "Open": {
+            "comment": "Confirm button of the password sheet: unlocks the archive with the typed password and opens it. Verb.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Open"
+                    }
+                }
+            }
+        },
+        "Password": {
+            "comment": "Placeholder of a secure text field where the user types the archive's password: in the password sheet and in the save options sheet. Noun.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Password"
+                    }
+                }
+            }
+        },
+        "Photos…": {
+            "comment": "Item in the Add menu: opens the Photos picker to add photos and videos. The ellipsis shows a picker follows. Photos is the Apple app's name.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Photos…"
+                    }
+                }
+            }
+        },
+        "PickedMedia.photoName": {
+            "comment": "File name for a photo added from Photos that has no name of its own. It becomes the file's name inside the archive, followed by the extension (e.g. “Photo.heic”). Avoid “/” and “:”.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Photo"
+                    }
+                }
+            }
+        },
+        "PickedMedia.videoName": {
+            "comment": "File name for a video added from Photos that has no name of its own. It becomes the file's name inside the archive, followed by the extension (e.g. “Video.mov”). Avoid “/” and “:”.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Video"
+                    }
+                }
+            }
+        },
+        "Preparing %lld items…": {
+            "comment": "Progress sheet title while several items are extracted to a temporary place to share them. %lld = number of items. Never shown for a single item; in languages whose “one” form also covers 21, 31…, it still means several items. The ellipsis shows work in progress.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "variations": {
+                        "plural": {
+                            "one": {
+                                "stringUnit": {
+                                    "state": "translated",
+                                    "value": "Preparing %lld item…"
+                                }
+                            },
+                            "other": {
+                                "stringUnit": {
+                                    "state": "translated",
+                                    "value": "Preparing %lld items…"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "Preparing “%@”…": {
+            "comment": "Progress sheet title while an item is extracted to a temporary place to preview or share it. %@ = the item's name. The ellipsis shows work in progress.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Preparing “%@”…"
+                    }
+                }
+            }
+        },
+        "Preview": {
+            "comment": "Menu item that shows the selected item's content in a preview. Verb.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Preview"
+                    }
+                }
+            }
+        },
+        "Redo": {
+            "comment": "Toolbar button that repeats the edit that was just undone. Verb. Pairs with Undo.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Redo"
+                    }
+                }
+            }
+        },
+        "Remember in Keychain": {
+            "comment": "Switch in the password sheet. On = the password is stored in the Keychain so the archive opens without asking next time. Keychain is Apple's feature name.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Remember in Keychain"
+                    }
+                }
+            }
+        },
+        "Remove": {
+            "comment": "Button in the “… contains Mac metadata” alert: saves the archive without the Mac metadata (__MACOSX folders, ._ files and .DS_Store files); removed files can’t be restored. Verb; destructive button.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Remove"
+                    }
+                }
+            }
+        },
+        "Replace": {
+            "comment": "Button in the replace confirmation and the extraction conflict alert: overwrite the existing item with the new one. Verb. Destructive.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Replace"
+                    }
+                }
+            }
+        },
+        "Replace %lld objects?": {
+            "comment": "Alert title of the confirmation before added items replace several items already in the archive. %lld = number of items. Never shown for a single item; in languages whose “one” form also covers 21, 31…, it still means several items.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "variations": {
+                        "plural": {
+                            "one": {
+                                "stringUnit": {
+                                    "state": "translated",
+                                    "value": "Replace %lld object?"
+                                }
+                            },
+                            "other": {
+                                "stringUnit": {
+                                    "state": "translated",
+                                    "value": "Replace %lld objects?"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "Replace for All": {
+            "comment": "Button in the extraction conflict alert: replace the existing item for this and every remaining conflict in this extraction, without asking again. Destructive.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Replace for All"
+                    }
+                }
+            }
+        },
+        "Replace “%@”?": {
+            "comment": "Alert title of the confirmation before an added item replaces one already in the archive. %@ = the item's name.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Replace “%@”?"
+                    }
+                }
+            }
+        },
+        "Save": {
+            "comment": "Save the changes made to the archive: the Save menu command (⌘S), the trailing toolbar button and the confirm button of the save options sheet in Save a Copy. Verb.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Save"
+                    }
+                }
+            }
+        },
+        "Save a Copy": {
+            "comment": "Title of the save options sheet when saving the open archive as a new file. Verb phrase.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Save a Copy"
+                    }
+                }
+            }
+        },
+        "Save a Copy…": {
+            "comment": "Menu item that saves the open archive as a new file with its own format and options. Verb phrase. The ellipsis shows a sheet follows.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Save a Copy…"
+                    }
+                }
+            }
+        },
+        "Saving “%@”…": {
+            "comment": "Progress sheet title while the changes are written to the archive. %@ = the archive's file name. The ellipsis shows work in progress.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Saving “%@”…"
+                    }
+                }
+            }
+        },
+        "Select": {
+            "comment": "Toolbar button that turns on Select mode, so items in the list can be picked for Extract, Share or Delete. Verb. Becomes Done while selecting.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Select"
+                    }
+                }
+            }
+        },
+        "Share": {
+            "comment": "Menu item and toolbar button that opens the share sheet for the selected items. Verb.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Share"
+                    }
+                }
+            }
+        },
+        "Solid archive": {
+            "comment": "Switch in the Advanced part of the save options sheet. On = the 7z archive compresses all files as one block: smaller, but slower to extract one file.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Solid archive"
+                    }
+                }
+            }
+        },
+        "Stop": {
+            "comment": "Button in the extraction conflict alert: cancel the rest of the extraction. Items already extracted stay. Verb.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Stop"
+                    }
+                }
+            }
+        },
+        "Tap ＋ or drop files here to add them.": {
+            "comment": "Hint under “No Items” in an empty archive that can be edited. ＋ is the full-width plus sign: keep it, it matches the Add button's glyph.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Tap ＋ or drop files here to add them."
+                    }
+                }
+            }
+        },
+        "Text Encoding…": {
+            "comment": "More menu item that opens the Text Encoding sheet, where the encoding used to read the archive's file names is chosen. The ellipsis shows that a sheet opens.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Text Encoding…"
+                    }
+                }
+            }
+        },
+        "That folder doesn't contain “%@”.": {
+            "comment": "Extract Here alert title when the folder picked isn't the one that holds the archive. %@ = the archive's folder name as Files shows it. The message under it asks to pick it, or a folder that contains it.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "That folder doesn't contain “%@”."
+                    }
+                }
+            }
+        },
+        "The archive is being read again. Try again.": {
+            "comment": "Alert message, while Text Encoding re-reads the archive: the files picked or dropped weren't added, or the items of an Extract weren't extracted",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "The archive is being read again. Try again."
+                    }
+                }
+            }
+        },
+        "The archive is being saved. Try again.": {
+            "comment": "Alert message when an edit or extraction was asked for while the archive is being saved. The user waits and tries again.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "The archive is being saved. Try again."
+                    }
+                }
+            }
+        },
+        "The comment of a split archive can’t be changed.": {
+            "comment": "Info sheet, under the read-only comment of a split (multi-part) ZIP archive.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "The comment of a split archive can’t be changed."
+                    }
+                }
+            }
+        },
+        "The folder you chose couldn't be opened. Try again.": {
+            "comment": "Extract Here alert message: Files gave a folder, but the app couldn't get access to it",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "The folder you chose couldn't be opened. Try again."
+                    }
+                }
+            }
+        },
+        "This comment can’t be changed in Lutik.": {
+            "comment": "Info sheet, under a read-only archive comment that Lutik can't write back (for example in an APK, which Lutik only views).",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "This comment can’t be changed in Lutik."
+                    }
+                }
+            }
+        },
+        "Undo": {
+            "comment": "Toolbar button that takes back the last edit to the archive. Verb. Pairs with Redo.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Undo"
+                    }
+                }
+            }
+        },
+        "Unknown size": {
+            "comment": "VoiceOver text for an item whose size isn't known; the list shows “--” for it.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Unknown size"
+                    }
+                }
+            }
+        },
+        "Untitled": {
+            "comment": "File name of a newly created archive before the user names it, without the extension.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Untitled"
+                    }
+                }
+            }
+        },
+        "Verify": {
+            "comment": "Placeholder of the second secure text field in the save options sheet where the password is typed again to confirm it. Verb.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Verify"
+                    }
+                }
+            }
+        },
+        "“%@” contains Mac metadata": {
+            "comment": "Title of the alert shown before saving an archive that contains Mac metadata (__MACOSX folders and ._ files); the buttons Keep, Remove and Cancel follow. %@ = the archive's name.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "“%@” contains Mac metadata"
+                    }
+                }
+            }
+        },
+        "“%@” is on a read-only volume.": {
+            "comment": "Extract Here alert title when the folder to extract into can't be written to (e.g. a disk image or a locked card). %@ = the folder's name as Files shows it.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "“%@” is on a read-only volume."
+                    }
+                }
+            }
+        },
+        "“%@” is password protected.": {
+            "comment": "Header of the password sheet: the archive asks for a password. %@ = the archive's file name.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "“%@” is password protected."
+                    }
+                }
+            }
+        },
+        "Move…": {
+            "comment": "Moves the item, or the items selected in Select mode, to another folder of the archive: button in a row's context menu and in Select mode's bottom bar. The ellipsis shows a sheet follows where the folder is picked.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Move…"
+                    }
+                }
+            }
+        },
+        "Copy": {
+            "comment": "Copies the item to the clipboard (it is extracted first, so it can be pasted here, in another archive or in Files): button in a row's context menu. The system's Edit > Copy (⌘C) copies the items selected in Select mode.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Copy"
+                    }
+                }
+            }
+        },
+        "Cut": {
+            "comment": "Cuts the item to the clipboard, to be moved by Paste in another folder of the same archive: button in a row's context menu. The system's Edit > Cut (⌘X) cuts the items selected in Select mode.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Cut"
+                    }
+                }
+            }
+        },
+        "Paste": {
+            "comment": "Pastes the clipboard's items into the folder on screen: copied or cut archive items, or files copied in another app. Item in the Add (＋) menu and in the menu a long press on empty space in the list shows.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Paste"
+                    }
+                }
+            }
+        },
+        "Couldn't Copy": {
+            "comment": "Alert title when copying archive items to the clipboard (Copy) fails; the reason is shown below it.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Couldn't Copy"
+                    }
+                }
+            }
+        },
+        "Nothing on the clipboard can be pasted here.": {
+            "comment": "Alert message under “Couldn't Paste” when the clipboard looked like it held files or copied archive items, but none could be pasted.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Nothing on the clipboard can be pasted here."
+                    }
+                }
+            }
+        },
+        "ScreenState.pastedTextName": {
+            "comment": "File name for a text file pasted (Paste) from the clipboard that has no name of its own. It becomes the file's name inside the archive, followed by the extension (e.g. “Pasted Text.txt”). Avoid “/” and “:”.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Pasted Text"
+                    }
+                }
+            }
+        },
+        "Move To": {
+            "comment": "Title of the sheet that lists the archive's folders after Move…, where the folder to move the items into is picked.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Move To"
+                    }
+                }
+            }
+        },
+        "Move Here": {
+            "comment": "Button of the Move To sheet that moves the items into the folder picked in its list.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Move Here"
+                    }
+                }
+            }
+        },
+        "Couldn't move “%@”": {
+            "comment": "Alert title when moving an item to another folder of the archive fails; the reason is shown below it. %@ = the item's name.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "Couldn't move “%@”"
+                    }
+                }
+            }
+        },
+        "There is already an item named “%@” there.": {
+            "comment": "Alert message under “Couldn't move …” when a hidden item of the archive (Finder metadata, say) already has that name in the folder the items were moved to. %@ = that name.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "stringUnit": {
+                        "state": "translated",
+                        "value": "There is already an item named “%@” there."
+                    }
+                }
+            }
+        },
+        "Couldn't move %lld items": {
+            "comment": "Alert title when moving several items to another folder of the archive fails; the reason is shown below it. %lld = number of items. In languages whose “one” form also covers 21, 31…, it must keep %lld.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "variations": {
+                        "plural": {
+                            "one": {
+                                "stringUnit": {
+                                    "state": "translated",
+                                    "value": "Couldn't move %lld item"
+                                }
+                            },
+                            "other": {
+                                "stringUnit": {
+                                    "state": "translated",
+                                    "value": "Couldn't move %lld items"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "Couldn't delete %lld items": {
+            "comment": "Alert title when deleting items from the archive is refused; the reason is shown below it. %lld = number of items. In languages whose “one” form also covers 21, 31…, it must keep %lld.",
+            "extractionState": "manual",
+            "localizations": {
+                "en": {
+                    "variations": {
+                        "plural": {
+                            "one": {
+                                "stringUnit": {
+                                    "state": "translated",
+                                    "value": "Couldn't delete %lld item"
+                                }
+                            },
+                            "other": {
+                                "stringUnit": {
+                                    "state": "translated",
+                                    "value": "Couldn't delete %lld items"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "version": "1.0"
+}

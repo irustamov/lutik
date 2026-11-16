@@ -1,0 +1,125 @@
+Kernir patch 0019: the xar reader counts the headers it returns against the entry limit, not its bare folders
+
+Upstream: libarchive 3.8.10, libarchive/archive_read.c (__archive_read_kernir_names_allowance, from 0016),
+archive_read_support_format_xar.c (struct xar, xar_read_header, file_new, xml_end), include/kernir_names.h (its
+comment, with 0016's comment in the xar reader). Applies on top of 0001-0018
+(0016 and 0018 lines included).
+
+Patch 0016 counted every <file> element against the entry limit, bare folders included: a directory <file> with
+only a name and a type, which xar_read_header frees without returning it. Kernir counts the headers it reads, so
+a xar of N files and B bare folders was refused once N + B passed the limit, though Kernir would list it whole up
+to N = the limit.
+
+The <file> elements xar_read_header returns (kernir_xar_listed, now also its skip test) are counted at </file>, once
+their has flags and type are known, and refused over max_entries with 0016's message ("xar archive has more
+entries than the entry limit"), the same count Kernir's caller refuses. Every <file> is still allocated when it
+opens, so file_new still holds all of them, bare folders included, to a hard limit before calloc: 2 × max_entries
+(saturated at UINT64_MAX), the same message. 0016's names total, which grows with every <file> so far, grows with
+at most max_entries of them (__archive_read_kernir_names_allowance caps its count, as Kernir's allowances do), so
+bare folders past the limit add no name bytes. Archives within 0016's limits read as before.
+
+Apply from Sources/CLibArchive: patch -p1 < patches/0019-xar-bare-folders-entry-cap.patch
+
+--- a/libarchive/archive_read.c
++++ b/libarchive/archive_read.c
+@@ -160,6 +160,9 @@
+ {
+ 	uint64_t per = a->kernir_name_bytes_per_entry;
+ 
++	/* Kernir patch 0019: grows with at most the entry limit. */
++	if (entries > a->kernir_max_entries)
++		entries = a->kernir_max_entries;
+ 	if (per != 0 && entries > UINT64_MAX / per)
+ 		return (UINT64_MAX);
+ 	return (per * entries > a->kernir_names_bytes ?
+--- a/libarchive/archive_read_support_format_xar.c
++++ b/libarchive/archive_read_support_format_xar.c
+@@ -331,14 +331,27 @@
+ /*
+  * Kernir patch 0016: the names total grows with the <file> elements so far
+  * (__archive_read_kernir_names_allowance, 256 MiB or 512 bytes each by
+- * default), and the TOC may hold at most kernir_max_entries <file> elements
+- * (each one is allocated before Kernir sees any) and as many <ea> elements,
+- * and at most KERNIR_XAR_EAS_PER_FILE <ea> in one <file>: xattr_new keeps
++ * default), and listed <file> elements over kernir_max_entries are refused
++ * (patch 0019; any <file> over 2 x kernir_max_entries too, bounded memory:
++ * each one is allocated before Kernir sees any), as are <ea> elements over
++ * kernir_max_entries, and at most KERNIR_XAR_EAS_PER_FILE <ea> in one <file>: xattr_new keeps
+  * them sorted by id, walking the file's list for each one, so a file's
+  * <ea> elements cost time that grows with the square of their count (20,000
+  * of them in a 47 KB xar took 0.6 s). A real file has a few dozen at most.
+  */
+ #define KERNIR_XAR_EAS_PER_FILE	1024
++/*
++ * Kernir patch 0019: a bare folder (a directory <file> with only a name and
++ * a type) is never returned as a header, so it does not count against
++ * kernir_max_entries: the <file> elements read_header returns do, counted
++ * at </file> once their has flags are known, as the caller counts headers.
++ * Each <file> is still allocated as it opens, so all of them, bare folders
++ * included, are held to twice kernir_max_entries (saturated), and 0016's
++ * names total grows with at most kernir_max_entries of them.
++ */
++#define kernir_xar_listed(file)						\
++	(((file)->mode & AE_IFMT) != AE_IFDIR ||			\
++	    (file)->has != (HAS_PATHNAME | HAS_TYPE))
+ 
+ struct xar {
+ 	uint64_t		 offset; /* Current position in the file. */
+@@ -347,6 +360,7 @@
+ 	uint64_t		 kernir_name_bytes;	/* Kernir patch 0015 */
+ 	uint64_t		 kernir_files;	/* Kernir patch 0016 */
+ 	uint64_t		 kernir_eas;	/* Kernir patch 0016 */
++	uint64_t		 kernir_listed;	/* Kernir patch 0019 */
+ #define OUTBUFF_SIZE	(1024 * 64)
+ 	unsigned char		*outbuff;
+ 
+@@ -761,9 +775,7 @@
+ 			xar->end_of_file = 1;
+ 			return (ARCHIVE_EOF);
+ 		}
+-		if ((file->mode & AE_IFMT) != AE_IFDIR)
+-			break;
+-		if (file->has != (HAS_PATHNAME | HAS_TYPE))
++		if (kernir_xar_listed(file))	/* Kernir patch 0019 */
+ 			break;
+ 		/*
+ 		 * If a file type is a directory and it does not have
+@@ -1876,8 +1888,9 @@
+ 	if (depth > KERNIR_XAR_DEPTH)
+ 		return (kernir_xar_refuse(a,
+ 		    "xar entry nests more than 200 directories deep"));
+-	/* Kernir patch 0016 */
+-	if (++xar->kernir_files > a->kernir_max_entries)
++	/* Kernir patch 0016, 0019: bare folders included, twice the limit. */
++	if (++xar->kernir_files > (a->kernir_max_entries > UINT64_MAX / 2 ?
++	    UINT64_MAX : 2 * a->kernir_max_entries))
+ 		return (kernir_xar_refuse(a,
+ 		    "xar archive has more entries than the entry limit"));
+ 	file = calloc(1, sizeof(*file));
+@@ -2448,6 +2461,11 @@
+ 		break;
+ 	case TOC_FILE:
+ 		if (strcmp(name, "file") == 0) {
++			/* Kernir patch 0019: a header read_header returns. */
++			if (kernir_xar_listed(xar->file) &&
++			    ++xar->kernir_listed > a->kernir_max_entries)
++				return (kernir_xar_refuse(a, "xar archive has "
++				    "more entries than the entry limit"));
+ 			if (xar->file->parent != NULL &&
+ 			    ((xar->file->mode & AE_IFMT) == AE_IFDIR))
+ 				xar->file->parent->subdirs++;
+--- a/include/kernir_names.h
++++ b/include/kernir_names.h
+@@ -48,9 +48,10 @@
+    header or TOC to, which they parse before the first header is returned. libarchive/archive_read.c,
+    archive_read_support_format_7zip.c, archive_read_support_format_xar.c.
+    - max_entries: most 7z files (numFiles), folders and unpack streams (4 times as many pack streams), and most
+-     xar <file> elements and <ea> elements; also most <ea> elements in one xar file: KERNIR_XAR_EAS_PER_FILE.
++     <ea> elements in a xar; listed xar <file> elements over it are refused, and any <file> over 2 × it (bounded
++     memory; patch 0019); also most <ea> elements in one xar file: KERNIR_XAR_EAS_PER_FILE.
+    - names_bytes, name_bytes_per_entry: the xar names may take max(names_bytes, name_bytes_per_entry × the
+-     <file> elements so far) bytes of UTF-8. A 7z names block may take 2 × names_bytes (UTF-16) plus 2 bytes per
++     <file> elements so far) bytes of UTF-8; the allowance stops growing at max_entries elements. A 7z names block may take 2 × names_bytes (UTF-16) plus 2 bytes per
+      entry, whatever numFiles claims: the block is allocated before any entry is parsed.
+    The defaults below are NestingLimits.standard's (maxEntries, maxTotalNameBytes, nameBytesPerEntry), which a
+    test checks. Set before archive_read_open; ARCHIVE_OK then. A call after it returns ARCHIVE_FATAL and also puts

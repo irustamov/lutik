@@ -1,0 +1,34 @@
+Kernir patch 0001: write_disk does not apply AppleDouble "._" files
+
+Upstream: libarchive 3.8.10, libarchive/archive_write_disk_posix.c (_archive_write_disk_header,
+inside the __APPLE__ && UF_COMPRESSED && HAVE_ZLIB_H block).
+
+On Apple platforms write_disk marks every non-empty "._XXX" entry TODO_APPLEDOUBLE. When the
+entry finishes, fixup_appledouble() checks the AppleDouble magic, applies the file to "XXX"
+with copyfile(COPYFILE_UNPACK) and unlinks "._XXX". Kernir lists "._" and "__MACOSX/" entries
+raw (zip:!mac-ext) and the ruling is that extraction writes them raw too, as ordinary files.
+
+Why a patch and not config.h: HAVE_COPYFILE_H also turns on the tar reader's mac-ext default
+(archive_read_support_format_tar.c), the read_disk metadata capture
+(archive_read_disk_entry_from_file.c) and the zip seekable default; undefining it would change
+those as well. This patch only stops setting TODO_APPLEDOUBLE; fixup_appledouble() stays
+compiled but is never reached. ARCHIVE_EXTRACT_MAC_METADATA (set_mac_metadata) is untouched.
+
+Apply from Sources/CLibArchive: patch -p1 < patches/0001-write-disk-no-appledouble-fixup.patch
+
+--- a/libarchive/archive_write_disk_posix.c
++++ b/libarchive/archive_write_disk_posix.c
+@@ -774,8 +774,11 @@
+ 		if (p[0] == '.' && p[1] == '_') {
+ 			/* Do not compress "._XXX" files. */
+ 			a->todo &= ~TODO_HFS_COMPRESSION;
+-			if (a->filesize > 0)
+-				a->todo |= TODO_APPLEDOUBLE;
++			/*
++			 * Kernir patch 0001 (patches/0001-write-disk-no-appledouble-fixup.patch):
++			 * "._XXX" files are extracted raw, like the listing shows them, never
++			 * applied to "XXX" and removed. TODO_APPLEDOUBLE is no longer set.
++			 */
+ 		}
+ 	}
+ #endif

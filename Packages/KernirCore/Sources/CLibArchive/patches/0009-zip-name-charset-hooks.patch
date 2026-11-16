@@ -1,0 +1,216 @@
+Kernir patch 0009: zip entry-name hooks (name-declared accessor, raw-name write mode)
+
+Upstream: libarchive 3.8.10, libarchive/archive_read_support_format_zip.c (struct zip, process_extra
+0x7075, zip_read_local_file_header), libarchive/archive_write.c (_archive_write_header),
+libarchive/archive_write_private.h (struct archive_write) and libarchive/archive_write_set_format_zip.c
+(archive_write_zip_header). Adds include/kernir_names.h (new file, listed in include/module.modulemap).
+
+Reader: kernir_read_zip_entry_name_declared() returns 1 when the current entry's name was declared
+Unicode, 0 when it is stored in an undeclared code page, -1 when the archive is not being read as
+zip (the active format's read_header is neither zip reader's). The per-entry value is set where
+zip_read_local_file_header() picks the name converter (1 iff general-purpose bit 11), and raised to
+1 in process_extra() where an Info-ZIP Unicode Path field (0x7075) replaces the name, that is only
+when the field's CRC matches the header name (or the ignorecrc32 option skips that check) and the
+UTF-8 copy succeeds. The central-directory pass may also apply a 0x7075 field, but the local header
+read that follows resets the value.
+
+Writer: kernir_write_zip_next_name_raw(a, utf8_flag) arms the next archive_write_header() call
+only: the entry's MBS pathname and symlink are stored verbatim (no hdrcharset conversion, no
+"Can't translate pathname" warning) and the UTF-8 flag (bit 11) is set iff utf8_flag != 0, in place
+of the is_all_ascii/hdrcharset rule. The request is kept in struct archive_write;
+_archive_write_header() takes it and clears it before anything else, so it is used up by the next
+header whether that header succeeds, fails in the zip writer, or returns early before the format
+runs (unfinished previous entry, "Can't add archive to itself", filter flush failure).
+archive_write_zip_header() reads only the taken value. ARCHIVE_FATAL (and an error message) when the
+handle is not a zip writer. Without the calls the reader and writer behave as upstream.
+
+Apply from Sources/CLibArchive: patch -p1 < patches/0009-zip-name-charset-hooks.patch
+
+--- a/libarchive/archive_read_support_format_zip.c
++++ b/libarchive/archive_read_support_format_zip.c
+@@ -76,6 +76,7 @@
+ #include "archive_read_private.h"
+ #include "archive_time_private.h"
+ #include "archive_ppmd8_private.h"
++#include "kernir_names.h"	/* Kernir patch 0009 */
+ 
+ 
+ 
+@@ -227,6 +228,9 @@
+ 	struct archive_string_conv *sconv_utf8;
+ 	int			init_default_conversion;
+ 	int			process_mac_extensions;
++	/* Kernir patch 0009: the current entry's name was declared
++	 * Unicode (bit 11, or a 0x7075 field was used). */
++	int			kernir_name_declared;
+ 
+ 	char			init_decryption;
+ 
+@@ -1153,7 +1157,8 @@
+ 				fprintf(stderr, "Failed to read the ZIP "
+ 				    "0x7075 extra field path.\n");
+ #endif
+-			}
++			} else
++				zip->kernir_name_declared = 1;
+ 			break;
+ 		}
+ 		case 0x7855:
+@@ -1319,6 +1324,7 @@
+ 		    "Truncated ZIP file header");
+ 		return (ARCHIVE_FATAL);
+ 	}
++	zip->kernir_name_declared = (zip_entry->zip_flags & ZIP_UTF8_NAME) != 0;
+ 	if (zip_entry->zip_flags & ZIP_UTF8_NAME) {
+ 		/* The filename is stored to be UTF-8. */
+ 		if (zip->sconv_utf8 == NULL) {
+@@ -4879,6 +4885,28 @@
+ 	if (r != ARCHIVE_OK)
+ 		free(zip);
+ 	return (r);
++}
++
++/*
++ * Kernir patch 0009: 1 when the current entry's name was declared Unicode
++ * (bit 11, or the reader used an Info-ZIP Unicode Path field), 0 when it is
++ * in an undeclared code page, -1 when the archive is not being read as zip.
++ */
++int
++kernir_read_zip_entry_name_declared(struct archive *_a)
++{
++	struct archive_read *a = (struct archive_read *)_a;
++	struct zip *zip;
++
++	if (_a == NULL || _a->magic != ARCHIVE_READ_MAGIC ||
++	    a->format == NULL ||
++	    (a->format->read_header !=
++	     archive_read_format_zip_streamable_read_header &&
++	     a->format->read_header !=
++	     archive_read_format_zip_seekable_read_header))
++		return (-1);
++	zip = (struct zip *)a->format->data;
++	return (zip->kernir_name_declared);
+ }
+ 
+ /*# vim:set noet:*/
+--- a/libarchive/archive_write.c
++++ b/libarchive/archive_write.c
+@@ -778,6 +778,13 @@
+ 	struct archive_write *a = (struct archive_write *)_a;
+ 	int ret, r2;
+ 
++	/* Kernir patch 0009: a raw-name request covers this header only,
++	 * whatever it returns. It runs before archive_check_magic on purpose:
++	 * this function is only reached through the archive_write vtable, and
++	 * consuming after the check would leak the request on a state-error return. */
++	a->kernir_zip_raw_name = a->kernir_zip_raw_request;
++	a->kernir_zip_raw_request = 0;
++
+ 	archive_check_magic(&a->archive, ARCHIVE_WRITE_MAGIC,
+ 	    ARCHIVE_STATE_DATA | ARCHIVE_STATE_HEADER, "archive_write_header");
+ 	archive_clear_error(&a->archive);
+--- a/libarchive/archive_write_private.h
++++ b/libarchive/archive_write_private.h
+@@ -80,6 +80,12 @@
+ 	int64_t		  skip_file_dev;
+ 	int64_t		  skip_file_ino;
+ 
++	/* Kernir patch 0009: zip raw-name request for the next
++	 * archive_write_header (0 off, 1 raw name, 2 raw name with the
++	 * UTF-8 flag), and the request that header took. */
++	int		  kernir_zip_raw_request;
++	int		  kernir_zip_raw_name;
++
+ 	/* Utility:  Pointer to a block of nulls. */
+ 	const unsigned char	*nulls;
+ 	size_t			 null_length;
+--- a/libarchive/archive_write_set_format_zip.c
++++ b/libarchive/archive_write_set_format_zip.c
+@@ -74,6 +74,7 @@
+ #include "archive_time_private.h"
+ #include "archive_write_private.h"
+ #include "archive_write_set_format_private.h"
++#include "kernir_names.h"		/* Kernir patch 0009 */
+ 
+ 
+ 
+@@ -784,6 +785,8 @@
+ 	int ret, ret2 = ARCHIVE_OK;
+ 	mode_t type;
+ 	int version_needed = 10;
++	/* Kernir patch 0009: taken by _archive_write_header. */
++	int raw_name = a->kernir_zip_raw_name;
+ #define MIN_VERSION_NEEDED(x) do { if (version_needed < x) { version_needed = x; } } while (0)
+ 
+ 	/* Sanity check. */
+@@ -877,7 +880,9 @@
+ 		return (ARCHIVE_FATAL);
+ 	}
+ 
+-	{
++	/* Kernir patch 0009: in raw-name mode the MBS pathname and symlink
++	 * are stored verbatim. */
++	if (raw_name == 0) {
+ 		const char *p;
+ 		size_t len;
+ 
+@@ -928,7 +933,11 @@
+ 	}
+ 
+ 	/* If filename isn't ASCII and we can use UTF-8, set the UTF-8 flag. */
+-	if (!is_all_ascii(archive_entry_pathname(zip->entry))) {
++	if (raw_name != 0) {
++		/* Kernir patch 0009: the caller's flag, verbatim. */
++		if (raw_name == 2)
++			zip->entry_flags |= ZIP_ENTRY_FLAG_UTF8_NAME;
++	} else if (!is_all_ascii(archive_entry_pathname(zip->entry))) {
+ 		if (zip->opt_sconv != NULL) {
+ 			if (strcmp(archive_string_conversion_charset_name(
+ 					zip->opt_sconv), "UTF-8") == 0)
+@@ -2527,4 +2536,25 @@
+ 		return (0);
+ 	archive_hmac_sha1_cleanup(&hctx);
+ 	return (1);
++}
++
++/*
++ * Kernir patch 0009: the next archive_write_header stores the entry's MBS
++ * pathname and symlink verbatim (no conversion, no "Can't translate"
++ * warning) and sets the UTF-8 flag iff utf8_flag != 0.
++ */
++int
++kernir_write_zip_next_name_raw(struct archive *_a, int utf8_flag)
++{
++	struct archive_write *a = (struct archive_write *)_a;
++
++	if (_a == NULL || _a->magic != ARCHIVE_WRITE_MAGIC ||
++	    a->format_write_header != archive_write_zip_header) {
++		if (_a != NULL)
++			archive_set_error(_a, ARCHIVE_ERRNO_MISC,
++			    "Raw entry names need a zip writer");
++		return (ARCHIVE_FATAL);
++	}
++	a->kernir_zip_raw_request = utf8_flag ? 2 : 1;
++	return (ARCHIVE_OK);
+ }
+--- /dev/null
++++ b/include/kernir_names.h
+@@ -0,0 +1,18 @@
++/* Kernir patch 0009 (patches/0009-zip-name-charset-hooks.patch): zip entry-name hooks.
++ * Implemented in libarchive/archive_read_support_format_zip.c and archive_write_set_format_zip.c. */
++#ifndef KERNIR_NAMES_H
++#define KERNIR_NAMES_H
++
++struct archive;
++
++/* 1: the current zip entry's name was declared Unicode (bit 11, or an Info-ZIP Unicode Path field 0x7075 was used).
++   0: stored in an undeclared code page. -1: the archive is not being read as zip. */
++int kernir_read_zip_entry_name_declared(struct archive *a);
++
++/* For the next archive_write_header only (zip writer): write the entry's MBS pathname and symlink bytes
++   verbatim (no charset conversion, no "Can't translate" warning) and set bit 11 iff utf8_flag != 0.
++   Returns ARCHIVE_OK, or ARCHIVE_FATAL if the writer is not zip.
++   The flag resets at the start of every archive_write_header, whether that header succeeds or fails. */
++int kernir_write_zip_next_name_raw(struct archive *a, int utf8_flag);
++
++#endif

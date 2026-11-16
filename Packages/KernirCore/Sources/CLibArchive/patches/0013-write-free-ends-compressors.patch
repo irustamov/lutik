@@ -1,0 +1,176 @@
+Kernir patch 0013: freeing a write handle without close ends the gzip, xz and zip compressors
+
+Upstream: libarchive 3.8.10, libarchive/archive_write_add_filter_gzip.c (free_data),
+libarchive/archive_write_add_filter_xz.c (free_data) and libarchive/archive_write_set_format_zip.c (struct zip,
+archive_write_zip_header, archive_write_zip_finish_entry, archive_write_zip_free). Applies on top of 0012.
+
+archive_write_free skips close on a handle in state FATAL, which is how Kernir frees an unfinished write
+(archive_write_fail first: close would pad the open entry with zeros up to its declared size, Int64.max bytes
+for a crafted header, and 7z pads into its temporary file where no write error can stop it). Upstream ends
+the gzip filter's deflate stream, the xz filter's lzma stream and the zip writer's per-entry deflate, bzip2,
+lzma/xz or zstd stream only in close, so every cancelled or failed save kept that state: 256 KiB for gzip and
+zip deflate, 93 MiB for xz at the default level, 673 MiB at level 9. The bzip2 filter and the 7zip writer
+already end theirs in free.
+
+The gzip and xz filters' free_data now call deflateEnd and lzma_end: both are no-ops on a stream that close
+ended or open never started (the filter data is calloc'd). The zip writer records whether the entry's
+compressor is live (set when write_header started it, cleared when finish_entry ended it) and ends a live one
+in free and at the start of the next write_header, while entry_compression still names it. finish_entry's
+error paths that end the stream themselves leave the flag set; their end calls are no-ops when repeated, and
+the zstd context is set to NULL once freed. Successful archives are byte-identical.
+
+Apply from Sources/CLibArchive: patch -p1 < patches/0013-write-free-ends-compressors.patch
+
+--- a/libarchive/archive_write_add_filter_gzip.c
++++ b/libarchive/archive_write_add_filter_gzip.c
+@@ -429,6 +429,11 @@
+ free_data(struct gzip *gzip)
+ {
+ 	if (gzip != NULL) {
++		/* Kernir patch 0013: a handle freed without close (state
++		 * FATAL, e.g. after archive_write_fail) never reached the
++		 * deflateEnd in close. deflateEnd is a no-op on a stream that
++		 * close ended or open never started (calloc'd). */
++		deflateEnd(&(gzip->stream));
+ 		free(gzip->compressed);
+ 		free(gzip->original_filename);
+ 		free(gzip);
+--- a/libarchive/archive_write_add_filter_xz.c
++++ b/libarchive/archive_write_add_filter_xz.c
+@@ -539,6 +539,11 @@
+ free_data(struct xz *xz)
+ {
+ 	if (xz != NULL) {
++		/* Kernir patch 0013: a handle freed without close (state
++		 * FATAL, e.g. after archive_write_fail) never reached the
++		 * lzma_end in close. lzma_end is a no-op on a stream that
++		 * close ended or open never started (calloc'd). */
++		lzma_end(&(xz->stream));
+ 		free(xz->compressed);
+ 		free(xz);
+ 	}
+--- a/libarchive/archive_write_set_format_zip.c
++++ b/libarchive/archive_write_set_format_zip.c
+@@ -227,6 +227,13 @@
+ 	 * record. Raw bytes, at most 0xffff each. */
+ 	struct archive_string kernir_entry_comment;
+ 	struct archive_string kernir_archive_comment;
++
++	/* Kernir patch 0013: set once write_header started the entry's
++	 * compressor (any entry_compression), cleared once finish_entry
++	 * ended it. kernir_end_stream ends a live one: before the next
++	 * header reuses the union, and in free when the handle is freed
++	 * without close (state FATAL, e.g. after archive_write_fail). */
++	char kernir_stream_live;
+ };
+ 
+ /* Don't call this min or MIN, since those are already defined
+@@ -238,6 +245,7 @@
+ static int archive_write_zip_close(struct archive_write *);
+ static int archive_write_zip_free(struct archive_write *);
+ static int archive_write_zip_finish_entry(struct archive_write *);
++static void kernir_end_stream(struct zip *);	/* Kernir patch 0013 */
+ static int archive_write_zip_header(struct archive_write *,
+ 	      struct archive_entry *);
+ static int archive_write_zip_options(struct archive_write *,
+@@ -808,6 +816,11 @@
+ 		archive_string_empty(&a->kernir_zip_comment);
+ 	}
+ 
++	/* Kernir patch 0013: a previous entry's compressor that
++	 * finish_entry left live (ARCHIVE_FAILED returns) is ended while
++	 * entry_compression still names it. */
++	kernir_end_stream(zip);
++
+ 	/* Sanity check. */
+ 	if (archive_entry_pathname(entry) == NULL
+ #if defined(_WIN32) && !defined(__CYGWIN__)
+@@ -1523,6 +1536,7 @@
+ 	default:
+ 		break;
+ 	}
++	zip->kernir_stream_live = 1;	/* Kernir patch 0013 */
+ 
+ 	return (ret2);
+ }
+@@ -2002,6 +2016,7 @@
+ 			if (ret != ARCHIVE_OK)
+ 			{
+ 				ZSTD_freeCStream(zip->stream.zstd.context);
++				zip->stream.zstd.context = NULL; /* Kernir 0013 */
+ 				return (ret);
+ 			}
+ 			zip->entry_compressed_written += remainder;
+@@ -2013,6 +2028,7 @@
+ 			zip->stream.zstd.out.pos = 0;
+ 		} while (finishing);
+ 		ZSTD_freeCStream(zip->stream.zstd.context);
++		zip->stream.zstd.context = NULL; /* Kernir patch 0013 */
+ 		break;
+ #endif
+ #ifdef HAVE_LZMA_H
+@@ -2065,6 +2081,7 @@
+ 	default:
+ 		break;
+ 	}
++	zip->kernir_stream_live = 0;	/* Kernir patch 0013 */
+ 	if (zip->hctx_valid) {
+ 		uint8_t hmac[20];
+ 		size_t hmac_len = 20;
+@@ -2295,6 +2312,48 @@
+ 		zip->written_bytes += zip->kernir_archive_comment.length;
+ 	}
+ 	return (ARCHIVE_OK);
++}
++
++/*
++ * Kernir patch 0013: ends the entry's compressor if write_header started
++ * it and finish_entry did not end it (free without close, or a
++ * finish_entry that returned early). The error paths of finish_entry
++ * that end it themselves leave the flag set: deflateEnd,
++ * BZ2_bzCompressEnd and lzma_end are no-ops on an ended stream, and the
++ * zstd context is NULL once freed.
++ */
++static void
++kernir_end_stream(struct zip *zip)
++{
++	if (!zip->kernir_stream_live)
++		return;
++	zip->kernir_stream_live = 0;
++	switch (zip->entry_compression) {
++#ifdef HAVE_ZLIB_H
++	case COMPRESSION_DEFLATE:
++		deflateEnd(&zip->stream.deflate);
++		break;
++#endif
++#ifdef HAVE_BZLIB_H
++	case COMPRESSION_BZIP2:
++		BZ2_bzCompressEnd(&zip->stream.bzip2);
++		break;
++#endif
++#if defined(HAVE_ZSTD_H) && HAVE_ZSTD_compressStream
++	case COMPRESSION_ZSTD:
++		ZSTD_freeCStream(zip->stream.zstd.context);
++		zip->stream.zstd.context = NULL;
++		break;
++#endif
++#ifdef HAVE_LZMA_H
++	case COMPRESSION_LZMA:
++	case COMPRESSION_XZ:
++		lzma_end(&zip->stream.lzma.context);
++		break;
++#endif
++	default:
++		break;
++	}
+ }
+ 
+ static int
+@@ -2309,6 +2368,7 @@
+ 		free(segment->buff);
+ 		free(segment);
+ 	}
++	kernir_end_stream(zip);	/* Kernir patch 0013 */
+ 	free(zip->buf);
+ 	archive_entry_free(zip->entry);
+ 	/* Kernir patch 0012 */

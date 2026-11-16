@@ -1,0 +1,1 @@
+First release. Look inside ZIP, 7z, RAR and other archives, preview files, add, remove and rename them, extract what you need, and save the archive back. Free and open source.

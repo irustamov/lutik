@@ -1,0 +1,730 @@
+Kernir patch 0004: the 7zip reader decrypts 7zAES (AES-256 + SHA-256) folders and encrypted headers
+
+Upstream: libarchive 3.8.10, libarchive/archive_read_support_format_7zip.c (setup_decode_folder,
+seek_pack, extract_pack_stream, get_uncompressed_data, read_consume, ppmd_read, read_Folder,
+read_data, cleanup). Needs include/kernir_7zaes.h and libarchive/kernir_7zaes.c (CommonCrypto).
+
+Upstream stops at "The file content is encrypted, but currently not supported". Here each 7zAES
+coder is a decryption stage on the packed stream it reads: setup_decode_folder() records the key
+(from the first passphrase only, through a per-reader cache keyed on cost, salt and passphrase)
+and IV per packed stream, then works on a copy of the folder without the AES coders, so
+[AES, LZMA2] reads as [LZMA2] and the eight-coder BCJ2 form as the usual four-coder one
+(read_Folder now accepts 8 coders and keeps the packed-stream map). seek_pack() starts
+AES-256-CBC on an encrypted stream; extract_pack_stream() and ppmd_read() read it through a
+decrypted buffer of 64 KiB plus one block, and the COPY fast path that hands out read-ahead
+pointers is off for an encrypted folder. Messages: no passphrase gives "Passphrase required for
+this entry" (ARCHIVE_FAILED, ARCHIVE_FATAL for the header); bad coder properties
+"... 7zAES coder properties"; other crypto coders "Crypto codec not supported yet". A CRC
+mismatch in an encrypted folder (a wrong passphrase on stored data) is ARCHIVE_FAILED, not a
+warning. Keys are wiped with memset_s.
+
+Apply from Sources/CLibArchive: patch -p1 < patches/0004-7zip-aes-read.patch
+
+--- a/libarchive/archive_read_support_format_7zip.c
++++ b/libarchive/archive_read_support_format_7zip.c
+@@ -23,6 +23,8 @@
+  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+  */
+ 
++/* Kernir patch 0004: memset_s (C11 Annex K) wipes 7zAES keys. */
++#define __STDC_WANT_LIB_EXT1__ 1
+ #include "archive_platform.h"
+ 
+ #ifdef HAVE_ERRNO_H
+@@ -59,6 +61,7 @@
+ #include "archive_read_private.h"
+ #include "archive_time_private.h"
+ #include "archive_endian.h"
++#include "kernir_7zaes.h" /* Kernir patch 0004 */
+ 
+ 
+ 
+@@ -181,11 +184,15 @@
+ 		unsigned char	*properties;
+ 	} *coders;
+ 	size_t			 numBindPairs;
+-	struct {
++	struct _7z_bind_pair { /* Kernir patch 0004: tagged */
+ 		size_t		 inIndex;
+ 		size_t		 outIndex;
+ 	} *bindPairs;
+ 	size_t			 numPackedStreams;
++	/* Kernir patch 0004: folder in-stream index of each packed stream
++	 * (kept when there are at most KERNIR_7Z_MAX_PACKED of them). */
++#define KERNIR_7Z_MAX_PACKED	4
++	size_t			 packedStreams[KERNIR_7Z_MAX_PACKED];
+ 	size_t			 numInStreams;
+ 	size_t			 numOutStreams;
+ 	int64_t			*unPackSize;
+@@ -391,6 +398,47 @@
+ 
+ 	/* Custom value that is non-zero if this archive contains encrypted entries. */
+ 	int			 has_encrypted_entries;
++
++	/*
++	 * Kernir patch 0004: 7zAES. Each AES coder is a decryption stage on
++	 * one packed stream; setup_decode_folder() drops it from the coder
++	 * chain (aes_reduced) and records its key here, per packed stream of
++	 * the current folder.
++	 */
++	struct kernir_7z_aes_stream {
++		int		 encrypted;
++		uint8_t		 key[KERNIR_7ZAES_KEY_SIZE];
++		uint8_t		 iv[KERNIR_7ZAES_BLOCK_SIZE];
++		int64_t		 plain_size;	/* AES coder output size */
++	} aes_streams[KERNIR_7Z_MAX_PACKED];
++	int			 aes_folder;	/* current folder has AES streams */
++	size_t			 aes_pack_base;	/* its first packed stream */
++	struct _7z_folder	 aes_reduced;
++#define KERNIR_7Z_AES_MAX_CODERS	8
++#define KERNIR_7Z_AES_MAX_STREAMS	16
++	struct _7z_coder	 aes_coders[KERNIR_7Z_AES_MAX_CODERS];
++	struct _7z_bind_pair	 aes_bind_pairs[KERNIR_7Z_AES_MAX_STREAMS];
++	int64_t			 aes_unpack_sizes[KERNIR_7Z_AES_MAX_STREAMS];
++	/* The packed stream being read, when it is encrypted. */
++	int			 aes_active;
++	struct kernir_7zaes_cbc	 aes_cbc;
++	int64_t			 aes_raw_remaining; /* ciphertext left in the file */
++	/* Decrypted bytes [aes_buf_pos, aes_buf_len) not yet consumed. */
++#define KERNIR_7Z_AES_FILL	(63 * 1024)
++#define KERNIR_7Z_AES_BUF_SIZE	(64 * 1024 + KERNIR_7ZAES_BLOCK_SIZE)
++	unsigned char		*aes_buf;
++	size_t			 aes_buf_pos;
++	size_t			 aes_buf_len;
++	/* Derived keys, keyed on (cycles_power, salt, passphrase). */
++#define KERNIR_7Z_AES_KEYS	4
++	struct kernir_7z_aes_key {
++		char		*passphrase;
++		unsigned	 cycles_power;
++		size_t		 salt_size;
++		uint8_t		 salt[16];
++		uint8_t		 key[KERNIR_7ZAES_KEY_SIZE];
++	} aes_keys[KERNIR_7Z_AES_KEYS];
++	unsigned		 aes_keys_next;
+ };
+ 
+ /* Maximum entry size. This limitation prevents reading intentional
+@@ -477,6 +525,15 @@
+ static void	delta_Decode(struct _7zip *, uint8_t *, size_t);
+ static size_t	bcj_lookahead(int64_t);
+ static int64_t	seek_compat(struct archive_read *, int64_t, int, int);
++/* Kernir patch 0004 */
++static int	kernir_aes_setup_folder(struct archive_read *,
++		    struct _7z_folder **, int);
++static int	kernir_aes_stream_start(struct archive_read *);
++static void	kernir_aes_stream_stop(struct _7zip *);
++static void	kernir_aes_folder_reset(struct _7zip *);
++static void	kernir_aes_cleanup(struct _7zip *);
++static const void *kernir_aes_read_ahead(struct archive_read *, ssize_t *);
++static const uint8_t *kernir_aes_peek(struct archive_read *, size_t);
+ 
+ 
+ int
+@@ -1168,7 +1225,9 @@
+ 			    zip->entry_crc32,
+ 			    (unsigned long)zip->si.ss.digests[
+ 			    		zip->entry->ssIndex]);
+-			ret = ARCHIVE_WARN;
++			/* Kernir patch 0004: in an encrypted folder this is
++			 * what a wrong passphrase looks like; never a warning. */
++			ret = zip->aes_folder ? ARCHIVE_FAILED : ARCHIVE_WARN;
+ 		}
+ 	}
+ 
+@@ -1220,6 +1279,7 @@
+ 	free(zip->sub_stream_buff[1]);
+ 	free(zip->sub_stream_buff[2]);
+ 	free(zip->tmp_stream_buff);
++	kernir_aes_cleanup(zip); /* Kernir patch 0004 */
+ 	free(zip);
+ 	a->format->data = NULL;
+ 	return (ARCHIVE_OK);
+@@ -1229,6 +1289,23 @@
+ read_consume(struct archive_read *a)
+ {
+ 	struct _7zip *zip = a->format->data;
++
++	/* Kernir patch 0004: an encrypted stream's ciphertext was consumed
++	 * when it was decrypted; this consumes decrypted bytes. */
++	if (zip->aes_active && zip->pack_stream_bytes_unconsumed) {
++		if ((uint64_t)zip->pack_stream_bytes_unconsumed >
++		    zip->aes_buf_len - zip->aes_buf_pos) {
++			/* More than was handed out: drop it all, fail. */
++			zip->aes_buf_pos = zip->aes_buf_len;
++			zip->pack_stream_bytes_unconsumed = 0;
++			archive_set_error(&a->archive, ARCHIVE_ERRNO_MISC,
++			    "Damaged 7-Zip archive");
++			return (ARCHIVE_FATAL);
++		}
++		zip->aes_buf_pos += (size_t)zip->pack_stream_bytes_unconsumed;
++		zip->pack_stream_bytes_unconsumed = 0;
++		return (ARCHIVE_OK);
++	}
+ 
+ 	if (zip->pack_stream_bytes_unconsumed) {
+ 		int64_t r;
+@@ -1330,8 +1407,10 @@
+ 			zip->ppstream.overconsumed = 1;
+ 			return (0);
+ 		}
+-		const uint8_t *data = __archive_read_ahead(a,
+-		    zip->ppstream.stream_in + 1, NULL);
++		/* Kernir patch 0004: decrypted bytes when encrypted. */
++		const uint8_t *data = zip->aes_active ?
++		    kernir_aes_peek(a, zip->ppstream.stream_in) :
++		    __archive_read_ahead(a, zip->ppstream.stream_in + 1, NULL);
+ 		if (data == NULL) {
+ 			archive_set_error(&a->archive,
+ 			    ARCHIVE_ERRNO_FILE_FORMAT,
+@@ -2387,7 +2466,8 @@
+ 	 */
+ 	if (parse_7zip_size(a, &(f->numCoders)) < 0)
+ 		return (-1);
+-	if (f->numCoders > 4)
++	/* Kernir patch 0004: 8, not 4, for BCJ2 with four 7zAES coders. */
++	if (f->numCoders > 8)
+ 		/* Too many coders. */
+ 		return (-1);
+ 
+@@ -2492,11 +2572,15 @@
+ 		}
+ 		if (i == numInStreamsTotal)
+ 			return (-1);
++		f->packedStreams[0] = i; /* Kernir patch 0004 */
+ 	} else {
+ 		for (i = 0; i < f->numPackedStreams; i++) {
+ 			size_t packedStream;
+ 			if (parse_7zip_size(a, &packedStream) < 0)
+ 				return (-1);
++			/* Kernir patch 0004 */
++			if (i < KERNIR_7Z_MAX_PACKED)
++				f->packedStreams[i] = packedStream;
+ 		}
+ 	}
+ 	f->numInStreams = numInStreamsTotal;
+@@ -3568,6 +3652,7 @@
+ 	zip->uncompressed_buffer_bytes_remaining = 0;
+ 	zip->pack_stream_bytes_unconsumed = 0;
+ 	zip->header_is_being_read = 0;
++	kernir_aes_folder_reset(zip); /* Kernir patch 0004 */
+ 
+ 	return (ARCHIVE_OK);
+ }
+@@ -3579,7 +3664,9 @@
+ 	struct _7zip *zip = a->format->data;
+ 	ssize_t bytes_avail;
+ 
+-	if (zip->codec == _7Z_COPY && zip->codec2 == -1) {
++	/* Kernir patch 0004: never hand out ciphertext; an encrypted folder
++	 * goes through the uncompressed buffer. */
++	if (zip->codec == _7Z_COPY && zip->codec2 == -1 && !zip->aes_folder) {
+ 		/* Copy mode. */
+ 
+ 		*buff = __archive_read_ahead(a, minimum, &bytes_avail);
+@@ -3643,7 +3730,8 @@
+ 	ssize_t bytes_avail;
+ 	int r;
+ 
+-	if (zip->codec == _7Z_COPY && zip->codec2 == -1) {
++	/* Kernir patch 0004: see get_uncompressed_data(). */
++	if (zip->codec == _7Z_COPY && zip->codec2 == -1 && !zip->aes_folder) {
+ 		if (minimum == 0)
+ 			minimum = 1;
+ 		if (__archive_read_ahead(a, minimum, &bytes_avail) == NULL
+@@ -3730,7 +3818,10 @@
+ 		 * available bytes; asking for more than that forces the
+ 		 * decompressor to combine reads by copying data.
+ 		 */
+-		buff_in = __archive_read_ahead(a, 1, &bytes_avail);
++		/* Kernir patch 0004: an encrypted stream is read decrypted. */
++		buff_in = zip->aes_active ?
++		    kernir_aes_read_ahead(a, &bytes_avail) :
++		    __archive_read_ahead(a, 1, &bytes_avail);
+ 		if (bytes_avail <= 0) {
+ 			archive_set_error(&a->archive,
+ 			    ARCHIVE_ERRNO_FILE_FORMAT,
+@@ -3820,6 +3911,9 @@
+ 		}
+ 		zip->stream_offset = pack_offset;
+ 	}
++	/* Kernir patch 0004: start (or stop) decrypting at this stream. */
++	if (kernir_aes_stream_start(a) != ARCHIVE_OK)
++		return (ARCHIVE_FATAL);
+ 	zip->pack_stream_index++;
+ 	zip->pack_stream_remaining--;
+ 	return (ARCHIVE_OK);
+@@ -3961,6 +4055,14 @@
+ 		free(zip->sub_stream_buff[i]);
+ 		zip->sub_stream_buff[i] = NULL;
+ 	}
++
++	/*
++	 * Kernir patch 0004: 7zAES coders become a decryption stage on their
++	 * packed streams; from here on `folder' is the chain without them.
++	 */
++	r = kernir_aes_setup_folder(a, &folder, header);
++	if (r != ARCHIVE_OK)
++		return (r);
+ 
+ 	/*
+ 	 * Check coder types before modifying any stream-reader state, so that
+@@ -3979,10 +4081,11 @@
+ 					archive_entry_set_is_data_encrypted(a->entry, 1);
+ 					archive_entry_set_is_metadata_encrypted(a->entry, 1);
+ 				}
++				/* Kernir patch 0004: 7zAES is handled above. */
+ 				archive_set_error(&(a->archive),
+-					ARCHIVE_ERRNO_MISC,
+-					"The %s is encrypted, "
+-					"but currently not supported", cname);
++				    ARCHIVE_ERRNO_MISC,
++				    "Crypto codec not supported yet (ID: 0x%jX)",
++				    (uintmax_t)folder->coders[i].codec);
+ 				return (header ? ARCHIVE_FATAL : ARCHIVE_FAILED);
+ 			}
+ 			case _7Z_X86_BCJ2: {
+@@ -4105,6 +4208,13 @@
+ 		/* Skip the main stream at this time. */
+ 		if ((r = seek_pack(a)) < 0)
+ 			return (r);
++		/* Kernir patch 0004: skip an encrypted one as ciphertext. */
++		if (zip->aes_active) {
++			int64_t raw = zip->aes_raw_remaining;
++
++			kernir_aes_stream_stop(zip);
++			zip->pack_stream_bytes_unconsumed = raw;
++		} else
+ 		zip->pack_stream_bytes_unconsumed =
+ 		    zip->pack_stream_inbytes_remaining;
+ 		if ((r = read_consume(a)) < 0)
+@@ -4213,7 +4323,430 @@
+ 	return (ARCHIVE_OK);
+ }
+ 
++/*
++ * Kernir patch 0004: 7zAES (06F10701) read support.
++ *
++ * An AES coder takes one packed stream and feeds one other coder. Rather
++ * than a coder of its own, it becomes a decryption stage on that packed
++ * stream: kernir_aes_setup_folder() records the key and IV per packed
++ * stream and drops the coder from a copy of the folder, so the rest of
++ * setup_decode_folder() sees [LZMA2], [BCJ, LZMA2] or the usual four-coder
++ * BCJ2 chain. seek_pack() starts AES-256-CBC on each encrypted stream, and
++ * extract_pack_stream()/ppmd_read() read it through a decrypted buffer of
++ * at most 64 KiB plus one block; ciphertext never reaches a caller.
++ */
++
++static void
++kernir_aes_wipe(void *p, size_t n)
++{
++	if (p != NULL && n > 0)
++		memset_s(p, n, 0, n);
++}
++
++static void
++kernir_aes_stream_stop(struct _7zip *zip)
++{
++	if (zip->aes_active) {
++		/* Unconsumed bytes were decrypted ones of this stream. */
++		zip->pack_stream_bytes_unconsumed = 0;
++		zip->aes_active = 0;
++	}
++	kernir_7zaes_cbc_release(&zip->aes_cbc);
++	zip->aes_raw_remaining = 0;
++	if (zip->aes_buf != NULL)
++		kernir_aes_wipe(zip->aes_buf, zip->aes_buf_len);
++	zip->aes_buf_pos = zip->aes_buf_len = 0;
++}
++
++static void
++kernir_aes_folder_reset(struct _7zip *zip)
++{
++	kernir_aes_stream_stop(zip);
++	kernir_aes_wipe(zip->aes_streams, sizeof(zip->aes_streams));
++	zip->aes_folder = 0;
++	zip->aes_pack_base = 0;
++}
++
++static void
++kernir_aes_cleanup(struct _7zip *zip)
++{
++	unsigned i;
++
++	kernir_aes_folder_reset(zip);
++	if (zip->aes_buf != NULL) {
++		kernir_aes_wipe(zip->aes_buf, KERNIR_7Z_AES_BUF_SIZE);
++		free(zip->aes_buf);
++		zip->aes_buf = NULL;
++	}
++	for (i = 0; i < KERNIR_7Z_AES_KEYS; i++) {
++		struct kernir_7z_aes_key *k = &zip->aes_keys[i];
++
++		if (k->passphrase != NULL) {
++			kernir_aes_wipe(k->passphrase, strlen(k->passphrase));
++			free(k->passphrase);
++		}
++		kernir_aes_wipe(k, sizeof(*k));
++	}
++}
++
++/*
++ * The key for (params, passphrase): one SHA-256 chain of 2^cycles_power
++ * rounds per distinct salt and cost, not one per folder. 0 or -1.
++ */
+ static int
++kernir_aes_get_key(struct _7zip *zip, const struct kernir_7zaes_params *p,
++    const char *passphrase, uint8_t key[KERNIR_7ZAES_KEY_SIZE])
++{
++	struct kernir_7z_aes_key *k;
++	unsigned i;
++
++	for (i = 0; i < KERNIR_7Z_AES_KEYS; i++) {
++		k = &zip->aes_keys[i];
++		if (k->passphrase != NULL &&
++		    k->cycles_power == p->cycles_power &&
++		    k->salt_size == p->salt_size &&
++		    memcmp(k->salt, p->salt, p->salt_size) == 0 &&
++		    strcmp(k->passphrase, passphrase) == 0) {
++			memcpy(key, k->key, KERNIR_7ZAES_KEY_SIZE);
++			return (0);
++		}
++	}
++	if (kernir_7zaes_derive_key(p, passphrase, key) != 0)
++		return (-1);
++
++	k = &zip->aes_keys[zip->aes_keys_next++ % KERNIR_7Z_AES_KEYS];
++	if (k->passphrase != NULL) {
++		kernir_aes_wipe(k->passphrase, strlen(k->passphrase));
++		free(k->passphrase);
++	}
++	kernir_aes_wipe(k, sizeof(*k));
++	k->passphrase = strdup(passphrase);
++	if (k->passphrase == NULL)
++		return (0);	/* Not cached; the key is still good. */
++	k->cycles_power = p->cycles_power;
++	k->salt_size = p->salt_size;
++	memcpy(k->salt, p->salt, p->salt_size);
++	memcpy(k->key, key, KERNIR_7ZAES_KEY_SIZE);
++	return (0);
++}
++
++static int
++kernir_aes_form_error(struct archive_read *a, int header)
++{
++	archive_set_error(&a->archive, ARCHIVE_ERRNO_MISC,
++	    "Unsupported form of 7zAES streams");
++	return (header ? ARCHIVE_FATAL : ARCHIVE_FAILED);
++}
++
++/*
++ * If *pfolder has 7zAES coders, record a key per encrypted packed stream
++ * and point *pfolder at a copy of the folder without those coders.
++ * Leaves the stream-reader state alone (and no key behind) on failure.
++ */
++static int
++kernir_aes_setup_folder(struct archive_read *a, struct _7z_folder **pfolder,
++    int header)
++{
++	struct _7zip *zip = a->format->data;
++	struct _7z_folder *f = *pfolder, *rf = &zip->aes_reduced;
++	struct kernir_7zaes_params params;
++	const char *passphrase = NULL;
++	size_t i, n_aes = 0;
++	const int fail = header ? ARCHIVE_FATAL : ARCHIVE_FAILED;
++	int r;
++
++	kernir_aes_folder_reset(zip);
++	for (i = 0; i < f->numCoders; i++)
++		if (f->coders[i].codec == _7Z_CRYPTO_AES_256_SHA_256)
++			n_aes++;
++	if (n_aes == 0)
++		return (ARCHIVE_OK);
++
++	zip->has_encrypted_entries = 1;
++	if (!header && a->entry)
++		archive_entry_set_is_data_encrypted(a->entry, 1);
++
++	if (f->numCoders > KERNIR_7Z_AES_MAX_CODERS ||
++	    f->numInStreams > KERNIR_7Z_AES_MAX_STREAMS ||
++	    f->numOutStreams > KERNIR_7Z_AES_MAX_STREAMS ||
++	    f->numBindPairs > KERNIR_7Z_AES_MAX_STREAMS ||
++	    f->numPackedStreams == 0 ||
++	    f->numPackedStreams > KERNIR_7Z_MAX_PACKED ||
++	    f->packIndex > zip->si.pi.numPackStreams ||
++	    f->numPackedStreams > zip->si.pi.numPackStreams - f->packIndex)
++		return (kernir_aes_form_error(a, header));
++
++	/* Work on a copy; properties stay owned by the original. */
++	*rf = *f;
++	rf->coders = zip->aes_coders;
++	rf->bindPairs = zip->aes_bind_pairs;
++	rf->unPackSize = zip->aes_unpack_sizes;
++	memcpy(rf->coders, f->coders, f->numCoders * sizeof(*f->coders));
++	if (f->numBindPairs)
++		memcpy(rf->bindPairs, f->bindPairs,
++		    f->numBindPairs * sizeof(*f->bindPairs));
++	memcpy(rf->unPackSize, f->unPackSize,
++	    f->numOutStreams * sizeof(*f->unPackSize));
++	for (i = 0; i < rf->numBindPairs; i++)
++		if (rf->bindPairs[i].inIndex >= rf->numInStreams ||
++		    rf->bindPairs[i].outIndex >= rf->numOutStreams)
++			return (kernir_aes_form_error(a, header));
++	for (i = 0; i < rf->numPackedStreams; i++)
++		if (rf->packedStreams[i] >= rf->numInStreams)
++			return (kernir_aes_form_error(a, header));
++
++	memset(&params, 0, sizeof(params));
++	for (;;) {
++		struct kernir_7z_aes_stream *st;
++		const struct _7z_coder *c;
++		size_t c_idx, in = 0, out = 0, k, bp, x;
++		int pr;
++
++		for (c_idx = 0; c_idx < rf->numCoders; c_idx++) {
++			if (rf->coders[c_idx].codec ==
++			    _7Z_CRYPTO_AES_256_SHA_256)
++				break;
++			in += rf->coders[c_idx].numInStreams;
++			out += rf->coders[c_idx].numOutStreams;
++		}
++		if (c_idx == rf->numCoders)
++			break;
++		c = &rf->coders[c_idx];
++		if (c->numInStreams != 1 || c->numOutStreams != 1)
++			goto form_failed;
++		/* Its input must be a packed stream ... */
++		for (k = 0; k < rf->numPackedStreams; k++)
++			if (rf->packedStreams[k] == in)
++				break;
++		if (k == rf->numPackedStreams || zip->aes_streams[k].encrypted)
++			goto form_failed;
++		/* ... and its output another coder's input (or the folder's),
++		 * through exactly one bind pair. */
++		bp = rf->numBindPairs;
++		for (i = 0; i < rf->numBindPairs; i++) {
++			if (rf->bindPairs[i].inIndex == in)
++				goto form_failed;
++			if (rf->bindPairs[i].outIndex != out)
++				continue;
++			if (bp != rf->numBindPairs)
++				goto form_failed;
++			bp = i;
++		}
++		if (bp == rf->numBindPairs && rf->numCoders != 1)
++			goto form_failed;
++
++		r = fail;
++		pr = kernir_7zaes_parse_props(c->properties,
++		    c->propertiesSize, &params);
++		if (pr == -2) {
++			archive_set_error(&a->archive, ARCHIVE_ERRNO_MISC,
++			    "Unsupported 7zAES coder properties "
++			    "(key cost 2^%u)", params.cycles_power);
++			goto failed;
++		} else if (pr != 0) {
++			archive_set_error(&a->archive, ARCHIVE_ERRNO_MISC,
++			    "Malformed 7zAES coder properties");
++			goto failed;
++		}
++		if (rf->unPackSize[out] < 0 || rf->unPackSize[out] >
++		    zip->si.pi.sizes[rf->packIndex + k]) {
++			archive_set_error(&a->archive, ARCHIVE_ERRNO_MISC,
++			    "Damaged 7-Zip archive");
++			goto failed;
++		}
++		/* The first passphrase only: never a passphrase loop. */
++		if (passphrase == NULL) {
++			__archive_read_reset_passphrase(a);
++			passphrase = __archive_read_next_passphrase(a);
++			if (passphrase == NULL) {
++				archive_set_error(&a->archive,
++				    ARCHIVE_ERRNO_MISC,
++				    "Passphrase required for this entry");
++				goto failed;
++			}
++		}
++		st = &zip->aes_streams[k];
++		if (kernir_aes_get_key(zip, &params, passphrase,
++		    st->key) != 0) {
++			archive_set_error(&a->archive, ARCHIVE_ERRNO_MISC,
++			    "Cannot derive the 7zAES key from the passphrase");
++			goto failed;
++		}
++		memcpy(st->iv, params.iv, sizeof(st->iv));
++		st->plain_size = rf->unPackSize[out];
++		st->encrypted = 1;
++
++		if (bp == rf->numBindPairs) {
++			/* AES alone: what it outputs is the folder. */
++			rf->coders[c_idx].codec = _7Z_COPY;
++			rf->coders[c_idx].propertiesSize = 0;
++			rf->coders[c_idx].properties = NULL;
++			break;
++		}
++		/* Drop the coder: its consumer reads packed stream k. */
++		x = rf->bindPairs[bp].inIndex;
++		memmove(&rf->bindPairs[bp], &rf->bindPairs[bp + 1],
++		    (rf->numBindPairs - bp - 1) * sizeof(*rf->bindPairs));
++		rf->numBindPairs--;
++		memmove(&rf->coders[c_idx], &rf->coders[c_idx + 1],
++		    (rf->numCoders - c_idx - 1) * sizeof(*rf->coders));
++		rf->numCoders--;
++		memmove(&rf->unPackSize[out], &rf->unPackSize[out + 1],
++		    (rf->numOutStreams - out - 1) * sizeof(*rf->unPackSize));
++		rf->numOutStreams--;
++		rf->numInStreams--;
++		for (i = 0; i < rf->numBindPairs; i++) {
++			if (rf->bindPairs[i].inIndex > in)
++				rf->bindPairs[i].inIndex--;
++			if (rf->bindPairs[i].outIndex > out)
++				rf->bindPairs[i].outIndex--;
++		}
++		rf->packedStreams[k] = x;
++		for (i = 0; i < rf->numPackedStreams; i++)
++			if (rf->packedStreams[i] > in)
++				rf->packedStreams[i]--;
++	}
++	kernir_aes_wipe(&params, sizeof(params));
++
++	zip->aes_folder = 1;
++	zip->aes_pack_base = rf->packIndex;
++	*pfolder = rf;
++	return (ARCHIVE_OK);
++form_failed:
++	r = kernir_aes_form_error(a, header);
++failed:
++	kernir_aes_wipe(&params, sizeof(params));
++	kernir_aes_wipe(zip->aes_streams, sizeof(zip->aes_streams));
++	return (r);
++}
++
++/* Called by seek_pack() once pack_stream_inbytes_remaining is set. */
++static int
++kernir_aes_stream_start(struct archive_read *a)
++{
++	struct _7zip *zip = a->format->data;
++	struct kernir_7z_aes_stream *st;
++	size_t k;
++
++	kernir_aes_stream_stop(zip);
++	if (!zip->aes_folder || zip->pack_stream_index < zip->aes_pack_base)
++		return (ARCHIVE_OK);
++	k = zip->pack_stream_index - zip->aes_pack_base;
++	if (k >= KERNIR_7Z_MAX_PACKED || !zip->aes_streams[k].encrypted)
++		return (ARCHIVE_OK);
++	st = &zip->aes_streams[k];
++
++	/* Ciphertext comes in whole blocks; anything else is damage. */
++	if (zip->pack_stream_inbytes_remaining % KERNIR_7ZAES_BLOCK_SIZE ||
++	    st->plain_size > zip->pack_stream_inbytes_remaining) {
++		archive_set_error(&a->archive, ARCHIVE_ERRNO_MISC,
++		    "Damaged 7-Zip archive");
++		return (ARCHIVE_FATAL);
++	}
++	if (zip->aes_buf == NULL) {
++		zip->aes_buf = malloc(KERNIR_7Z_AES_BUF_SIZE);
++		if (zip->aes_buf == NULL) {
++			archive_set_error(&a->archive, ENOMEM,
++			    "No memory for 7-Zip decryption");
++			return (ARCHIVE_FATAL);
++		}
++	}
++	if (kernir_7zaes_cbc_init(&zip->aes_cbc, 0, st->key, st->iv) != 0) {
++		archive_set_error(&a->archive, ARCHIVE_ERRNO_MISC,
++		    "Cannot start 7zAES decryption");
++		return (ARCHIVE_FATAL);
++	}
++	zip->aes_raw_remaining = zip->pack_stream_inbytes_remaining;
++	/* Callers see the plaintext stream: the AES coder's output size. */
++	zip->pack_stream_inbytes_remaining = st->plain_size;
++	zip->aes_active = 1;
++	return (ARCHIVE_OK);
++}
++
++/* Decrypts more ciphertext onto the end of aes_buf, up to `limit' bytes
++ * of buffer. 0 or -1 (truncated, or no room). */
++static int
++kernir_aes_decrypt_more(struct archive_read *a, size_t limit)
++{
++	struct _7zip *zip = a->format->data;
++	const void *p;
++	ssize_t avail;
++	size_t n;
++
++	if (zip->aes_raw_remaining <= 0 || zip->aes_buf_len >= limit)
++		return (-1);
++	n = (limit - zip->aes_buf_len) & ~(size_t)(KERNIR_7ZAES_BLOCK_SIZE - 1);
++	if ((uint64_t)n > (uint64_t)zip->aes_raw_remaining)
++		n = (size_t)zip->aes_raw_remaining;
++	p = __archive_read_ahead(a, KERNIR_7ZAES_BLOCK_SIZE, &avail);
++	if (p == NULL || avail < KERNIR_7ZAES_BLOCK_SIZE || n == 0)
++		return (-1);
++	if ((size_t)avail < n)
++		n = (size_t)avail & ~(size_t)(KERNIR_7ZAES_BLOCK_SIZE - 1);
++	if (kernir_7zaes_cbc_update(&zip->aes_cbc, p, n,
++	    zip->aes_buf + zip->aes_buf_len) != 0)
++		return (-1);
++	if (__archive_read_consume(a, n) < 0)
++		return (-1);
++	zip->stream_offset += n;
++	zip->aes_raw_remaining -= n;
++	zip->aes_buf_len += n;
++	return (0);
++}
++
++/*
++ * Like __archive_read_ahead(a, 1, avail) on the decrypted stream. Bytes
++ * past the plaintext (CBC padding) may be returned; callers clip to
++ * pack_stream_inbytes_remaining. *avail is 0 when the file is truncated.
++ */
++static const void *
++kernir_aes_read_ahead(struct archive_read *a, ssize_t *avail)
++{
++	struct _7zip *zip = a->format->data;
++
++	if (zip->aes_buf_pos == zip->aes_buf_len) {
++		zip->aes_buf_pos = zip->aes_buf_len = 0;
++		if (zip->aes_raw_remaining == 0 &&
++		    zip->pack_stream_inbytes_remaining == 0) {
++			/* Nothing left, and callers take none of it. */
++			*avail = 1;
++			return (zip->aes_buf);
++		}
++		if (kernir_aes_decrypt_more(a, KERNIR_7Z_AES_FILL) < 0) {
++			*avail = 0;
++			return (NULL);
++		}
++	}
++	*avail = (ssize_t)(zip->aes_buf_len - zip->aes_buf_pos);
++	return (zip->aes_buf + zip->aes_buf_pos);
++}
++
++/* Like __archive_read_ahead(a, offset + 1, NULL) on the decrypted stream,
++ * for PPMd's range decoder at a buffer boundary: the result points at the
++ * consume position. NULL if there are not offset + 1 bytes. */
++static const uint8_t *
++kernir_aes_peek(struct archive_read *a, size_t offset)
++{
++	struct _7zip *zip = a->format->data;
++
++	if (offset >= KERNIR_7Z_AES_BUF_SIZE)
++		return (NULL);
++	while (zip->aes_buf_len - zip->aes_buf_pos <= offset) {
++		if (zip->aes_buf_len + KERNIR_7ZAES_BLOCK_SIZE >
++		    KERNIR_7Z_AES_BUF_SIZE && zip->aes_buf_pos > 0) {
++			/* Make room. PPMd's input pointer is spent here. */
++			memmove(zip->aes_buf, zip->aes_buf + zip->aes_buf_pos,
++			    zip->aes_buf_len - zip->aes_buf_pos);
++			zip->aes_buf_len -= zip->aes_buf_pos;
++			zip->aes_buf_pos = 0;
++		}
++		if (kernir_aes_decrypt_more(a, KERNIR_7Z_AES_BUF_SIZE) < 0)
++			return (NULL);
++	}
++	return (zip->aes_buf + zip->aes_buf_pos);
++}
++
++static int
+ skip_stream(struct archive_read *a, int64_t skip_bytes)
+ {
+ 	struct _7zip *zip = a->format->data;

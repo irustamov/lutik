@@ -1,0 +1,30 @@
+Kernir patch 0011: the zip reader takes a zip64 locator with 0 total disks as a single disk
+
+Upstream: libarchive 3.8.10, libarchive/archive_read_support_format_zip.c (read_zip64_eocd).
+
+OneDrive and SharePoint write the zip64 end-of-central-directory locator of every download over 4 GB
+with total-number-of-disks 0 (the spec says 1) and point the 32-bit end-of-central-directory record at
+it with a central-directory offset of 0xFFFFFFFF. Upstream ignores such a locator, and in a file over
+4 GiB the 0xFFFFFFFF offset passes read_eocd's bounds check, so the seekable reader wins the bid with
+that offset and fails at once with "Damaged Zip archive" (system bsdtar and unzip fail the same way;
+7-Zip and Python's zipfile read these files). 0 is now accepted like 1; more than 1 is still refused.
+
+Apply from Sources/CLibArchive: patch -p1 < patches/0011-zip64-locator-zero-disks.patch
+
+--- a/libarchive/archive_read_support_format_zip.c
++++ b/libarchive/archive_read_support_format_zip.c
+@@ -4164,8 +4164,12 @@
+ 	/* Central dir must be on first volume. */
+ 	if (archive_le32dec(p + 4) != 0)
+ 		return 0;
+-	/* Must be only a single volume. */
+-	if (archive_le32dec(p + 16) != 1)
++	/* Must be only a single volume.
++	 * Kernir patch 0011: 0 counts as a single volume too. OneDrive and
++	 * SharePoint write 0 here in every download over 4 GB (with a 32-bit
++	 * EOCD whose CD offset is 0xFFFFFFFF); 7-Zip and Python's zipfile
++	 * read them. */
++	if (archive_le32dec(p + 16) > 1)
+ 		return 0;
+ 
+ 	/* Find the Zip64 EOCD record. */

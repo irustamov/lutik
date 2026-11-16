@@ -1,0 +1,30 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "Compress with Lutik" : {
+      "comment" : "Name of a Finder Service (NSServices menu item title), shown in Finder's context menu under Quick Actions or Services, and in the Services menu, for any selected files and folders. Lutik is the app name: do not translate it. Translate the rest.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Compress with Lutik"
+          }
+        }
+      }
+    },
+    "Extract Here with Lutik" : {
+      "comment" : "Name of a Finder Service (NSServices menu item title), shown in Finder's context menu under Quick Actions or Services, and in the Services menu, for the selected archives. Lutik is the app name: do not translate it. Translate the rest.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Extract Here with Lutik"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

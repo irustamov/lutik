@@ -1,0 +1,8 @@
+#!/bin/bash
+# Fake `security` for tests. FAKE_SECURITY_IDENTITY=none prints no identities.
+[ "${1:-}" = find-identity ] || { echo "fake security: unsupported: $*" >&2; exit 2; }
+echo "     0 valid identities found"
+if [ "${FAKE_SECURITY_IDENTITY:-}" != none ]; then
+  echo '  1) 0123456789ABCDEF0123456789ABCDEF01234567 "Developer ID Application: Fake Name (Q42GSJXJKF)"'
+  echo '  2) 89ABCDEF0123456789ABCDEF0123456789ABCDEF "Apple Development: Other (ZZZZZZZZZZ)"'
+fi

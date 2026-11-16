@@ -1,0 +1,35 @@
+Kernir patch 0003: entry names stay NFC on macOS
+
+Upstream: libarchive 3.8.10, libarchive/archive_string.c (setup_converter).
+
+On __APPLE__ upstream gives a converter from UTF-8/UTF-16 to UTF-8 SCONV_NORMALIZATION_D. The
+flag is direction-blind: it also applies when a writer fetches the stored UTF-8 name of an entry
+through archive_mstring_get_mbs, so tar, zip and 7z archives written or repacked on macOS
+carried NFD names where the source had NFC. The patch takes SCONV_NORMALIZATION_C there, as
+every other platform does. The two other __APPLE__ blocks are untouched.
+
+Apply from Sources/CLibArchive: patch -p1 < patches/0003-utf8-names-stay-nfc-on-apple.patch
+
+--- a/libarchive/archive_string.c
++++ b/libarchive/archive_string.c
+@@ -1266,12 +1266,14 @@
+ 	 */
+ 	if ((flag & SCONV_FROM_CHARSET) &&
+ 	    (flag & (SCONV_FROM_UTF16 | SCONV_FROM_UTF8))) {
+-#if defined(__APPLE__)
+-		if (flag & SCONV_TO_UTF8)
+-			flag |= SCONV_NORMALIZATION_D;
+-		else
+-#endif
+-			flag |= SCONV_NORMALIZATION_C;
++		/*
++		 * Kernir patch 0003 (patches/0003-utf8-names-stay-nfc-on-apple.patch):
++		 * upstream takes NORMALIZATION_D here on __APPLE__ when the target
++		 * is UTF-8. That one flag also covers the writer's UTF-8 -> UTF-8
++		 * fetch of an entry name, so NFC names were stored as NFD.
++		 * Take NORMALIZATION_C on every platform.
++		 */
++		flag |= SCONV_NORMALIZATION_C;
+ 	}
+ #if defined(__APPLE__)
+ 	/*

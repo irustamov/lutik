@@ -1,0 +1,354 @@
+Kernir patch 0021: the iso9660 reader reads a directory one block at a time and holds its records, Rockridge names and link targets to Kernir's limits
+
+Upstream: libarchive 3.8.10, libarchive/archive_read_support_format_iso9660.c (read_children, choose_volume, read_CE,
+struct file_info, struct iso9660); include/kernir_names.h (a comment). Applies on top of 0001-0020.
+
+The reader reads a whole directory, and every Rockridge continuation area (CE) its records point at, before it returns
+the directory's first entry, so no limit of the caller's comes in time:
+- read_children read ahead the directory's whole extent at once: its size is a 32-bit on-disk value checked only
+  against the volume size the image declares itself, so a 296 KiB image claiming a 4 GiB directory had the
+  read-ahead copy buffer malloc 4.3 GB before EOF (any image past libarchive's first read, 64 KiB for Kernir);
+  choose_volume did the same with the root's size. The extent is now read and
+  parsed one logical block at a time (current_position still moves to the extent's end first, so register_CE takes
+  the same CE areas as before), so a short file stops at EOF with bounded memory, and choose_volume reads only the
+  root's directory record (at most 255 bytes).
+- every record of the directory was queued with no count: each one, the root included, now counts against 0016's
+  entry limit before parse_file_info allocates it, refused with "ISO9660 image has more entries than the entry
+  limit". Multi-extent parts, CL placeholders and a hidden rr_moved count too, though no header of theirs is
+  returned, so such an image can be refused slightly before Kernir's own count would refuse it.
+- several records' CE entries can point at one chain of CE blocks, and read_CE then appends each block's NM and SL
+  text to every one of those names: N records and k blocks made N x k x 1.75 KB of names from k x 2 KB of file (an 848
+  KB image built 583 MB of names). Each record's name and link target are now charged after parse_file_info and after
+  each continuation area, by the most they have held (an NM without CONTINUE empties a name, and the charge is not
+  given back): a name or link target over 65,536 bytes is refused with "ISO9660 entry name is longer than 65536
+  bytes" / "ISO9660 link target is longer than 65536 bytes", and all of them over 0016's names total
+  (__archive_read_kernir_names_allowance of the records so far) with "ISO9660 entry names and link targets take more
+  than the names limit".
+- a shared chain whose areas grow no name (padding, unknown entries, or NM without CONTINUE refilling one name) still
+  had read_CE parse N x k areas, CPU quadratic in the image's size before the first header, with nothing charged:
+  each record's pass over each area is now charged by the area's size before it is parsed, to a total of its own held
+  to the same allowance plus the bytes read so far (current_position: a valid image's distinct areas, such as
+  xorriso's multi-KB AAIP ACL and xattr entries, always fit in those, and a shared chain stays linear in the image's
+  size) and refused with the same message.
+All refusals are ARCHIVE_FATAL, ARCHIVE_ERRNO_FILE_FORMAT; Kernir maps the messages to its entry-count, path-length
+and names-total limits. Images within the limits read as before.
+
+Apply from Sources/CLibArchive: patch -p1 < patches/0021-iso9660-directory-limits.patch
+
+--- a/include/kernir_names.h
++++ b/include/kernir_names.h
+@@ -66,4 +66,10 @@
+ int kernir_read_get_name_limits(struct archive *a, uint64_t *max_entries, uint64_t *names_bytes,
+                                 uint64_t *name_bytes_per_entry);
+ 
++/* Kernir patch 0021 (patches/0021-iso9660-directory-limits.patch, archive_read_support_format_iso9660.c): the
++   ISO 9660 reader holds these limits too, while it reads a directory: it counts every directory record, the root
++   included, against max_entries before it allocates it, and holds Rockridge names and link targets to 65,536 bytes
++   each and to max(names_bytes, name_bytes_per_entry × the records so far) in all; the continuation-area (CE) bytes
++   each record parses are held to that allowance plus the bytes of the image read so far, as a total of their own. */
++
+ #endif
+--- a/libarchive/archive_read_support_format_iso9660.c
++++ b/libarchive/archive_read_support_format_iso9660.c
+@@ -292,6 +292,7 @@
+ 	char		 name_continues; /* Non-zero if name continues */
+ 	struct archive_string symlink;
+ 	char		 symlink_continues; /* Non-zero if link continues */
++	uint64_t	 kernir_charged; /* Kernir patch 0021 */
+ 	/* Set 1 if this file compressed by paged zlib(zisofs) */
+ 	int		 pz;
+ 	int		 pz_log2_bs; /* Log2 of block size */
+@@ -355,6 +356,9 @@
+ 
+ 	uint64_t current_position;
+ 	ssize_t	logical_block_size;
++	uint64_t kernir_entries;	/* Kernir patch 0021 */
++	uint64_t kernir_name_bytes;	/* Kernir patch 0021 */
++	uint64_t kernir_ce_bytes;	/* Kernir patch 0021 */
+ 	uint64_t volume_size; /* Total size of volume in bytes. */
+ 	int32_t  volume_block;/* Total size of volume in logical blocks. */
+ 
+@@ -423,6 +427,9 @@
+ static int	register_CE(struct archive_read *a, uint32_t location,
+ 		    struct file_info *file);
+ static int	read_CE(struct archive_read *a, struct iso9660 *iso9660);
++static int	kernir_iso_count(struct archive_read *);	/* Kernir 0021 */
++static int	kernir_iso_charge(struct archive_read *, struct file_info *);
++static int	kernir_iso_charge_ce(struct archive_read *, uint32_t);
+ static void	parse_rockridge_NM1(struct file_info *,
+ 		    const unsigned char *, int);
+ static void	parse_rockridge_SL1(struct file_info *,
+@@ -1011,6 +1018,113 @@
+ 
+ 	/* Nothing looked wrong, so let's accept it. */
+ 	return (1);
++}
++
++/*
++ * Kernir patch 0021: a directory, and the Rockridge continuation areas (CE)
++ * its records point at, are read whole before the directory's first entry
++ * is returned, so no limit of the caller's comes in time. Upstream read
++ * ahead a directory's whole extent at once, its size a 32-bit on-disk value
++ * checked only against the volume size the image declares itself: a 296 KiB
++ * image claiming a 4 GiB directory had the read-ahead copy buffer malloc
++ * 4 GiB before EOF (choose_volume did the same with the root's size). The
++ * extent is now read and parsed one logical block at a time, so a short
++ * file stops at EOF with bounded memory, and choose_volume reads only the
++ * root's directory record (at most 255 bytes).
++ *
++ * Every directory record, the root included, counts against the entry
++ * limit before parse_file_info allocates it (kernir_iso_count). Multi-extent
++ * parts, CL placeholders and a hidden rr_moved count too, though the caller
++ * sees no header of theirs, so such an image can be refused slightly before
++ * the caller's own count would refuse it.
++ *
++ * Several records' CE entries may point at one chain of CE blocks, and
++ * read_CE then parses every block of it once for each of those records,
++ * appending its NM and SL text to every one of their names: N records and
++ * k blocks made N x k x 1.75 KB of names from k x 2 KB of file. Each
++ * record's name and link target are charged after parse_file_info and
++ * after each continuation area (kernir_iso_charge, by the most they have
++ * held: an NM without CONTINUE empties the name and starts it again, so a
++ * name can shrink, and the charge is then not given back): one over
++ * KERNIR_ISO_NAME_BYTES, or all of them over the names limit
++ * (__archive_read_kernir_names_allowance of the records so far), is
++ * refused. A chain whose areas grow no name (padding, unknown entries, or
++ * an NM without CONTINUE refilling the same name) still cost N x k parses,
++ * CPU quadratic in the image's size: each record's pass over each area is
++ * charged too, by the area's size, before it is parsed
++ * (kernir_iso_charge_ce, a total of its own held to the same allowance plus
++ * the bytes read so far, current_position: a valid image's distinct areas,
++ * such as xorriso's AAIP ACL and xattr entries, always fit in those, and a
++ * shared chain still stays linear in the image's size; refused with the
++ * same message). All of these are ARCHIVE_FATAL with
++ * their own messages, which Kernir maps to its limits.
++ */
++#define KERNIR_ISO_NAME_BYTES 65536
++
++static int
++kernir_iso_refuse(struct archive_read *a, const char *msg)
++{
++	archive_set_error(&a->archive, ARCHIVE_ERRNO_FILE_FORMAT, "%s", msg);
++	return (ARCHIVE_FATAL);
++}
++
++static int
++kernir_iso_count(struct archive_read *a)
++{
++	struct iso9660 *iso9660 = a->format->data;
++
++	if (++iso9660->kernir_entries > a->kernir_max_entries)
++		return (kernir_iso_refuse(a,
++		    "ISO9660 image has more entries than the entry limit"));
++	return (ARCHIVE_OK);
++}
++
++static int
++kernir_iso_charge(struct archive_read *a, struct file_info *file)
++{
++	struct iso9660 *iso9660 = a->format->data;
++	uint64_t held;
++
++	if (archive_strlen(&file->name) > KERNIR_ISO_NAME_BYTES)
++		return (kernir_iso_refuse(a,
++		    "ISO9660 entry name is longer than 65536 bytes"));
++	if (archive_strlen(&file->symlink) > KERNIR_ISO_NAME_BYTES)
++		return (kernir_iso_refuse(a,
++		    "ISO9660 link target is longer than 65536 bytes"));
++	held = (uint64_t)archive_strlen(&file->name) +
++	    archive_strlen(&file->symlink);
++	if (held > file->kernir_charged) {
++		iso9660->kernir_name_bytes += held - file->kernir_charged;
++		file->kernir_charged = held;
++	}
++	if (iso9660->kernir_name_bytes >
++	    __archive_read_kernir_names_allowance(a, iso9660->kernir_entries))
++		return (kernir_iso_refuse(a, "ISO9660 entry names and link "
++		    "targets take more than the names limit"));
++	return (ARCHIVE_OK);
++}
++
++static int
++kernir_iso_charge_ce(struct archive_read *a, uint32_t size)
++{
++	struct iso9660 *iso9660 = a->format->data;
++	uint64_t bound;
++
++	if (iso9660->kernir_ce_bytes > UINT64_MAX - size)
++		iso9660->kernir_ce_bytes = UINT64_MAX;
++	else
++		iso9660->kernir_ce_bytes += size;
++	/* A valid image's distinct areas lie in the bytes read so far. */
++	bound = __archive_read_kernir_names_allowance(a,
++	    iso9660->kernir_entries);
++	if (bound > UINT64_MAX - iso9660->current_position)
++		bound = UINT64_MAX;
++	else
++		bound += iso9660->current_position;
++	if (iso9660->kernir_ce_bytes > bound)
++		return (kernir_iso_refuse(a, "ISO9660 entry names and link "
++		    "targets take more than the names limit"));
++	return (ARCHIVE_OK);
+ }
+ 
+ static int
+@@ -1019,7 +1133,7 @@
+ 	struct iso9660 *iso9660 = a->format->data;
+ 	const unsigned char *b, *p;
+ 	struct file_info *multi;
+-	size_t step, skip_size;
++	size_t step, block;
+ 
+ 	/* flush any remaining bytes from the last round to ensure
+ 	 * we're positioned */
+@@ -1053,20 +1167,23 @@
+ 
+ 	step = (size_t)(((parent->size + iso9660->logical_block_size -1) /
+ 	    iso9660->logical_block_size) * iso9660->logical_block_size);
+-	b = __archive_read_ahead(a, step, NULL);
+-	if (b == NULL) {
+-		archive_set_error(&a->archive, ARCHIVE_ERRNO_MISC,
+-		    "Failed to read full block when scanning "
+-		    "ISO9660 directory list");
+-		return (ARCHIVE_FATAL);
+-	}
++	/* Kernir patch 0021: one block at a time. current_position is the
++	 * extent's end from here on, as upstream had it, so register_CE
++	 * still takes only CE areas past the whole extent. */
++	block = (size_t)iso9660->logical_block_size;
+ 	iso9660->current_position += step;
+ 	multi = NULL;
+-	skip_size = step;
+ 	while (step) {
++		b = __archive_read_ahead(a, block, NULL);
++		if (b == NULL) {
++			archive_set_error(&a->archive, ARCHIVE_ERRNO_MISC,
++			    "Failed to read full block when scanning "
++			    "ISO9660 directory list");
++			return (ARCHIVE_FATAL);
++		}
+ 		p = b;
+-		b += iso9660->logical_block_size;
+-		step -= iso9660->logical_block_size;
++		b += block;
++		step -= block;
+ 		for (; p < b && b - p > DR_name_offset && *p != 0 && *p <= b - p;
+ 			p += *p) {
+ 			struct file_info *child;
+@@ -1084,11 +1201,19 @@
+ 			if (*(p + DR_name_len_offset) == 1
+ 			    && *(p + DR_name_offset) == '\001')
+ 				continue;
++			if (kernir_iso_count(a) != ARCHIVE_OK) {
++				__archive_read_consume(a, block);
++				return (ARCHIVE_FATAL);
++			}
+ 			child = parse_file_info(a, parent, p, b - p);
+ 			if (child == NULL) {
+-				__archive_read_consume(a, skip_size);
++				__archive_read_consume(a, block);
+ 				return (ARCHIVE_FATAL);
+ 			}
++			if (kernir_iso_charge(a, child) != ARCHIVE_OK) {
++				__archive_read_consume(a, block);
++				return (ARCHIVE_FATAL);
++			}
+ 			if (child->cl_offset == 0 &&
+ 			    (child->multi_extent || multi != NULL)) {
+ 				struct content *con;
+@@ -1104,7 +1229,7 @@
+ 					archive_set_error(
+ 					    &a->archive, ENOMEM,
+ 					    "No memory for multi extent");
+-					__archive_read_consume(a, skip_size);
++					__archive_read_consume(a, block);
+ 					return (ARCHIVE_FATAL);
+ 				}
+ 				con->offset = child->offset;
+@@ -1125,10 +1250,9 @@
+ 				if (add_entry(a, iso9660, child) != ARCHIVE_OK)
+ 					return (ARCHIVE_FATAL);
+ 		}
++		__archive_read_consume(a, block);
+ 	}
+ 
+-	__archive_read_consume(a, skip_size);
+-
+ 	/* Read data which recorded by RRIP "CE" extension. */
+ 	if (read_CE(a, iso9660) != ARCHIVE_OK)
+ 		return (ARCHIVE_FATAL);
+@@ -1143,6 +1267,7 @@
+ 	int64_t skipsize;
+ 	struct vd *vd;
+ 	const void *block;
++	size_t record;	/* Kernir patch 0021 */
+ 	char seenJoliet;
+ 
+ 	vd = &(iso9660->primary);
+@@ -1159,7 +1284,10 @@
+ 		return ((int)skipsize);
+ 	iso9660->current_position = skipsize;
+ 
+-	block = __archive_read_ahead(a, vd->size, NULL);
++	/* Kernir patch 0021: only the root's directory record, at most 255
++	 * bytes (its length is one byte), not the size it claims. */
++	record = vd->size < 255 ? vd->size : 255;
++	block = __archive_read_ahead(a, record, NULL);
+ 	if (block == NULL) {
+ 		archive_set_error(&a->archive, ARCHIVE_ERRNO_MISC,
+ 		    "Failed to read full block when scanning "
+@@ -1174,9 +1302,11 @@
+ 	 */
+ 	seenJoliet = iso9660->seenJoliet;/* Save flag. */
+ 	iso9660->seenJoliet = 0;
+-	file = parse_file_info(a, NULL, block, vd->size);
+-	if (file == NULL)
++	if (kernir_iso_count(a) != ARCHIVE_OK)	/* Kernir patch 0021 */
+ 		return (ARCHIVE_FATAL);
++	file = parse_file_info(a, NULL, block, record);
++	if (file == NULL || kernir_iso_charge(a, file) != ARCHIVE_OK)
++		return (ARCHIVE_FATAL);
+ 	iso9660->seenJoliet = seenJoliet;
+ 
+ 	/*
+@@ -1198,7 +1328,13 @@
+ 			return ((int)skipsize);
+ 		iso9660->current_position += skipsize;
+ 
+-		block = __archive_read_ahead(a, vd->size, NULL);
++		/* Kernir patch 0021: the record only; this root replaces
++		 * the primary one, so it does not count again. Its name is
++		 * charged below with no refund of the primary root's: on this
++		 * path neither root has Rockridge (no NM or SL), so each
++		 * charge is a root's identifier, a byte at most. */
++		record = vd->size < 255 ? vd->size : 255;
++		block = __archive_read_ahead(a, record, NULL);
+ 		if (block == NULL) {
+ 			archive_set_error(&a->archive, ARCHIVE_ERRNO_MISC,
+ 			    "Failed to read full block when scanning "
+@@ -1206,8 +1342,8 @@
+ 			return (ARCHIVE_FATAL);
+ 		}
+ 		iso9660->seenJoliet = 0;
+-		file = parse_file_info(a, NULL, block, vd->size);
+-		if (file == NULL)
++		file = parse_file_info(a, NULL, block, record);
++		if (file == NULL || kernir_iso_charge(a, file) != ARCHIVE_OK)
+ 			return (ARCHIVE_FATAL);
+ 		iso9660->seenJoliet = seenJoliet;
+ 	}
+@@ -2487,8 +2623,14 @@
+ 			end = p + file->ce_size;
+ 			file->ce_processed_end = ce_end;
+ 			next_CE(heap);
++			/* Kernir patch 0021: this pass's bytes, before it. */
++			if (kernir_iso_charge_ce(a, file->ce_size) != ARCHIVE_OK)
++				return (ARCHIVE_FATAL);
+ 			r = parse_rockridge(a, file, p, end);
+ 			if (r != ARCHIVE_OK)
++				return (ARCHIVE_FATAL);
++			/* Kernir patch 0021 */
++			if (kernir_iso_charge(a, file) != ARCHIVE_OK)
+ 				return (ARCHIVE_FATAL);
+ 		} while (heap->cnt &&
+ 		    heap->reqs[0].offset == iso9660->current_position);

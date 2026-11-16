@@ -1,0 +1,89 @@
+Kernir patch 0024: the iso9660 reader holds continuation-area passes to the furthest it has read, not where it is
+
+Upstream: libarchive 3.8.10, libarchive/archive_read_support_format_iso9660.c (struct iso9660, kernir_iso_charge_ce
+from 0021, archive_read_format_iso9660_read_header). Applies on top of 0001-0023.
+
+0021 holds the bytes of every continuation area (CE) each record's pass parses to the names allowance plus the bytes
+of the image read so far, taken as current_position, since a valid image's distinct areas all lie in those. But
+read_header seeks back to a file's body when the directory listing it lies after the body (seekable sources only;
+"very unusual", upstream's comment says, yet valid), and current_position then drops to the body's offset. A
+directory read after that, at an offset below the furthest point reached, had its areas held to the allowance plus
+its own end, though the areas already charged lay up to that furthest point: a valid image could be refused with
+"ISO9660 entry names and link targets take more than the names limit" (D1's 24 files with a one-block area each,
+then D1's file F, whose body precedes D1, then D2's one-block area: refused under a 1,024-byte names limit).
+
+The reader now keeps the furthest current_position it has reached (kernir_high_water, raised just before that seek,
+the only place current_position goes back), and kernir_iso_charge_ce adds the larger of it and current_position.
+Without a seek back the two are equal and nothing changes; with one, the bound is still the allowance plus bytes of
+the image the reader has passed, at most its size, so a shared chain stays linear in the image's size. register_CE
+and read_CE still take areas relative to current_position, and 0021's names charge is untouched.
+
+Apply from Sources/CLibArchive: patch -p1 < patches/0024-iso9660-ce-high-water.patch
+
+--- a/libarchive/archive_read_support_format_iso9660.c
++++ b/libarchive/archive_read_support_format_iso9660.c
+@@ -359,6 +359,7 @@
+ 	uint64_t kernir_entries;	/* Kernir patch 0021 */
+ 	uint64_t kernir_name_bytes;	/* Kernir patch 0021 */
+ 	uint64_t kernir_ce_bytes;	/* Kernir patch 0021 */
++	uint64_t kernir_high_water;	/* Kernir patch 0024 */
+ 	uint64_t volume_size; /* Total size of volume in bytes. */
+ 	int32_t  volume_block;/* Total size of volume in logical blocks. */
+ 
+@@ -1053,11 +1054,12 @@
+  * CPU quadratic in the image's size: each record's pass over each area is
+  * charged too, by the area's size, before it is parsed
+  * (kernir_iso_charge_ce, a total of its own held to the same allowance plus
+- * the bytes read so far, current_position: a valid image's distinct areas,
+- * such as xorriso's AAIP ACL and xattr entries, always fit in those, and a
+- * shared chain still stays linear in the image's size; refused with the
+- * same message). All of these are ARCHIVE_FATAL with
+- * their own messages, which Kernir maps to its limits.
++ * the furthest position reached (Kernir patch 0024: current_position, or
++ * where it was before a seek back to a file's body, if that is further): a
++ * valid image's distinct areas, such as xorriso's AAIP ACL and xattr
++ * entries, always fit in those, and a shared chain still stays linear in
++ * the image's size; refused with the same message). All of these are
++ * ARCHIVE_FATAL with their own messages, which Kernir maps to its limits.
+  */
+ #define KERNIR_ISO_NAME_BYTES 65536
+ 
+@@ -1108,19 +1110,23 @@
+ kernir_iso_charge_ce(struct archive_read *a, uint32_t size)
+ {
+ 	struct iso9660 *iso9660 = a->format->data;
+-	uint64_t bound;
++	uint64_t bound, reached;
+ 
+ 	if (iso9660->kernir_ce_bytes > UINT64_MAX - size)
+ 		iso9660->kernir_ce_bytes = UINT64_MAX;
+ 	else
+ 		iso9660->kernir_ce_bytes += size;
+-	/* A valid image's distinct areas lie in the bytes read so far. */
++	/* A valid image's distinct areas lie in the bytes read so far:
++	 * Kernir patch 0024, the furthest the reader has reached, which a
++	 * seek back to a file's body (read_header) does not lower. */
++	reached = iso9660->current_position > iso9660->kernir_high_water ?
++	    iso9660->current_position : iso9660->kernir_high_water;
+ 	bound = __archive_read_kernir_names_allowance(a,
+ 	    iso9660->kernir_entries);
+-	if (bound > UINT64_MAX - iso9660->current_position)
++	if (bound > UINT64_MAX - reached)
+ 		bound = UINT64_MAX;
+ 	else
+-		bound += iso9660->current_position;
++		bound += reached;
+ 	if (iso9660->kernir_ce_bytes > bound)
+ 		return (kernir_iso_refuse(a, "ISO9660 entry names and link "
+ 		    "targets take more than the names limit"));
+@@ -1551,6 +1557,10 @@
+ 			iso9660->entry_bytes_remaining = 0;
+ 			return (ARCHIVE_WARN);
+ 		}
++		/* Kernir patch 0024: the only place current_position goes
++		 * back; kernir_iso_charge_ce keeps the furthest it reached. */
++		if (iso9660->current_position > iso9660->kernir_high_water)
++			iso9660->kernir_high_water = iso9660->current_position;
+ 		iso9660->current_position = (uint64_t)r64;
+ 	}
+ 

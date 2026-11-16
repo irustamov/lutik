@@ -1,0 +1,314 @@
+Kernir patch 0018: the xar reader decodes a base64 <name> once, and joins the pieces of an <ea>'s <name>
+
+Upstream: libarchive 3.8.10, libarchive/archive_read_support_format_xar.c (struct xar, xar_cleanup, xml_start,
+xml_end, xml_data, the expat, libxml2 and xmllite callbacks that call xml_end). Follows up
+https://github.com/libarchive/libarchive/issues/3849. Applies on top of 0001-0017 (0015, 0016 and 0017 lines
+included).
+
+Patch 0017 joined the pieces expat hands over for one <name> (split at entity and character references, newlines
+and the end of each 64 KiB chunk of inflated TOC), but a <name enctype="base64"> was still decoded piece by piece
+by strappend_base64, so a piece that ended inside a 4-character group decoded wrongly: "QUJ" + "D" read "AB",
+"QU" + "JD" read garbage. Base64 wrapped into lines that are not whole groups, a name across a chunk boundary and
+one written with character references all hit this. And an <ea>'s <name> (FILE_EA_NAME) was archive_strncpy'd,
+so it kept only its last piece: <ea><name>x&amp;y</name></ea> named the attribute "y".
+
+xml_data now collects the raw text of a base64 <name> (not the ignored second <name> of 0017) in
+kernir_name_b64text, leaving out whitespace (space, tab, CR, LF: base64 may be wrapped anywhere) and refusing more
+than KERNIR_XAR_NAME_B64_CHARS = 87,384 characters, 65,536 bytes' worth (the per-name message of 0015), so the text
+held before a refusal stays bounded. xml_end decodes it once at </name> (kernir_xar_name_b64_end), adds the parent
+prefix and sets HAS_PATHNAME as xml_data does for a plain name, and charges 0015's per-name limit (prefix
+included) and 0016's names total on the decoded name, once, after the per-name check. xml_end therefore returns an
+int now and the three XML callbacks pass a refusal on. Whether a <name> is base64 is fixed when it starts
+(kernir_name_b64), so an element nested in it cannot switch its later pieces to plain text. Decoding still stops
+at the first character outside the base64 alphabet ("=" included), as strappend_base64 did per piece.
+
+An <ea>'s <name> now joins its pieces: the first piece of each <name> empties the attribute name (the last <name>
+counts, whole, and an empty <name/> leaves the earlier one, as upstream) and the joined name is refused over
+65,536 bytes (the per-name message of 0015). It is a separate string with its own state (kernir_ea_name_started),
+so neither name can spill into the other.
+
+Apply from Sources/CLibArchive: patch -p1 < patches/0018-xar-name-decode-once.patch
+
+--- a/libarchive/archive_read_support_format_xar.c
++++ b/libarchive/archive_read_support_format_xar.c
+@@ -323,6 +323,11 @@
+  */
+ #define KERNIR_XAR_DEPTH	200
+ #define KERNIR_XAR_NAME_BYTES	65536
++/*
++ * Kernir patch 0018: the most base64 text (whitespace left out) a <name>
++ * may hold, 65,536 bytes' worth; more is refused before it is decoded.
++ */
++#define KERNIR_XAR_NAME_B64_CHARS	(4 * ((KERNIR_XAR_NAME_BYTES + 2) / 3))
+ /*
+  * Kernir patch 0016: the names total grows with the <file> elements so far
+  * (__archive_read_kernir_names_allowance, 256 MiB or 512 bytes each by
+@@ -351,6 +356,15 @@
+ 	int			 base64text;
+ 	/* Kernir patch 0017: inside a <name> after the entry has one. */
+ 	int			 kernir_name_ignored;
++	/*
++	 * Kernir patch 0018: a base64 <name> is collected raw (pending: a
++	 * piece arrived) and decoded once, at its end; an <ea>'s <name> is
++	 * joined (started: a piece arrived).
++	 */
++	int			 kernir_name_b64;
++	int			 kernir_name_b64_pending;
++	struct archive_string	 kernir_name_b64text;
++	int			 kernir_ea_name_started;
+ 
+ 	/*
+ 	 * TOC
+@@ -443,6 +457,7 @@
+ static int	file_new(struct archive_read *,
+     struct xar *, struct xmlattr_list *);
+ static int	kernir_xar_refuse(struct archive_read *, const char *);
++static int	kernir_xar_name_b64_end(struct archive_read *);
+ static void	file_free(struct xar_file *);
+ static int	xattr_new(struct archive_read *,
+     struct xar *, struct xmlattr_list *);
+@@ -454,7 +469,7 @@
+ static void	unknowntag_end(struct xar *, const char *);
+ static int	xml_start(struct archive_read *,
+     const char *, struct xmlattr_list *);
+-static void	xml_end(void *, const char *);
++static int	xml_end(void *, const char *);
+ static int	xml_data(void *, const char *, size_t);
+ static int	xml_parse_file_flags(struct xar *, const char *);
+ static int	xml_parse_file_ext2(struct xar *, const char *);
+@@ -1024,6 +1039,7 @@
+ 		free(tag);
+ 	}
+ 	free(xar->outbuff);
++	archive_string_free(&(xar->kernir_name_b64text)); /* Kernir 0018 */
+ 	free(xar);
+ 	a->format->data = NULL;
+ 	return (r);
+@@ -2223,6 +2239,10 @@
+ 				    strcmp(attr->value, "base64") == 0)
+ 					xar->base64text = 1;
+ 			}
++			/* Kernir patch 0018 */
++			xar->kernir_name_b64 = xar->base64text;
++			xar->kernir_name_b64_pending = 0;
++			archive_string_empty(&(xar->kernir_name_b64text));
+ 		}
+ 		else if (strcmp(name, "acl") == 0)
+ 			xar->xmlsts = FILE_ACL;
+@@ -2286,8 +2306,10 @@
+ 			xar->xmlsts = FILE_EA_A_CHECKSUM;
+ 		else if (strcmp(name, "extracted-checksum") == 0)
+ 			xar->xmlsts = FILE_EA_E_CHECKSUM;
+-		else if (strcmp(name, "name") == 0)
++		else if (strcmp(name, "name") == 0) {
+ 			xar->xmlsts = FILE_EA_NAME;
++			xar->kernir_ea_name_started = 0; /* Kernir 0018 */
++		}
+ 		else if (strcmp(name, "fstype") == 0)
+ 			xar->xmlsts = FILE_EA_FSTYPE;
+ 		else
+@@ -2388,7 +2410,7 @@
+ 	return (ARCHIVE_OK);
+ }
+ 
+-static void
++static int
+ xml_end(void *userData, const char *name)
+ {
+ 	struct archive_read *a = (struct archive_read *)userData;
+@@ -2565,8 +2587,11 @@
+ 			xar->xmlsts = TOC_FILE;
+ 		break;
+ 	case FILE_NAME:
+-		if (strcmp(name, "name") == 0)
++		if (strcmp(name, "name") == 0) {
+ 			xar->xmlsts = TOC_FILE;
++			/* Kernir patch 0018 */
++			return (kernir_xar_name_b64_end(a));
++		}
+ 		break;
+ 	case FILE_ACL:
+ 		if (strcmp(name, "acl") == 0)
+@@ -2716,6 +2741,7 @@
+ 		unknowntag_end(xar, name);
+ 		break;
+ 	}
++	return (ARCHIVE_OK);
+ }
+ 
+ static const int base64[256] = {
+@@ -2801,6 +2827,76 @@
+ 	}
+ 	if (len > 0)
+ 		archive_strncat(as, (const char *)buff, len);
++}
++
++/*
++ * Kernir patch 0018: expat hands over the text of a base64 <name> in pieces
++ * that may end inside a 4-character group, so it is collected here, without
++ * whitespace (base64 may be wrapped), at most KERNIR_XAR_NAME_B64_CHARS of
++ * it, and decoded once, by kernir_xar_name_b64_end.
++ */
++static int
++kernir_xar_name_b64_collect(struct archive_read *a, const char *s,
++    size_t len)
++{
++	struct xar *xar = a->format->data;
++	size_t i, n;
++
++	xar->kernir_name_b64_pending = 1;
++	for (i = 0; i < len; i = n) {
++		n = i;
++		while (n < len && s[n] != ' ' && s[n] != '\t' &&
++		    s[n] != '\n' && s[n] != '\r')
++			n++;
++		if (n == i) {
++			n++;
++			continue;
++		}
++		if (archive_strlen(&(xar->kernir_name_b64text)) + (n - i) >
++		    KERNIR_XAR_NAME_B64_CHARS)
++			return (kernir_xar_refuse(a,
++			    "xar entry name is longer than 65536 bytes"));
++		archive_strncat(&(xar->kernir_name_b64text), s + i, n - i);
++	}
++	return (ARCHIVE_OK);
++}
++
++/*
++ * Kernir patch 0018: at </name>, decode the collected base64 name once into
++ * the pathname (with the parent prefix, as xml_data adds it to a plain
++ * name), then charge 0015's per-name and 0016's total limits on it.
++ */
++static int
++kernir_xar_name_b64_end(struct archive_read *a)
++{
++	struct xar *xar = a->format->data;
++	size_t used;
++
++	if (!xar->kernir_name_b64_pending)
++		return (ARCHIVE_OK);
++	xar->kernir_name_b64_pending = 0;
++	used = archive_strlen(&(xar->file->pathname));
++	if ((xar->file->has & HAS_PATHNAME) == 0) {
++		if (xar->file->parent != NULL) {
++			archive_string_concat(&(xar->file->pathname),
++			    &(xar->file->parent->pathname));
++			archive_strappend_char(&(xar->file->pathname), '/');
++		}
++		xar->file->has |= HAS_PATHNAME;
++	}
++	strappend_base64(xar, &(xar->file->pathname),
++	    xar->kernir_name_b64text.s,
++	    archive_strlen(&(xar->kernir_name_b64text)));
++	archive_string_empty(&(xar->kernir_name_b64text));
++	if (archive_strlen(&(xar->file->pathname)) > KERNIR_XAR_NAME_BYTES)
++		return (kernir_xar_refuse(a,
++		    "xar entry name is longer than 65536 bytes"));
++	xar->kernir_name_bytes += archive_strlen(&(xar->file->pathname)) - used;
++	if (xar->kernir_name_bytes >
++	    __archive_read_kernir_names_allowance(a, xar->kernir_files))
++		return (kernir_xar_refuse(a, "xar entry names and "
++		    "link targets take more than the names limit"));
++	return (ARCHIVE_OK);
+ }
+ 
+ static int
+@@ -2858,6 +2954,9 @@
+ 		 */
+ 		if (xar->kernir_name_ignored)
+ 			break;
++		/* Kernir patch 0018: decoded once, at </name>. */
++		if (xar->kernir_name_b64)
++			return (kernir_xar_name_b64_collect(a, s, len));
+ 		used = archive_strlen(&(xar->file->pathname));
+ 		if ((xar->file->has & HAS_PATHNAME) == 0) {
+ 			if (xar->file->parent != NULL) {
+@@ -2868,11 +2967,7 @@
+ 			}
+ 			xar->file->has |= HAS_PATHNAME;
+ 		}
+-		if (xar->base64text) {
+-			strappend_base64(xar,
+-			    &(xar->file->pathname), s, len);
+-		} else
+-			archive_strncat(&(xar->file->pathname), s, len);
++		archive_strncat(&(xar->file->pathname), s, len);
+ 		/* Kernir patch 0015 */
+ 		if (archive_strlen(&(xar->file->pathname)) >
+ 		    KERNIR_XAR_NAME_BYTES)
+@@ -3069,7 +3164,19 @@
+ 		break;
+ 	case FILE_EA_NAME:
+ 		xar->file->has |= HAS_XATTR;
+-		archive_strncpy(&(xar->xattr->name), s, len);
++		/*
++		 * Kernir patch 0018: join the pieces (the last <name> counts,
++		 * whole), within 0015's per-name limit.
++		 */
++		if (!xar->kernir_ea_name_started) {
++			archive_string_empty(&(xar->xattr->name));
++			xar->kernir_ea_name_started = 1;
++		}
++		if (archive_strlen(&(xar->xattr->name)) + len >
++		    KERNIR_XAR_NAME_BYTES)
++			return (kernir_xar_refuse(a,
++			    "xar entry name is longer than 65536 bytes"));
++		archive_strncat(&(xar->xattr->name), s, len);
+ 		break;
+ 	case FILE_EA_FSTYPE:
+ 		xar->file->has |= HAS_XATTR;
+@@ -3420,10 +3527,20 @@
+ 				return (r);
+ 			}
+ 			if (empty)
+-				xml_end(a, name);
++				r = xml_end(a, name); /* Kernir 0018 */
++			if (r != ARCHIVE_OK) {
++				xmlFreeTextReader(reader);
++				xmlCleanupParser();
++				return (r);
++			}
+ 			break;
+ 		case XML_READER_TYPE_END_ELEMENT:
+-			xml_end(a, name);
++			r = xml_end(a, name); /* Kernir patch 0018 */
++			if (r != ARCHIVE_OK) {
++				xmlFreeTextReader(reader);
++				xmlCleanupParser();
++				return (r);
++			}
+ 			break;
+ 		case XML_READER_TYPE_TEXT:
+ 			value = (const char *)xmlTextReaderConstValue(reader);
+@@ -3506,7 +3623,7 @@
+ 
+ 	if (ud->state != ARCHIVE_OK)	/* Kernir patch 0015 */
+ 		return;
+-	xml_end(ud->archive, (const char *)name);
++	ud->state = xml_end(ud->archive, (const char *)name); /* 0018 */
+ }
+ 
+ static void
+@@ -3840,7 +3957,7 @@
+ 			}
+ 			xmlattr_cleanup(&list);
+ 			if (r == ARCHIVE_OK && empty) {
+-				xml_end(a, name);
++				r = xml_end(a, name); /* Kernir 0018 */
+ 			}
+ 
+ 			free(name);
+@@ -3858,8 +3975,11 @@
+ 				goto out;
+ 			}
+ 
+-			xml_end(a, name);
++			r = xml_end(a, name); /* Kernir patch 0018 */
+ 			free(name);
++			if (r != ARCHIVE_OK) {
++				goto out;
++			}
+ 			break;
+ 		case XmlNodeType_Text:
+ 			r = xmllite_call_return_as(a, &as, reader,

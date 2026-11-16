@@ -1,0 +1,150 @@
+Kernir patch 0023: the current-locale charset is UTF-8 on Apple platforms
+
+Upstream: libarchive 3.8.10, libarchive/archive_string.c (default_iconv_charset and the multibyte <-> wide
+conversions). Applies on top of 0001-0022; 0003 touches the same file elsewhere.
+
+libarchive converts every entry name between the format's charset and the "current locale" one, which it takes
+from nl_langinfo(CODESET) of the calling thread. Kernir ran each name-converting call with a UTF-8 LC_CTYPE
+installed per thread (uselocale), and trapped when newlocale found none. iOS 17 has none: newlocale fails (EFTYPE)
+for every UTF-8 name, only "C" opens, and its codeset is US-ASCII, so every non-ASCII name failed to convert (zip
+UTF-8 names, 7z, RAR, tar, iso9660 Joliet; adds and renames refused). Pinning a handle's current_code would not
+reach header entries: archive_entry_clear zeroes entry->archive, so their conversions run with a == NULL.
+
+On __APPLE__ default_iconv_charset returns "UTF-8" when no charset is cached, so the current charset is UTF-8 for
+every handle and every entry, whatever the thread's locale. The multibyte <-> wide conversions behind
+archive_entry_*_w (archive_wstring_append_from_mbs, archive_string_append_from_wcs) and invalid_mbs decode and encode
+UTF-8 with libarchive's own helpers instead of mbrtowc/wcrtomb, as a UTF-8 locale does: in "C" every byte was one
+wide character, so the zip and cab readers' backslash-to-slash step split CP932 names at a 0x5C trail byte (表 is
+95 5C). Invalid UTF-8 fails there as it did, and a wide character past U+10FFFF or a surrogate becomes "?" (EILSEQ).
+Names on Apple file systems are UTF-8 and Kernir only ever ran with a UTF-8 locale here, so nothing changes where
+one exists.
+
+Apply from Sources/CLibArchive: patch -p1 < patches/0023-apple-current-charset-utf8.patch
+
+--- a/libarchive/archive_string.c
++++ b/libarchive/archive_string.c
+@@ -445,7 +445,17 @@
+ default_iconv_charset(const char *charset) {
+ 	if (charset != NULL && charset[0] != '\0')
+ 		return charset;
+-#if HAVE_LOCALE_CHARSET && HAVE_LOCALCHARSET_H && !defined(__APPLE__)
++#if defined(__APPLE__)
++	/*
++	 * Kernir patch 0023 (patches/0023-apple-current-charset-utf8.patch):
++	 * names are UTF-8 on every Apple platform, so the "current locale"
++	 * charset is UTF-8 whatever the calling thread's LC_CTYPE. iOS 17 has
++	 * no UTF-8 locale at all: its "C" codeset is US-ASCII, and every
++	 * non-ASCII name failed to convert. This also covers the entries
++	 * archive_entry_clear unbinds from their archive (a == NULL).
++	 */
++	return "UTF-8";
++#elif HAVE_LOCALE_CHARSET && HAVE_LOCALCHARSET_H && !defined(__APPLE__)
+ 	/* locale_charset() is broken on Mac OS */
+ 	return locale_charset();
+ #elif HAVE_NL_LANGINFO
+@@ -643,7 +653,28 @@
+ 	if (NULL == archive_wstring_ensure(dest, dest->length + len + 1))
+ 		return (-1);
+ 	wcs = dest->s + dest->length;
++#if defined(__APPLE__)
+ 	/*
++	 * Kernir patch 0023: the current charset is UTF-8 here (see
++	 * default_iconv_charset), so decode UTF-8 as a UTF-8 locale's
++	 * mbrtowc does, whatever the thread's locale. In "C" mbrtowc took
++	 * every byte as one character, so the 0x5C trail byte of a CP932
++	 * name read as a backslash. Invalid or truncated UTF-8 fails.
++	 */
++	while (*mbs && mbs_length > 0) {
++		uint32_t uc;
++		int n = utf8_to_unicode(&uc, mbs, mbs_length);
++		if (n <= 0) {
++			ret_val = -1;
++			break;
++		}
++		*wcs++ = (wchar_t)uc;
++		mbs += n;
++		mbs_length -= n;
++	}
++	(void)r;
++#else
++	/*
+ 	 * We cannot use mbsrtowcs/mbstowcs here because those may convert
+ 	 * extra MBS when strlen(p) > len and one wide character consists of
+ 	 * multi bytes.
+@@ -681,6 +712,7 @@
+ 		mbs += r;
+ 		mbs_length -= r;
+ 	}
++#endif /* __APPLE__ */
+ 	dest->length = wcs - dest->s;
+ 	dest->s[dest->length] = L'\0';
+ 	return (ret_val);
+@@ -845,7 +877,13 @@
+ 		return (-1);
+ 
+ 	p = as->s + as->length;
+-	end = as->s + as->buffer_length - MB_CUR_MAX -1;
++#if defined(__APPLE__)
++	/* Kernir patch 0023: encode UTF-8, as in archive_wstring_append_from_mbs. */
++#define KERNIR_MB_MAX ((size_t)4)
++#else
++#define KERNIR_MB_MAX ((size_t)MB_CUR_MAX)
++#endif
++	end = as->s + as->buffer_length - KERNIR_MB_MAX -1;
+ 	while (*w != L'\0' && len > 0) {
+ 		if (p >= end) {
+ 			as->length = p - as->s;
+@@ -853,12 +891,22 @@
+ 			/* Re-allocate buffer for MBS. */
+ 			if (archive_string_ensure(as,
+ 			    as->length + max(len * 2,
+-			    (size_t)MB_CUR_MAX) + 1) == NULL)
++			    KERNIR_MB_MAX) + 1) == NULL)
+ 				return (-1);
+ 			p = as->s + as->length;
+-			end = as->s + as->buffer_length - MB_CUR_MAX -1;
++			end = as->s + as->buffer_length - KERNIR_MB_MAX -1;
+ 		}
+-#if HAVE_WCRTOMB
++#if defined(__APPLE__)
++		if ((uint32_t)*w > UNICODE_MAX ||
++		    IS_SURROGATE_PAIR_LA((uint32_t)*w)) {
++			/* What a UTF-8 wcrtomb refuses: EILSEQ. */
++			w++;
++			n = -1;
++			errno = EILSEQ;
++		} else
++			n = (int)unicode_to_utf8(p, KERNIR_MB_MAX,
++			    (uint32_t)*w++);
++#elif HAVE_WCRTOMB
+ 		n = wcrtomb(p, *w++, &shift_state);
+ #else
+ 		n = wctomb(p, *w++);
+@@ -880,6 +928,7 @@
+ 	as->s[as->length] = '\0';
+ 	return (ret_val);
+ }
++#undef KERNIR_MB_MAX
+ 
+ #else /* HAVE_WCTOMB || HAVE_WCRTOMB */
+ 
+@@ -2302,7 +2351,18 @@
+ 	while (n) {
+ 		wchar_t wc;
+ 
+-#if HAVE_MBRTOWC
++#if defined(__APPLE__)
++		/* Kernir patch 0023: valid UTF-8, as a UTF-8 locale checks. */
++		uint32_t uc;
++		int un;
++		if (*p == '\0')
++			break;
++		un = utf8_to_unicode(&uc, p, n);
++		(void)wc;
++		if (un <= 0)
++			return (-1);/* Invalid. */
++		r = (size_t)un;
++#elif HAVE_MBRTOWC
+ 		r = mbrtowc(&wc, p, n, &shift_state);
+ #else
+ 		r = mbtowc(&wc, p, n);

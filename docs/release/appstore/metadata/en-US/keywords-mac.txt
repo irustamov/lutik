@@ -1,0 +1,1 @@
+unrar,extractor,extract,unpack,decompress,compress,quick look,tar,gz,bz2,xz,iso,password,unarchiver

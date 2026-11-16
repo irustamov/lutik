@@ -1,0 +1,378 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "7-Zip Archive" : {
+      "comment" : "Document type name (CFBundleTypeName). Finder shows it in the Kind column and in Get Info. Format and product names in it (such as ZIP, RAR or Android) are proper names.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "7-Zip Archive"
+          }
+        }
+      }
+    },
+    "Android App Bundle" : {
+      "comment" : "File type name, used both as a document type name (CFBundleTypeName) and as an imported type's description (UTTypeDescription). Finder shows it in the Kind column and in Get Info. Format and product names in it (such as ZIP, RAR or Android) are proper names.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Android App Bundle"
+          }
+        }
+      }
+    },
+    "Android Package" : {
+      "comment" : "File type name, used both as a document type name (CFBundleTypeName) and as an imported type's description (UTTypeDescription). Finder shows it in the Kind column and in Get Info. Format and product names in it (such as ZIP, RAR or Android) are proper names.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Android Package"
+          }
+        }
+      }
+    },
+    "Bzip2 Archive" : {
+      "comment" : "Document type name (CFBundleTypeName). Finder shows it in the Kind column and in Get Info. Format and product names in it (such as ZIP, RAR or Android) are proper names.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bzip2 Archive"
+          }
+        }
+      }
+    },
+    "Bzip2 TAR Archive" : {
+      "comment" : "Document type name (CFBundleTypeName). Finder shows it in the Kind column and in Get Info. Format and product names in it (such as ZIP, RAR or Android) are proper names.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bzip2 TAR Archive"
+          }
+        }
+      }
+    },
+    "CFBundleDisplayName" : {
+      "comment" : "App name (CFBundleDisplayName). Shown in Finder and the Dock. Lutik is the app name: do not translate it.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lutik"
+          }
+        }
+      }
+    },
+    "CFBundleName" : {
+      "comment" : "Short app name (CFBundleName), shown as the application menu title in the menu bar. Lutik is the app name: do not translate it.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lutik"
+          }
+        }
+      }
+    },
+    "CPIO Archive" : {
+      "comment" : "Document type name (CFBundleTypeName). Finder shows it in the Kind column and in Get Info. Format and product names in it (such as ZIP, RAR or Android) are proper names.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CPIO Archive"
+          }
+        }
+      }
+    },
+    "Cabinet Archive" : {
+      "comment" : "Document type name (CFBundleTypeName). Finder shows it in the Kind column and in Get Info. Format and product names in it (such as ZIP, RAR or Android) are proper names.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cabinet Archive"
+          }
+        }
+      }
+    },
+    "File or Folder" : {
+      "comment" : "Document type name (CFBundleTypeName). Finder shows it in the Kind column and in Get Info. Format and product names in it (such as ZIP, RAR or Android) are proper names.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "File or Folder"
+          }
+        }
+      }
+    },
+    "GNU TAR Archive" : {
+      "comment" : "Document type name (CFBundleTypeName). Finder shows it in the Kind column and in Get Info. Format and product names in it (such as ZIP, RAR or Android) are proper names.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "GNU TAR Archive"
+          }
+        }
+      }
+    },
+    "Gzip Archive" : {
+      "comment" : "Document type name (CFBundleTypeName). Finder shows it in the Kind column and in Get Info. Format and product names in it (such as ZIP, RAR or Android) are proper names.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gzip Archive"
+          }
+        }
+      }
+    },
+    "Gzip TAR Archive" : {
+      "comment" : "Document type name (CFBundleTypeName). Finder shows it in the Kind column and in Get Info. Format and product names in it (such as ZIP, RAR or Android) are proper names.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gzip TAR Archive"
+          }
+        }
+      }
+    },
+    "ISO Disk Image" : {
+      "comment" : "Document type name (CFBundleTypeName). Finder shows it in the Kind column and in Get Info. Format and product names in it (such as ZIP, RAR or Android) are proper names.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ISO Disk Image"
+          }
+        }
+      }
+    },
+    "Java Archive" : {
+      "comment" : "Document type name (CFBundleTypeName). Finder shows it in the Kind column and in Get Info. Format and product names in it (such as ZIP, RAR or Android) are proper names.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Java Archive"
+          }
+        }
+      }
+    },
+    "Java Enterprise Archive" : {
+      "comment" : "File type name, used both as a document type name (CFBundleTypeName) and as an imported type's description (UTTypeDescription). Finder shows it in the Kind column and in Get Info. Format and product names in it (such as ZIP, RAR or Android) are proper names.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Java Enterprise Archive"
+          }
+        }
+      }
+    },
+    "LHA Archive" : {
+      "comment" : "File type name, used both as a document type name (CFBundleTypeName) and as an imported type's description (UTTypeDescription). Finder shows it in the Kind column and in Get Info. Format and product names in it (such as ZIP, RAR or Android) are proper names.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "LHA Archive"
+          }
+        }
+      }
+    },
+    "Lutik Archive Items" : {
+      "comment" : "Description of an exported type (UTTypeDescription): the data Lutik puts on the pasteboard when items are copied or cut in an archive window. No file has this type. Lutik is the app name: do not translate it. Translate the rest.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lutik Archive Items"
+          }
+        }
+      }
+    },
+    "Mozilla Extension" : {
+      "comment" : "File type name, used both as a document type name (CFBundleTypeName) and as an imported type's description (UTTypeDescription). Finder shows it in the Kind column and in Get Info. Format and product names in it (such as ZIP, RAR or Android) are proper names.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mozilla Extension"
+          }
+        }
+      }
+    },
+    "NuGet Package" : {
+      "comment" : "File type name, used both as a document type name (CFBundleTypeName) and as an imported type's description (UTTypeDescription). Finder shows it in the Kind column and in Get Info. Format and product names in it (such as ZIP, RAR or Android) are proper names.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "NuGet Package"
+          }
+        }
+      }
+    },
+    "Python Wheel" : {
+      "comment" : "File type name, used both as a document type name (CFBundleTypeName) and as an imported type's description (UTTypeDescription). Finder shows it in the Kind column and in Get Info. Format and product names in it (such as ZIP, RAR or Android) are proper names.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Python Wheel"
+          }
+        }
+      }
+    },
+    "RAR Archive" : {
+      "comment" : "File type name, used both as a document type name (CFBundleTypeName) and as an imported type's description (UTTypeDescription). Finder shows it in the Kind column and in Get Info. Format and product names in it (such as ZIP, RAR or Android) are proper names.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "RAR Archive"
+          }
+        }
+      }
+    },
+    "Split Archive Part" : {
+      "comment" : "File type name, used both as a document type name (CFBundleTypeName) and as an imported type's description (UTTypeDescription). Finder shows it in the Kind column and in Get Info. Format and product names in it (such as ZIP, RAR or Android) are proper names.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Split Archive Part"
+          }
+        }
+      }
+    },
+    "TAR Archive" : {
+      "comment" : "Document type name (CFBundleTypeName). Finder shows it in the Kind column and in Get Info. Format and product names in it (such as ZIP, RAR or Android) are proper names.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "TAR Archive"
+          }
+        }
+      }
+    },
+    "Visual Studio Extension" : {
+      "comment" : "File type name, used both as a document type name (CFBundleTypeName) and as an imported type's description (UTTypeDescription). Finder shows it in the Kind column and in Get Info. Format and product names in it (such as ZIP, RAR or Android) are proper names.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Visual Studio Extension"
+          }
+        }
+      }
+    },
+    "Web Application Archive" : {
+      "comment" : "Document type name (CFBundleTypeName). Finder shows it in the Kind column and in Get Info. Format and product names in it (such as ZIP, RAR or Android) are proper names.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Web Application Archive"
+          }
+        }
+      }
+    },
+    "XAR Archive" : {
+      "comment" : "Document type name (CFBundleTypeName). Finder shows it in the Kind column and in Get Info. Format and product names in it (such as ZIP, RAR or Android) are proper names.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "XAR Archive"
+          }
+        }
+      }
+    },
+    "XZ Archive" : {
+      "comment" : "Document type name (CFBundleTypeName). Finder shows it in the Kind column and in Get Info. Format and product names in it (such as ZIP, RAR or Android) are proper names.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "XZ Archive"
+          }
+        }
+      }
+    },
+    "XZ TAR Archive" : {
+      "comment" : "Document type name (CFBundleTypeName). Finder shows it in the Kind column and in Get Info. Format and product names in it (such as ZIP, RAR or Android) are proper names.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "XZ TAR Archive"
+          }
+        }
+      }
+    },
+    "ZIP Archive" : {
+      "comment" : "Document type name (CFBundleTypeName). Finder shows it in the Kind column and in Get Info. Format and product names in it (such as ZIP, RAR or Android) are proper names.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ZIP Archive"
+          }
+        }
+      }
+    },
+    "Zstandard Archive" : {
+      "comment" : "File type name, used both as a document type name (CFBundleTypeName) and as an imported type's description (UTTypeDescription). Finder shows it in the Kind column and in Get Info. Format and product names in it (such as ZIP, RAR or Android) are proper names.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zstandard Archive"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

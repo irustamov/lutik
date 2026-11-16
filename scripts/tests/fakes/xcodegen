@@ -1,0 +1,3 @@
+#!/bin/bash
+# Fake xcodegen: logs argv only.
+printf 'xcodegen %s\n' "$*" >> "${FAKE_XCODEGEN_LOG:-/dev/null}"

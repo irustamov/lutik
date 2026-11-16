@@ -1,0 +1,141 @@
+Kernir patch 0017: the xar reader joins the pieces of a <name> or <link> text
+
+Upstream: libarchive 3.8.10, libarchive/archive_read_support_format_xar.c (struct xar, xml_start, xml_data).
+Reported upstream as https://github.com/libarchive/libarchive/issues/3849. Applies on top of 0001-0016 (0015 and
+0016 lines included).
+
+With expat (the only XML parser in this build), the CharacterDataHandler hands over the text of one element in
+pieces: at every entity or character reference (&amp; &lt; &gt; &#233;), at each newline, and where the 64 KiB
+chunk of inflated TOC that expat_read_toc feeds to XML_Parse ends. xml_data kept only the first piece of a <name>
+(the HAS_PATHNAME guard added upstream for repeated <name> elements, #2151/#2236, also dropped the rest of the
+first one) and only the last piece of a <link> (archive_strncpy). So "Tom &amp; Jerry.txt" and "Tom &amp;
+Mary.txt" both read as "Tom " and extract over each other, a name across a chunk boundary is cut there, and
+"a&amp;b" links to "b". Nothing is reported.
+
+xml_start now records, when a <name> starts, whether the entry already has a pathname (kernir_name_ignored: only
+the first <name> counts, as upstream intends), and empties the symlink target when a <link> starts (the last <link>
+counts, whole), uncharging what it held from 0015's names total. xml_data adds the parent prefix with the first
+piece of a name and appends every piece of a name or link target. 0015's per-name and per-link limit (65,536
+bytes, parent prefix included) and 0016's names total are charged on the joined text, by what each piece adds, so
+a name cannot pass the limits by arriving in pieces. Names with enctype="base64" are still decoded per piece by
+strappend_base64: a name wrapped into lines of whole 4-character groups now decodes whole, but one split at a chunk
+boundary inside a group still decodes wrongly (the issue's open point; decoding in xml_end would fix it). Archives whose names come in one piece read as before.
+
+One behaviour differs from upstream: "<link>a</link><link/>" now leaves an empty target (upstream kept "a") and
+HAS_SYMLINK stays set. This is harmless: read_header copies only a non-empty target into the entry.
+
+Apply from Sources/CLibArchive: patch -p1 < patches/0017-xar-name-chardata.patch
+
+--- a/libarchive/archive_read_support_format_xar.c
++++ b/libarchive/archive_read_support_format_xar.c
+@@ -349,6 +349,8 @@
+ 	enum xmlstatus		 xmlsts_unknown;
+ 	struct unknown_tag	*unknowntags;
+ 	int			 base64text;
++	/* Kernir patch 0017: inside a <name> after the entry has one. */
++	int			 kernir_name_ignored;
+ 
+ 	/*
+ 	 * TOC
+@@ -2166,8 +2168,16 @@
+ 			xar->xmlsts = FILE_DEVICENO;
+ 		else if (strcmp(name, "inode") == 0)
+ 			xar->xmlsts = FILE_INODE;
+-		else if (strcmp(name, "link") == 0)
++		else if (strcmp(name, "link") == 0) {
+ 			xar->xmlsts = FILE_LINK;
++			/*
++			 * Kernir patch 0017: the last <link> counts, whole;
++			 * a replaced target is no longer charged.
++			 */
++			xar->kernir_name_bytes -=
++			    archive_strlen(&(xar->file->symlink));
++			archive_string_empty(&(xar->file->symlink));
++		}
+ 		else if (strcmp(name, "type") == 0) {
+ 			xar->xmlsts = FILE_TYPE;
+ 			for (attr = list->first; attr != NULL;
+@@ -2204,6 +2214,9 @@
+ 		}
+ 		else if (strcmp(name, "name") == 0) {
+ 			xar->xmlsts = FILE_NAME;
++			/* Kernir patch 0017: only the first <name> counts. */
++			xar->kernir_name_ignored =
++			    (xar->file->has & HAS_PATHNAME) != 0;
+ 			for (attr = list->first; attr != NULL;
+ 			    attr = attr->next) {
+ 				if (strcmp(attr->name, "enctype") == 0 &&
+@@ -2804,6 +2817,7 @@
+ 	struct archive_read *a = (struct archive_read *)userData;
+ 	struct xar *xar = a->format->data;
+ 	uint64_t val;
++	size_t used;
+ 	int r;
+ 
+ #if DEBUG
+@@ -2836,15 +2850,24 @@
+ 
+ 	switch (xar->xmlsts) {
+ 	case FILE_NAME:
+-		if (xar->file->has & HAS_PATHNAME)
++		/*
++		 * Kernir patch 0017: expat hands over the text of one <name>
++		 * in pieces (at entity and character references, newlines
++		 * and the end of each inflated TOC chunk): join them, and
++		 * charge the limits on the joined name.
++		 */
++		if (xar->kernir_name_ignored)
+ 			break;
+-
+-		if (xar->file->parent != NULL) {
+-			archive_string_concat(&(xar->file->pathname),
+-			    &(xar->file->parent->pathname));
+-			archive_strappend_char(&(xar->file->pathname), '/');
++		used = archive_strlen(&(xar->file->pathname));
++		if ((xar->file->has & HAS_PATHNAME) == 0) {
++			if (xar->file->parent != NULL) {
++				archive_string_concat(&(xar->file->pathname),
++				    &(xar->file->parent->pathname));
++				archive_strappend_char(&(xar->file->pathname),
++				    '/');
++			}
++			xar->file->has |= HAS_PATHNAME;
+ 		}
+-		xar->file->has |= HAS_PATHNAME;
+ 		if (xar->base64text) {
+ 			strappend_base64(xar,
+ 			    &(xar->file->pathname), s, len);
+@@ -2855,7 +2878,8 @@
+ 		    KERNIR_XAR_NAME_BYTES)
+ 			return (kernir_xar_refuse(a,
+ 			    "xar entry name is longer than 65536 bytes"));
+-		xar->kernir_name_bytes += archive_strlen(&(xar->file->pathname));
++		xar->kernir_name_bytes +=
++		    archive_strlen(&(xar->file->pathname)) - used;
+ 		/* Kernir patch 0016: the grown total. */
+ 		if (xar->kernir_name_bytes >
+ 		    __archive_read_kernir_names_allowance(a, xar->kernir_files))
+@@ -2863,14 +2887,17 @@
+ 			    "link targets take more than the names limit"));
+ 		break;
+ 	case FILE_LINK:
+-		/* Kernir patch 0015: each piece replaces the last one. */
+-		if (len > KERNIR_XAR_NAME_BYTES)
++		/* Kernir patch 0017: join the pieces (see FILE_NAME). */
++		used = archive_strlen(&(xar->file->symlink));
++		xar->file->has |= HAS_SYMLINK;
++		archive_strncat(&(xar->file->symlink), s, len);
++		/* Kernir patch 0015 */
++		if (archive_strlen(&(xar->file->symlink)) >
++		    KERNIR_XAR_NAME_BYTES)
+ 			return (kernir_xar_refuse(a,
+ 			    "xar link target is longer than 65536 bytes"));
+-		xar->kernir_name_bytes -= archive_strlen(&(xar->file->symlink));
+-		xar->file->has |= HAS_SYMLINK;
+-		archive_strncpy(&(xar->file->symlink), s, len);
+-		xar->kernir_name_bytes += archive_strlen(&(xar->file->symlink));
++		xar->kernir_name_bytes +=
++		    archive_strlen(&(xar->file->symlink)) - used;
+ 		/* Kernir patch 0016: the grown total. */
+ 		if (xar->kernir_name_bytes >
+ 		    __archive_read_kernir_names_allowance(a, xar->kernir_files))

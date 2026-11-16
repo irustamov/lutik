@@ -1,0 +1,48 @@
+Kernir patch 0007: a data CRC mismatch fails the entry in the 7zip and LHA readers
+
+Upstream: libarchive 3.8.10, libarchive/archive_read_support_format_7zip.c
+(archive_read_format_7zip_read_data) and libarchive/archive_read_support_format_lha.c
+(lha_end_of_entry).
+
+Upstream reports a file whose data does not match its stored CRC only as ARCHIVE_WARN ("7-Zip bad
+CRC: 0x.. should be 0x..", "LHa data CRC error"; the LHA one arrives in place of the end of the data),
+so a caller that accepts warnings extracts damaged bytes without an error and a repack launders them
+with a fresh CRC. Both are now ARCHIVE_FAILED with the same message, as the zip, rar, rar5 and cab
+readers already do. On 7zip this extends patch 0004, which made the mismatch ARCHIVE_FAILED in an
+encrypted folder only. Under DONT_FAIL_ON_CRC_ERROR the upstream (and 0004) behaviour is kept.
+
+Apply from Sources/CLibArchive: patch -p1 < patches/0007-7zip-lha-data-crc-fails.patch
+
+--- a/libarchive/archive_read_support_format_7zip.c
++++ b/libarchive/archive_read_support_format_7zip.c
+@@ -1226,8 +1226,14 @@
+ 			    (unsigned long)zip->si.ss.digests[
+ 			    		zip->entry->ssIndex]);
+ 			/* Kernir patch 0004: in an encrypted folder this is
+-			 * what a wrong passphrase looks like; never a warning. */
++			 * what a wrong passphrase looks like; never a warning.
++			 * Kernir patch 0007: nor in a plain folder, where it is
++			 * damaged data. */
++#ifndef DONT_FAIL_ON_CRC_ERROR
++			ret = ARCHIVE_FAILED;
++#else
+ 			ret = zip->aes_folder ? ARCHIVE_FAILED : ARCHIVE_WARN;
++#endif
+ 		}
+ 	}
+ 
+--- a/libarchive/archive_read_support_format_lha.c
++++ b/libarchive/archive_read_support_format_lha.c
+@@ -1469,7 +1469,12 @@
+ 		    lha->crc != lha->entry_crc_calculated) {
+ 			archive_set_error(&a->archive, ARCHIVE_ERRNO_MISC,
+ 			    "LHa data CRC error");
++			/* Kernir patch 0007: damaged data fails the entry. */
++#ifndef DONT_FAIL_ON_CRC_ERROR
++			r = ARCHIVE_FAILED;
++#else
+ 			r = ARCHIVE_WARN;
++#endif
+ 		}
+ 
+ 		/* End-of-entry cleanup done. */

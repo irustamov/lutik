@@ -1,0 +1,1550 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "Folder": {
+      "comment": "Kind column of the Mac archive list: the item is a folder.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Folder"
+          }
+        }
+      }
+    },
+    "Document": {
+      "comment": "Kind column of the Mac archive list: a file whose extension has no known kind.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Document"
+          }
+        }
+      }
+    },
+    "%@ uncompressed": {
+      "comment": "Archive footer and Archive Info Size row: the total size of the archive's contents when it isn't known how big they are compressed. %@ = a size (e.g. “4.2 MB”).",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ uncompressed"
+          }
+        }
+      }
+    },
+    "%@ (%@ uncompressed)": {
+      "comment": "Archive Info, Size row. %1$@ = the archive file's size (e.g. “1.9 MB”), %2$@ = the total size of its contents (e.g. “4.2 MB”).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ (%2$@ uncompressed)"
+          }
+        }
+      }
+    },
+    "%@, %@ compressed": {
+      "comment": "Archive footer: the archive's contents' total size and their compressed size. %1$@ = total size (e.g. “4.2 MB”), %2$@ = compressed size (e.g. “1.8 MB”).",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@, %2$@ compressed"
+          }
+        }
+      }
+    },
+    "%@ · %@": {
+      "comment": "Archive footer. %1$@ = item count (e.g. “12 items”), %2$@ = either the total size (e.g. “1.6 MB uncompressed”, or a bare size such as “415 KB” at compact width on iPhone) or the archive format (e.g. “GZ”).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ · %2$@"
+          }
+        }
+      }
+    },
+    "%@ · %@ · %@": {
+      "comment": "Archive footer. %1$@ = item count (e.g. “12 items”), %2$@ = total size (e.g. “4.2 MB, 1.8 MB compressed” or “1.6 MB uncompressed”), %3$@ = archive format (e.g. “ZIP”).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ · %2$@ · %3$@"
+          }
+        }
+      }
+    },
+    "This file isn't a supported archive.": {
+      "comment": "Error title when opening a file that isn't an archive Lutik can read. Shown in the open alert on macOS and in the error view on iOS.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This file isn't a supported archive."
+          }
+        }
+      }
+    },
+    "This archive is password protected.": {
+      "comment": "Error title when an encrypted archive is opened without a password.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This archive is password protected."
+          }
+        }
+      }
+    },
+    "The password is incorrect.": {
+      "comment": "Error title when the password entered for an encrypted archive is wrong.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The password is incorrect."
+          }
+        }
+      }
+    },
+    "Encrypted %@ archives aren't supported yet.": {
+      "comment": "Error title when an archive uses an encryption Lutik can't read. %@ = the archive format's name (e.g. “RAR”, “7z”); format names are not translated.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Encrypted %@ archives aren't supported yet."
+          }
+        }
+      }
+    },
+    "%@ archives can only be read.": {
+      "comment": "Error title when trying to change an archive whose format Lutik can't write. %@ = the archive format's name (e.g. “RAR”); format names are not translated.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ archives can only be read."
+          }
+        }
+      }
+    },
+    "The archive is damaged and can't be read completely.": {
+      "comment": "Error title when the archive's data is corrupt or cut short.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The archive is damaged and can't be read completely."
+          }
+        }
+      }
+    },
+    "The item couldn't be found in the archive.": {
+      "comment": "Error title when an item to extract or preview is no longer in the archive.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The item couldn't be found in the archive."
+          }
+        }
+      }
+    },
+    "The file couldn't be read or written.": {
+      "comment": "Error title for a disk read or write failure while working on the archive.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The file couldn't be read or written."
+          }
+        }
+      }
+    },
+    "The operation was cancelled.": {
+      "comment": "Error title shown when the user stopped an operation (extracting, saving…).",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The operation was cancelled."
+          }
+        }
+      }
+    },
+    "This feature isn't available yet.": {
+      "comment": "Error title for an action this version of Lutik can't do yet.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This feature isn't available yet."
+          }
+        }
+      }
+    },
+    "Choose a ZIP, 7z, RAR, TAR or other supported archive.": {
+      "comment": "Recovery suggestion under “This file isn't a supported archive.”. ZIP, 7z, RAR and TAR are format names: do not translate them.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose a ZIP, 7z, RAR, TAR or other supported archive."
+          }
+        }
+      }
+    },
+    "Enter the password to open it.": {
+      "comment": "Recovery suggestion under “This archive is password protected.”.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter the password to open it."
+          }
+        }
+      }
+    },
+    "Check the password and try again.": {
+      "comment": "Recovery suggestion under “The password is incorrect.”.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check the password and try again."
+          }
+        }
+      }
+    },
+    "Lutik: %@": {
+      "comment": "The name of an archive's saved password, shown in Keychain Access. %@ = the archive's file name (e.g. “Photos.zip”); Lutik is the app name and is not translated.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lutik: %@"
+          }
+        }
+      }
+    },
+    "Decrypt it with another app first, or use a ZIP archive.": {
+      "comment": "Recovery suggestion under “Encrypted %@ archives aren't supported yet.”. ZIP is a format name: do not translate it.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Decrypt it with another app first, or use a ZIP archive."
+          }
+        }
+      }
+    },
+    "Use Save As to save a copy as ZIP or 7z.": {
+      "comment": "Recovery suggestion under “%@ archives can only be read.”. “Save As” is the File menu command (Save As Copy on iOS); ZIP and 7z are format names: do not translate them.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use Save As to save a copy as ZIP or 7z."
+          }
+        }
+      }
+    },
+    "This archive nests folders too deeply.": {
+      "comment": "Error when Lutik refuses to open an archive whose folders are nested too deeply (ArchiveNestingError). Shown as the open alert's message on macOS and in the error view on iOS.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This archive nests folders too deeply."
+          }
+        }
+      }
+    },
+    "This archive has too many files to open.": {
+      "comment": "Error when an archive lists more than 4 million files and folders, so Lutik refuses to open it (ArchiveNestingError.Limit.entryCount). Shown as the open alert's message on macOS and in the error view on iOS.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This archive has too many files to open."
+          }
+        }
+      }
+    },
+    "This archive's file names are too long or too complex to open.": {
+      "comment": "Error when Lutik refuses to open an archive whose item paths are too long or use too many combining marks (ArchiveNestingError). Shown as the open alert's message on macOS and in the error view on iOS.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This archive's file names are too long or too complex to open."
+          }
+        }
+      }
+    },
+    "%lld items": {
+      "comment": "Number of items in the archive: the first part of the archive footer (e.g. “12 items · 4.2 MB · ZIP”) and the value of Archive Info's Items row. %lld = the number of files and folders.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%#@n@"
+          },
+          "substitutions": {
+            "n": {
+              "argNum": 1,
+              "formatSpecifier": "lld",
+              "variations": {
+                "plural": {
+                  "one": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg item"
+                    }
+                  },
+                  "other": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg items"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Format": {
+      "comment": "Archive Info: label of the row showing the archive format (e.g. “ZIP”).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Format"
+          }
+        }
+      }
+    },
+    "Size": {
+      "comment": "Archive Info: label of the row showing the archive's size (e.g. “1.9 MB (4.2 MB uncompressed)”).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Size"
+          }
+        }
+      }
+    },
+    "Items": {
+      "comment": "Archive Info: label of the row showing how many items the archive holds (e.g. “12 items”).",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Items"
+          }
+        }
+      }
+    },
+    "Encryption": {
+      "comment": "Archive Info: label of the row showing the archive's encryption (e.g. “AES-256”); shown only for an encrypted archive.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Encryption"
+          }
+        }
+      }
+    },
+    "Too long for a ZIP comment.": {
+      "comment": "Archive Info: shown under the archive comment field, and when Save is refused, when the edited ZIP comment is longer than 16,000 bytes.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Too long for a ZIP comment."
+          }
+        }
+      }
+    },
+    "The comment contains bytes a ZIP archive cannot hold": {
+      "comment": "Archive Info: shown under the archive comment field, and when Save is refused, when the edited ZIP comment contains a byte sequence that would break the ZIP file.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The comment contains bytes a ZIP archive cannot hold"
+          }
+        }
+      }
+    },
+    "A split archive can’t have a comment.": {
+      "comment": "Shown when a save into split volumes is refused because the ZIP comment was changed, and as a Mac save panel note with Split on (the archive’s comment is left out): a split archive keeps no archive comment.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A split archive can’t have a comment."
+          }
+        }
+      }
+    },
+    "Remove the comment, or turn off splitting.": {
+      "comment": "Recovery suggestion under “A split archive can’t have a comment.” when a save into split volumes is refused.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Remove the comment, or turn off splitting."
+          }
+        }
+      }
+    },
+    "Add": {
+      "comment": "Undo action name after adding files to the archive (Edit > Undo Add).",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add"
+          }
+        }
+      }
+    },
+    "Delete": {
+      "comment": "Undo action name after deleting items from the archive (Edit > Undo Delete).",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Delete"
+          }
+        }
+      }
+    },
+    "Update": {
+      "comment": "Undo action name after a file opened from the archive and changed in another app was put back into the archive (Edit > Undo Update).",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Update"
+          }
+        }
+      }
+    },
+    "Rename": {
+      "comment": "Undo action name after renaming an item in the archive (Edit > Undo Rename).",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rename"
+          }
+        }
+      }
+    },
+    "New Folder": {
+      "comment": "Undo action name after adding a new folder to the archive (Edit > Undo New Folder).",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "New Folder"
+          }
+        }
+      }
+    },
+    "Move": {
+      "comment": "Undo action name after moving items to another folder inside the archive (Edit > Undo Move).",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Move"
+          }
+        }
+      }
+    },
+    "An item can’t be moved into itself.": {
+      "comment": "Error when moving items inside the archive: the target folder is one of the moved items or inside one.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "An item can’t be moved into itself."
+          }
+        }
+      }
+    },
+    "More than one item named “%@” would be moved into this folder.": {
+      "comment": "Error when moving items inside the archive: two of them, or one and a hidden entry of the archive, would share a name in the target folder. %@ = the name.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "More than one item named “%@” would be moved into this folder."
+          }
+        }
+      }
+    },
+    "“%@” can’t be used until you save, because items were moved out of a deleted folder with that name.": {
+      "comment": "Error when moving items inside the archive (or deleting some) would put an item moved out of a deleted folder back at that folder's path: the user saves the archive first. %@ = the deleted folder's name.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” can’t be used until you save, because items were moved out of a deleted folder with that name."
+          }
+        }
+      }
+    },
+    "These items can’t be moved.": {
+      "comment": "Error when moving items inside the archive: an item is gone, the target is not a folder, or the archive can't be edited.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "These items can’t be moved."
+          }
+        }
+      }
+    },
+    "Couldn't Paste": {
+      "comment": "Alert title when pasting into the archive is refused (Edit > Paste).",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Couldn't Paste"
+          }
+        }
+      }
+    },
+    "Items cut in another archive can’t be pasted here. Copy them instead.": {
+      "comment": "Alert message when items cut (Edit > Cut) in another archive, or before Lutik was last quit, are pasted into this one.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Items cut in another archive can’t be pasted here. Copy them instead."
+          }
+        }
+      }
+    },
+    "“%@” is a link and can’t be copied out of the archive.": {
+      "comment": "Alert message when the only item exported is a link (a symbolic link, or a file hard-linked to one outside the archive's copy), which Lutik never hands to other apps. Shown for Edit > Copy and Cut, Share, Open With, preview, a drag-out to Finder, a drag to another archive window, and Share on iOS. %@ = the item's name.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” is a link and can’t be copied out of the archive."
+          }
+        }
+      }
+    },
+    "The selected items are links and can’t be copied out of the archive.": {
+      "comment": "Alert message when every item exported is a link (a symbolic link, or a file hard-linked to one outside the archive's copy), which Lutik never hands to other apps. Shown for Edit > Copy and Cut, Share, Open With, preview, a drag-out to Finder, a drag to another archive window, and Share on iOS.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The selected items are links and can’t be copied out of the archive."
+          }
+        }
+      }
+    },
+    "The cut items are no longer in this archive.": {
+      "comment": "Alert message when every item cut (Edit > Cut) was deleted or renamed before the paste.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The cut items are no longer in this archive."
+          }
+        }
+      }
+    },
+    "“%@” is already in this folder.": {
+      "comment": "Alert message when a copied archive item is pasted into the folder it is already in. %@ = the item's name.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” is already in this folder."
+          }
+        }
+      }
+    },
+    "%lld of the copied items are already in this folder.": {
+      "comment": "Alert message when several copied archive items are pasted into the folder they are already in. %lld = how many (always 2 or more).",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld of the copied items are already in this folder."
+          }
+        }
+      }
+    },
+    "Copying…": {
+      "comment": "Progress sheet title while the copied archive items are extracted for the clipboard (Edit > Copy).",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Copying…"
+          }
+        }
+      }
+    },
+    "Edit Comment": {
+      "comment": "Undo/Redo action name (Edit > Undo Edit Comment) after the archive's ZIP comment was changed.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit Comment"
+          }
+        }
+      }
+    },
+    "Enter a name.": {
+      "comment": "Error when renaming an item in the archive: the typed name is empty.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter a name."
+          }
+        }
+      }
+    },
+    "Names can't contain “/”.": {
+      "comment": "Error when renaming an item in the archive: the typed name contains a slash.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Names can't contain “/”."
+          }
+        }
+      }
+    },
+    "The names “.” and “..” can't be used.": {
+      "comment": "Error when renaming an item in the archive: “.” and “..” are reserved names.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The names “.” and “..” can't be used."
+          }
+        }
+      }
+    },
+    "This name is reserved for Finder metadata.": {
+      "comment": "Error when renaming an item in the archive: Finder uses the name for hidden metadata (__MACOSX, .DS_Store, names starting with “._”).",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This name is reserved for Finder metadata."
+          }
+        }
+      }
+    },
+    "The name is too long.": {
+      "comment": "Error when renaming an item in the archive: the name is over 255 bytes in UTF-8.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The name is too long."
+          }
+        }
+      }
+    },
+    "The name “%@” is already taken. Please choose a different name.": {
+      "comment": "Error when renaming an item in the archive: another item in the same folder has that name. %@ = the name as typed.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The name “%@” is already taken. Please choose a different name."
+          }
+        }
+      }
+    },
+    "This item can't be renamed.": {
+      "comment": "Error when renaming an item in the archive: the item is gone, or the archive can't be edited.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This item can't be renamed."
+          }
+        }
+      }
+    },
+    "untitled folder": {
+      "comment": "Default name of a folder made with New Folder, stored in the archive: use Finder’s name for a new folder in your language (English is lowercase, like Finder’s). A second one gets “ 2” appended (“untitled folder 2”), then “ 3”…",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "untitled folder"
+          }
+        }
+      }
+    },
+    "Enter a password.": {
+      "comment": "Save options: error shown when Encrypt with password is on and the password field is empty.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter a password."
+          }
+        }
+      }
+    },
+    "The passwords don't match.": {
+      "comment": "Save options: error shown when the password and its Verify field differ.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The passwords don't match."
+          }
+        }
+      }
+    },
+    "This format doesn't support the chosen encryption.": {
+      "comment": "Save options: error shown when the chosen format can't use the chosen encryption method.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This format doesn't support the chosen encryption."
+          }
+        }
+      }
+    },
+    "Volumes must be at least %@.": {
+      "comment": "Save options, Split into volumes: the typed volume size is too small. %@ is the smallest size, such as “1 MB”.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volumes must be at least %@."
+          }
+        }
+      }
+    },
+    "Enter a volume size greater than zero.": {
+      "comment": "Save options, Split into volumes: error shown when the custom volume size is empty or zero.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enter a volume size greater than zero."
+          }
+        }
+      }
+    },
+    "Too many volumes. Choose a larger volume size.": {
+      "comment": "Save options, Split into volumes: error shown when the chosen volume size would make more volumes than the format allows.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Too many volumes. Choose a larger volume size."
+          }
+        }
+      }
+    },
+    "Split into volumes": {
+      "comment": "Save options: label of the picker that splits the saved archive into parts (volumes) of a chosen size.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Split into volumes"
+          }
+        }
+      }
+    },
+    "Don't Split": {
+      "comment": "Save options, Split into volumes picker: the choice that saves one file, not split into volumes.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Don't Split"
+          }
+        }
+      }
+    },
+    "%@ (FAT32)": {
+      "comment": "Save options, Split into volumes: the preset for a FAT32 drive's largest file. %@ is a size such as “4 GB”. Keep FAT32 verbatim (a file system name).",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ (FAT32)"
+          }
+        }
+      }
+    },
+    "Store": {
+      "comment": "Save options, Method picker: the ZIP/7z method that stores files without compression.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Store"
+          }
+        }
+      }
+    },
+    "Custom…": {
+      "comment": "Save options, Split into volumes picker: the choice that shows a field to type a volume size.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Custom…"
+          }
+        }
+      }
+    },
+    "Volume size": {
+      "comment": "Save options, Split into volumes: label (and VoiceOver label of the text field) for the custom size of each volume.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Volume size"
+          }
+        }
+      }
+    },
+    "Unit": {
+      "comment": "Save options, Split into volumes: VoiceOver label of the unit picker (KB, MB, GB) next to the custom volume size.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unit"
+          }
+        }
+      }
+    },
+    "Opens in Lutik and 7-Zip, not Archive Utility or Windows.": {
+      "comment": "Save options note under Split into volumes for a split ZIP: which apps can open it. Lutik, 7-Zip, Archive Utility and Windows are names: do not translate them.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opens in Lutik and 7-Zip, not Archive Utility or Windows."
+          }
+        }
+      }
+    },
+    "Only a folder holding an earlier split archive can be replaced.": {
+      "comment": "Error when a split save chose an existing item to replace that isn't the folder of an earlier split archive (replacing it would lose other files).",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Only a folder holding an earlier split archive can be replaced."
+          }
+        }
+      }
+    },
+    "“%@” already exists.": {
+      "comment": "Extraction error: an item with this name is already in the destination folder. %@ = the item's name.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@” already exists."
+          }
+        }
+      }
+    },
+    "“%@” couldn't be replaced. The original is now named “%@”.": {
+      "comment": "Extraction error: replacing an existing item failed and the original was kept under a new name. %1$@ = the item's name, %2$@ = the original's new name.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%1$@” couldn't be replaced. The original is now named “%2$@”."
+          }
+        }
+      }
+    },
+    "“%@” couldn't be replaced. The original is in “%@”.": {
+      "comment": "Extraction error: replacing an existing item failed and the original was kept in another folder. %1$@ = the item's name, %2$@ = the name of the folder that now holds the original.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%1$@” couldn't be replaced. The original is in “%2$@”."
+          }
+        }
+      }
+    },
+    "“%@” couldn't be replaced. The original is in “%@”, inside the hidden folder “%@”.": {
+      "comment": "Extraction error: replacing an existing item failed and the original was kept in a folder inside a hidden folder. %1$@ = the item's name, %2$@ = the name of the folder that now holds the original, %3$@ = the hidden folder's name (starts with “.”).",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%1$@” couldn't be replaced. The original is in “%2$@”, inside the hidden folder “%3$@”."
+          }
+        }
+      }
+    },
+    "“%@” wasn't extracted to “%@”: its path has a link where a folder was expected.": {
+      "comment": "Extraction error: an item was not extracted because a symbolic link is in its path where a folder should be. %1$@ = the item's name, %2$@ = the destination folder's name.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%1$@” wasn't extracted to “%2$@”: its path has a link where a folder was expected."
+          }
+        }
+      }
+    },
+    "A partial copy of “%@” was left in “%@”.": {
+      "comment": "Drag-out alert title, shown when copying an item to another volume failed partway and the incomplete copy couldn't be removed. %1$@ = the item's file name (e.g. “Photos”), %2$@ = the name of the folder it was dropped in (e.g. “Desktop”). Keep the curly quotes.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A partial copy of “%1$@” was left in “%2$@”."
+          }
+        }
+      }
+    },
+    "%lld items already exist.": {
+      "comment": "Extraction error: several items with these names are already in the destination folder. %lld = number of those items (two or more).",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%#@n@"
+          },
+          "substitutions": {
+            "n": {
+              "argNum": 1,
+              "formatSpecifier": "lld",
+              "variations": {
+                "plural": {
+                  "one": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg item already exists."
+                    }
+                  },
+                  "other": {
+                    "stringUnit": {
+                      "state": "translated",
+                      "value": "%arg items already exist."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "The archive was kept because it has unsaved changes.": {
+      "comment": "Extract Here finished, but the archive wasn't moved to the Trash (Settings > Extracting) because it has unsaved edits.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The archive was kept because it has unsaved changes."
+          }
+        }
+      }
+    },
+    "Archive": {
+      "comment": "File name, without its extension, of the archive that Finder's “Compress with Lutik” makes from several items (“Archive.zip”, then “Archive 2.zip”…), as Finder's own Compress names it. A file name: no “/” or “:”, and it must not start with “.”.",
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Archive"
+          }
+        }
+      }
+    },
+    "Text Encoding": {
+      "comment": "View menu: the submenu choosing how archive file names are decoded",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Text Encoding"
+          }
+        }
+      }
+    },
+    "Automatic": {
+      "comment": "View > Text Encoding: decode names automatically",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Automatic"
+          }
+        }
+      }
+    },
+    "Unicode (UTF-8)": {
+      "comment": "View > Text Encoding: UTF-8",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unicode (UTF-8)"
+          }
+        }
+      }
+    },
+    "Cyrillic (Windows)": {
+      "comment": "View > Text Encoding: Windows-1251",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cyrillic (Windows)"
+          }
+        }
+      }
+    },
+    "Russian (DOS)": {
+      "comment": "View > Text Encoding: CP866",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Russian (DOS)"
+          }
+        }
+      }
+    },
+    "Cyrillic (KOI8-R)": {
+      "comment": "View > Text Encoding: KOI8-R",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cyrillic (KOI8-R)"
+          }
+        }
+      }
+    },
+    "Japanese (Windows, DOS)": {
+      "comment": "View > Text Encoding: CP932 (Shift JIS)",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Japanese (Windows, DOS)"
+          }
+        }
+      }
+    },
+    "Chinese (GB 18030)": {
+      "comment": "View > Text Encoding: GB 18030",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chinese (GB 18030)"
+          }
+        }
+      }
+    },
+    "Traditional Chinese (Big 5)": {
+      "comment": "View > Text Encoding: Big5",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Traditional Chinese (Big 5)"
+          }
+        }
+      }
+    },
+    "Korean (Windows, DOS)": {
+      "comment": "View > Text Encoding: CP949",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Korean (Windows, DOS)"
+          }
+        }
+      }
+    },
+    "Western (Windows Latin 1)": {
+      "comment": "View > Text Encoding: Windows-1252",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Western (Windows Latin 1)"
+          }
+        }
+      }
+    },
+    "Latin-US (DOS)": {
+      "comment": "View > Text Encoding: CP437",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Latin-US (DOS)"
+          }
+        }
+      }
+    },
+    "Central European (Windows Latin 2)": {
+      "comment": "View > Text Encoding: Windows-1250",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Central European (Windows Latin 2)"
+          }
+        }
+      }
+    },
+    "Reading “%@”…": {
+      "comment": "Progress title while the archive is listed again after another text encoding was chosen (Text Encoding menu). %@ = the archive's file name. The ellipsis shows work in progress.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reading “%@”…"
+          }
+        }
+      }
+    },
+    "Part %lld of “%@” is missing.": {
+      "comment": "Error title when a part of a split (multi-volume) archive can't be found. %1$lld = the missing part's number, %2$@ = the archive's name.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Part %lld of “%@” is missing."
+          }
+        }
+      }
+    },
+    "The last part of “%@” is missing.": {
+      "comment": "Error title when the last part of a split (multi-volume) archive can't be found. %@ = the archive's name.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The last part of “%@” is missing."
+          }
+        }
+      }
+    },
+    "This archive is split into parts.": {
+      "comment": "Error title when Lutik may not read the other parts of a split (multi-volume) archive yet; the recovery suggestion asks for access to their folder.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This archive is split into parts."
+          }
+        }
+      }
+    },
+    "Put all parts in one folder and open the archive again.": {
+      "comment": "Recovery suggestion under “Part %lld of “%@” is missing.” and “The last part of “%@” is missing.”.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Put all parts in one folder and open the archive again."
+          }
+        }
+      }
+    },
+    "Lutik needs access to the folder that holds them.": {
+      "comment": "Recovery suggestion under “This archive is split into parts.”: “them” = the archive's parts. Lutik is the app name.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lutik needs access to the folder that holds them."
+          }
+        }
+      }
+    },
+    "That folder doesn't contain this archive's other parts.": {
+      "comment": "Alert title after the user gave Lutik access to a folder that doesn't hold the split archive's other parts.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "That folder doesn't contain this archive's other parts."
+          }
+        }
+      }
+    },
+    "Choose the folder that holds all parts of this archive.": {
+      "comment": "Message of the folder panel that asks for access to a split archive's parts, and of the alert after a wrong folder was chosen.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Choose the folder that holds all parts of this archive."
+          }
+        }
+      }
+    },
+    "Part %lld is still missing.": {
+      "comment": "Alert title after access to the right folder was given but a part of the split archive is still missing. %lld = the missing part's number.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Part %lld is still missing."
+          }
+        }
+      }
+    },
+    "The last part is still missing.": {
+      "comment": "Alert title after access to the right folder was given but the split archive's last part is still missing.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The last part is still missing."
+          }
+        }
+      }
+    },
+    "Lutik still can't read the other parts.": {
+      "comment": "Alert title after access to the right folder was given but the split archive's other parts still can't be read. Lutik is the app name.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lutik still can't read the other parts."
+          }
+        }
+      }
+    },
+    "Make sure every part is downloaded and in this folder, then try again.": {
+      "comment": "Alert message under “Part %lld is still missing.”, “The last part is still missing.” and “Lutik still can't read the other parts.”.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Make sure every part is downloaded and in this folder, then try again."
+          }
+        }
+      }
+    },
+    "A split archive can't be saved in place. Use Save As Copy.": {
+      "comment": "Save error: a split (multi-volume) archive is read-only. “Save As Copy” is the command that saves a copy.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A split archive can't be saved in place. Use Save As Copy."
+          }
+        }
+      }
+    },
+    "Exclude Mac metadata (.DS_Store, __MACOSX, ._ files)": {
+      "comment": "Save options sheet (New Archive, Save As Copy): the switch that leaves Finder's metadata files out of the saved archive. .DS_Store, __MACOSX and ._ are file names: do not translate them.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Exclude Mac metadata (.DS_Store, __MACOSX, ._ files)"
+          }
+        }
+      }
+    },
+    "Resource forks and extended attributes are never stored.": {
+      "comment": "Save options sheet: footer under the Exclude Mac metadata switch. Resource forks and extended attributes are macOS file data that archives never keep.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Resource forks and extended attributes are never stored."
+          }
+        }
+      }
+    },
+    "Version %@ (%@)": {
+      "comment": "About: the app's version line. The first value is the version (e.g. “0.1.0”), the second the build number and the commit (e.g. “1234, 9cc7108”).",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Version %@ (%@)"
+          }
+        }
+      }
+    },
+    "Version %@": {
+      "comment": "About: the app's version line when the build number is unknown. The value is the version (e.g. “0.1.0”).",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Version %@"
+          }
+        }
+      }
+    },
+    "Build %@": {
+      "comment": "About: the app's version line when the version is unknown. The value is the build number and the commit (e.g. “1234, 9cc7108”).",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Build %@"
+          }
+        }
+      }
+    },
+    "Welcome to %@": {
+      "comment": "Title of the Welcome screen (Mac window, iOS first-run sheet). %@ = the app’s name.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Welcome to %@"
+          }
+        }
+      }
+    },
+    "Preview in Finder": {
+      "comment": "Mac Welcome window: title of the feature row about the Quick Look preview of archives in Finder.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Preview in Finder"
+          }
+        }
+      }
+    },
+    "Look inside an archive, then drag files out or extract them all.": {
+      "comment": "Mac Welcome window: detail of the “Open and Extract” feature row.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Look inside an archive, then drag files out or extract them all."
+          }
+        }
+      }
+    },
+    "%@ couldn’t be made the default app for archives.": {
+      "comment": "Mac Settings: making the app the default for archives failed. %@ = the app’s name.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ couldn’t be made the default app for archives."
+          }
+        }
+      }
+    },
+    "Select an archive in Finder and press the Space bar to see what’s inside.": {
+      "comment": "Mac Welcome window: detail of the “Preview in Finder” feature row (Quick Look shows the archive’s file list).",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Select an archive in Finder and press the Space bar to see what’s inside."
+          }
+        }
+      }
+    },
+    "Open and Extract": {
+      "comment": "Mac Welcome window: title of the feature row about opening archives and extracting files.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open and Extract"
+          }
+        }
+      }
+    },
+    "Browse and Extract": {
+      "comment": "iOS Welcome sheet: title of the feature row about browsing archives and extracting files.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Browse and Extract"
+          }
+        }
+      }
+    },
+    "Look inside an archive and save just the files you need.": {
+      "comment": "iOS Welcome sheet: detail of the “Browse and Extract” feature row.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Look inside an archive and save just the files you need."
+          }
+        }
+      }
+    },
+    "Edit Archives": {
+      "comment": "Welcome screen (Mac window, iOS sheet): title of the feature row about editing archives.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Edit Archives"
+          }
+        }
+      }
+    },
+    "Add, rename, move, and delete files in %@ archives without unpacking them.": {
+      "comment": "Welcome screen: detail of the “Edit Archives” feature row. %@ = a list of format names, e.g. “ZIP, 7z, and TAR”.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Add, rename, move, and delete files in %@ archives without unpacking them."
+          }
+        }
+      }
+    },
+    "more": {
+      "comment": "Welcome screen: the last item of the list of formats in the “Common Formats” row, e.g. “ZIP, 7z, and more”. The list format adds the separators and “and”.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "more"
+          }
+        }
+      }
+    },
+    "Common Formats": {
+      "comment": "Welcome screen (Mac window, iOS sheet): title of the feature row about the archive formats the app opens.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Common Formats"
+          }
+        }
+      }
+    },
+    "Opens %@.": {
+      "comment": "Welcome screen: detail of the “Common Formats” feature row. %@ = a list of format names ending in “more”, e.g. “ZIP, 7z, RAR, TAR, GZ, XZ, ISO, and more”.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opens %@."
+          }
+        }
+      }
+    },
+    "%@ is now the default app for some archive types. Settings shows which ones.": {
+      "comment": "Mac Welcome window: making the app the default for archives worked for some types and failed for others. %@ = the app’s name. Settings is the app’s Settings window.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ is now the default app for some archive types. Settings shows which ones."
+          }
+        }
+      }
+    },
+    "%@ is now the default app for some archive types.": {
+      "comment": "Mac Settings: making the app the default for archives worked for some types and failed for others. %@ = the app’s name.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ is now the default app for some archive types."
+          }
+        }
+      }
+    },
+    "%@ couldn’t be made the default app for archives. Try again in Settings.": {
+      "comment": "Mac Welcome window: making the app the default for archives failed. %@ = the app’s name. Settings is the app’s Settings window.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ couldn’t be made the default app for archives. Try again in Settings."
+          }
+        }
+      }
+    },
+    "macOS didn’t make %@ the default app for archives, and refused some archive types outright. In Finder, select an archive of each type, choose File > Get Info, pick %@ under “Open with”, then click Change All.": {
+      "comment": "Mac Welcome window and Settings: macOS reported success making the app the default for some archive types, but Finder still opens them with another app, and refused other types with an error. Both %@ = the app’s name. File > Get Info, “Open with” and Change All are Finder’s menu item, section and button; keep them as macOS names them.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "macOS didn’t make %@ the default app for archives, and refused some archive types outright. In Finder, select an archive of each type, choose File > Get Info, pick %@ under “Open with”, then click Change All."
+          }
+        }
+      }
+    },
+    "macOS didn’t make %@ the default app for archives. In Finder, select an archive, choose File > Get Info, pick %@ under “Open with”, then click Change All.": {
+      "comment": "Mac Welcome window and Settings: macOS reported success making the app the default for archives, but Finder still opens them with another app. Both %@ = the app’s name. File > Get Info, “Open with” and Change All are Finder’s menu item, section and button; keep them as macOS names them.",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "macOS didn’t make %@ the default app for archives. In Finder, select an archive, choose File > Get Info, pick %@ under “Open with”, then click Change All."
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

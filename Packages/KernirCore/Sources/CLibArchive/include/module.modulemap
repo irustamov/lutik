@@ -1,0 +1,1 @@
+module CLibArchive { header "archive.h" header "archive_entry.h" header "kernir_7zaes.h" header "kernir_names.h" export * }

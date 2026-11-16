@@ -1,0 +1,38 @@
+Look inside a ZIP, 7z or RAR without unpacking it. Take out just the file you need, add or remove files, and save the archive back. Select an archive in Finder and press Space to see what's inside.
+
+Why I made Lutik
+I kept running into the same problem on my Mac: the built-in tools weren't enough for what I needed. I wanted to look inside an archive, take out one file, drop in another and save it back, without unpacking everything first. So I built Lutik for myself, and now I'm sharing it with everyone, for free.
+
+No subscription, no in-app purchases, no ads, no account. Open source under the MIT license.
+
+What you can do
+- Browse an archive as a tree, with name, size, kind and date. Sort and search.
+- Preview any file inside an archive without extracting it first.
+- Add files with the plus button or by dragging them in from Finder.
+- Remove and rename files, and make new folders inside an archive.
+- Drag files out of an archive straight into Finder.
+- Extract the selection, or everything, to a folder you choose.
+- Create a new archive from files you pick.
+- Read and edit the comment of a ZIP archive.
+- Save changes with Command-S, undo with Command-Z, like any document.
+
+In Finder
+- Select an archive and press Space to see what's inside with Quick Look.
+- Extract Here and Compress from the Services menu when you right-click files.
+
+Formats
+- Read: ZIP, 7z, TAR, GZ, BZ2, XZ, ISO and RAR, including multi-part RAR and split ZIP sets.
+- Write: ZIP, 7z and the TAR family. RAR is read-only.
+- Password-protected ZIP archives ask for the password when you open them.
+- Save a ZIP with a password, using AES-256 encryption.
+- Split a ZIP or 7z into parts when you save it.
+- Pick the text encoding when an older archive shows garbled file names.
+- Leave out the hidden __MACOSX and ._ files when you save.
+
+Built like part of the system
+Lutik uses only standard Apple controls and follows your light or dark appearance and accent color.
+
+Free and private
+Lutik is free, with no Pro version. It does not collect any data and has no analytics.
+
+Lutik is named after our dog. In loving memory of Lutik, a loyal companion whose warmth, joy, and gentle presence brought light into every day. Though Lutik is no longer with us, the love we shared and the memories we made will stay in our hearts forever. Run free across the rainbow bridge, sweet Lutik.

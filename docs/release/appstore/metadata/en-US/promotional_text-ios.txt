@@ -1,0 +1,1 @@
+Look inside a ZIP, 7z or RAR without unpacking it. Take one file out, add or remove files, and save the archive back. Free and open source, no in-app purchases.

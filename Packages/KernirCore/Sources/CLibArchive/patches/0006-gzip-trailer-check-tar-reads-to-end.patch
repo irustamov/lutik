@@ -1,0 +1,148 @@
+Kernir patch 0006: the gzip filter checks each member's trailer, and tar reads to the end of the stream
+
+Upstream: libarchive 3.8.10, libarchive/archive_read_support_filter_gzip.c (struct gzip,
+consume_trailer, gzip_filter_read) and libarchive/archive_read_support_format_tar.c (tar_read_header,
+the end-of-archive branch).
+
+Upstream inflates each gzip member and consumes its 8-byte trailer unread ("XXX TODO: Verify the
+length and CRC"), so damaged data extracted without an error and a repack wrote it into a new archive
+with a fresh checksum. gzip_filter_read now keeps a CRC32 of each member's output (gzip->crc, reset per
+member in consume_header) and consume_trailer compares it and the member's length mod 2^32 (total_out,
+taken before inflateEnd) with the trailer. A mismatch is ARCHIVE_FATAL "gzip trailer CRC mismatch" or
+"gzip ISIZE mismatch" (under #ifndef DONT_FAIL_ON_CRC_ERROR, like the other readers' CRC checks). The
+read that met the trailer still hands out what it decompressed and every later read fails, so a
+stream that ends inside one 64 KiB block keeps its data flow and fails on the next read (upstream's
+"Truncated gzip input" returns at once instead). Each member of a multi-member stream is checked.
+
+The tar part: a compressed tar's trailer (gzip CRC32/ISIZE, the bzip2 stream CRC, the xz stream footer)
+sits after tar's end-of-archive blocks. Upstream tar stops at the first two null blocks, so with more
+than one filter read of output left (a long record padding, or simply a stream past the bidders' read-
+ahead) the trailer was never read, and a filter error while reading the second null block was cleared
+to EOF. Now, after the null blocks, when tar reads through a filter (a->filter->upstream != NULL: any
+compression filter, uudecode, or a chain of them; the client reader alone has no upstream), it reads
+and discards the rest of the filter's output, so the top filter reaches its end and checks its trailer;
+a filter error there is ARCHIVE_FATAL with the filter's message. What a filter itself accepts after its
+stream (concatenated streams, xz stream padding, zstd skippable frames, zero padding after a gzip,
+bzip2, xz or lzma stream) still reads as before. A plain tar is not drained: it stops at its end blocks
+as upstream does, so a long tail (a zero-filled disk image the tar bidder takes, a tar followed by a
+large payload, an endless non-seekable input) is not read. Bytes after the end-of-archive blocks are
+never parsed (unlike the read_concatenated_archives option, which would refuse a tar with junk there).
+
+Apply from Sources/CLibArchive: patch -p1 < patches/0006-gzip-trailer-check-tar-reads-to-end.patch
+
+--- a/libarchive/archive_read_support_filter_gzip.c
++++ b/libarchive/archive_read_support_filter_gzip.c
+@@ -60,6 +60,9 @@
+ 	uint32_t	 mtime;
+ 	char		*name;
+ 	char		 eof; /* True = found end of compressed data. */
++	/* Kernir patch 0006: set when a member's trailer does not match
++	 * its data; every later read fails with it. */
++	const char	*trailer_error;
+ };
+ 
+ /* Gzip Filter. */
+@@ -402,6 +405,8 @@
+ {
+ 	struct gzip *gzip = f->data;
+ 	const unsigned char *p;
++	/* Kernir patch 0006: the member's length, before inflateEnd. */
++	uint32_t isize = (uint32_t)gzip->stream.total_out;
+ 
+ 	gzip->in_stream = 0;
+ 	switch (inflateEnd(&(gzip->stream))) {
+@@ -423,7 +428,15 @@
+ 		return (ARCHIVE_FATAL);
+ 	}
+ 
+-	/* XXX TODO: Verify the length and CRC. */
++	/* Kernir patch 0006: verify the CRC32 and ISIZE (length mod 2^32)
++	 * of this member. The data this read decompressed is still handed
++	 * out; gzip_filter_read fails from the next read on. */
++#ifndef DONT_FAIL_ON_CRC_ERROR
++	if (archive_le32dec(p) != (uint32_t)gzip->crc)
++		gzip->trailer_error = "gzip trailer CRC mismatch";
++	else if (archive_le32dec(p + 4) != isize)
++		gzip->trailer_error = "gzip ISIZE mismatch";
++#endif
+ 
+ 	/* We've verified the trailer, so consume it now. */
+ 	__archive_read_filter_consume(f->upstream, 8);
+@@ -437,14 +450,23 @@
+ 	struct gzip *gzip = f->data;
+ 	size_t decompressed;
+ 	ssize_t avail_in, max_in;
++	unsigned char *out_start;
+ 	int ret;
++
++	/* Kernir patch 0006: a damaged trailer ends the stream as an error. */
++	if (gzip->trailer_error != NULL) {
++		archive_set_error(&f->archive->archive,
++		    ARCHIVE_ERRNO_MISC, "%s", gzip->trailer_error);
++		return (ARCHIVE_FATAL);
++	}
+ 
+ 	/* Empty our output buffer. */
+ 	gzip->stream.next_out = gzip->out_block;
+ 	gzip->stream.avail_out = (uInt)gzip->out_block_size;
+ 
+ 	/* Try to fill the output buffer. */
+-	while (gzip->stream.avail_out > 0 && !gzip->eof) {
++	while (gzip->stream.avail_out > 0 && !gzip->eof &&
++	    gzip->trailer_error == NULL) { /* Kernir patch 0006 */
+ 		/* If we're not in a stream, read a header
+ 		 * and initialize the decompression library. */
+ 		if (!gzip->in_stream) {
+@@ -477,7 +499,11 @@
+ 		gzip->stream.avail_in = (uInt)avail_in;
+ 
+ 		/* Decompress and consume some of that data. */
++		out_start = gzip->stream.next_out;
+ 		ret = inflate(&(gzip->stream), 0);
++		/* Kernir patch 0006: CRC32 of the member's output. */
++		gzip->crc = __archive_crc32(gzip->crc, out_start,
++		    (size_t)(gzip->stream.next_out - out_start));
+ 		switch (ret) {
+ 		case Z_OK: /* Decompressor made some progress. */
+ 			__archive_read_filter_consume(f->upstream,
+@@ -503,6 +529,12 @@
+ 
+ 	/* We've read as much as we can. */
+ 	decompressed = gzip->stream.next_out - gzip->out_block;
++	/* Kernir patch 0006: nothing left to hand out before the error. */
++	if (decompressed == 0 && gzip->trailer_error != NULL) {
++		archive_set_error(&f->archive->archive,
++		    ARCHIVE_ERRNO_MISC, "%s", gzip->trailer_error);
++		return (ARCHIVE_FATAL);
++	}
+ 	if (decompressed == 0)
+ 		*p = NULL;
+ 	else
+--- a/libarchive/archive_read_support_format_tar.c
++++ b/libarchive/archive_read_support_format_tar.c
+@@ -801,6 +801,25 @@
+ 				if (h != NULL && h[0] == 0 && archive_block_is_null(h))
+ 						__archive_read_consume(a, 512);
+ 
++				/* Kernir patch 0006: when tar reads through a filter
++				 * (gzip, bzip2, xz, uu, ...; the client reader alone
++				 * has no upstream), read the rest of the stream,
++				 * whatever it holds, so the filter reaches its trailer
++				 * and checks it. A filter error (a bad gzip CRC, a
++				 * truncated stream) fails the read with the filter's
++				 * message instead of turning into EOF. A plain tar
++				 * stops at its end blocks as upstream does: whatever
++				 * follows is not read, however long. */
++				while (a->filter != NULL && a->filter->upstream != NULL) {
++					ssize_t rest;
++					h = __archive_read_ahead(a, 1, &rest);
++					if (rest < 0)
++						return (ARCHIVE_FATAL);
++					if (h == NULL || rest == 0)
++						break;
++					__archive_read_consume(a, rest);
++				}
++
+ 				archive_clear_error(&a->archive);
+ 				return (ARCHIVE_EOF);
+ 			}

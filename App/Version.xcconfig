@@ -1,0 +1,7 @@
+// Build number and commit of every target: the project-level base configuration (project.yml configFiles).
+// Defaults for a checkout xcodegen never ran in; scripts/build/stamp-version.sh (xcodegen's preGenCommand)
+// overrides them in the generated, gitignored file included last. Project-level settings in project.yml
+// would override this file, so CURRENT_PROJECT_VERSION is set only here.
+CURRENT_PROJECT_VERSION = 1
+KERNIR_GIT_COMMIT = dev
+#include? "Version.generated.xcconfig"

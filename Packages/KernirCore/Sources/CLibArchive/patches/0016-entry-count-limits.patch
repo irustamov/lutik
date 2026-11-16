@@ -1,0 +1,444 @@
+Kernir patch 0016: the 7zip and xar readers hold a whole header or TOC to an entry count and a growing names total
+
+Upstream: libarchive 3.8.10, libarchive/archive_read.c (archive_read_new), archive_read_private.h (struct
+archive_read), archive_read_support_format_7zip.c (read_PackInfo, read_CodersInfo, read_SubStreamsInfo, read_Header,
+decode_encoded_header_info, slurp_central_directory), archive_read_support_format_xar.c (read_toc, file_new,
+xattr_new, xml_data); include/kernir_names.h. Applies on top of 0001-0015 (0014 and 0015 lines included).
+
+Both readers parse every entry before archive_read_next_header returns the first one, and nothing counted the
+entries: a 763-byte 7z with 1,000,000 one-unit names in an LZMA-coded header cost 384 MiB and 8 s, and libarchive
+allows 100,000,000 (UMAX_ENTRY), about 40 GB; the 7z folder, pack stream and unpack stream counts, read before
+numFiles, had the same 100 M bound (128 bytes or more each). A xar <file> costs about 556 bytes while the TOC is
+parsed, and xattr_new keeps a file's <ea> list sorted by walking it for each one: 20,000 <ea> on one file took
+0.6 s, a million about 25 min.
+
+kernir_read_set_name_limits(a, max_entries, names_bytes, name_bytes_per_entry), called before
+archive_read_open, stores the limits in struct archive_read; archive_read_new sets the defaults
+KERNIR_READ_MAX_ENTRIES (4,000,000), KERNIR_READ_NAMES_BYTES (256 MiB) and KERNIR_READ_NAME_BYTES_PER_ENTRY (512),
+Kernir's NestingLimits.standard. kernir_read_get_name_limits reads them back. Then, before each allocation:
+- 7zip: numFiles, numFolders and the unpack streams over max_entries, and pack streams over 4 × max_entries (a BCJ2
+  folder has 4; saturated at UINT64_MAX), are refused ("7-Zip archive has more entries than the entry limit",
+  "7-Zip archive has more folders or streams than the entry limit").
+- 7zip: 0014's names block limit stays fixed: the block may hold 2 × names_bytes (512 MiB by default, 0014's
+  KERNIR_7Z_NAMES_BYTES) plus 2 bytes per entry ("7-Zip entry names take more UTF-16 than the names limit"). It
+  does not grow with numFiles, which the header only claims: grown by name_bytes_per_entry per claimed entry, an
+  LZMA header of about 1 MB of zeros could have a 4.1 GB block malloc'd and filled before the first header, a
+  jetsam kill on iOS and in Quick Look instead of a refusal.
+- xar: the <file> elements (bare folders included) over max_entries, the <ea> elements over max_entries, and more
+  than KERNIR_XAR_EAS_PER_FILE (1,024) <ea> on one <file> are refused ("xar archive has more entries than the
+  entry limit", "xar archive has more extended attributes than the entry limit", "xar entry has more than 1024
+  extended attributes").
+- xar: 0015's names total grows: max(names_bytes, name_bytes_per_entry × the <file> elements so far), for the
+  hardlink copies with every <file> ("xar entry names and link targets take more than the names limit", "xar
+  hardlink targets take the entry names past the names limit").
+These match what the caller lists: Kernir counts every header and grows its names total the same way, so nothing it
+would list is refused, except xar's bare folders, which count here and are never listed, and 7z names over 512 MiB
+of UTF-16 in an archive of more than 524,288 entries. Every refusal sets
+ARCHIVE_ERRNO_FILE_FORMAT with its own message and returns ARCHIVE_FATAL; a 7zip refusal deep in the streams info
+sets zip->kernir_refused, so neither "Damaged" nor "Malformed 7-Zip archive" replaces the message. Archives within
+the limits read as before.
+
+Apply from Sources/CLibArchive: patch -p1 < patches/0016-entry-count-limits.patch
+
+--- a/libarchive/archive_read_private.h
++++ b/libarchive/archive_read_private.h
+@@ -227,6 +227,15 @@
+ 		archive_passphrase_callback *callback;
+ 		void *client_data;
+ 	}		passphrases;
++
++	/*
++	 * Kernir patch 0016: the entry-count and name-total limits the 7zip
++	 * and xar readers enforce while they parse a whole header or TOC
++	 * (kernir_read_set_name_limits). archive_read_new sets the defaults.
++	 */
++	uint64_t		 kernir_max_entries;
++	uint64_t		 kernir_names_bytes;
++	uint64_t		 kernir_name_bytes_per_entry;
+ };
+ 
+ int	__archive_read_register_format(struct archive_read *a,
+@@ -264,4 +273,9 @@
+  */
+ void __archive_read_reset_passphrase(struct archive_read *a);
+ const char * __archive_read_next_passphrase(struct archive_read *a);
++/* Kernir patch 0016: max(kernir_names_bytes, kernir_name_bytes_per_entry *
++ * entries), UINT64_MAX where the product would overflow. */
++uint64_t __archive_read_kernir_names_allowance(struct archive_read *,
++    uint64_t entries);
++
+ #endif
+--- a/libarchive/archive_read.c
++++ b/libarchive/archive_read.c
+@@ -55,6 +55,7 @@
+ #include "archive_integer.h"
+ #include "archive_private.h"
+ #include "archive_read_private.h"
++#include "kernir_names.h"	/* Kernir patch 0016 */
+ 
+ #define minimum(a, b) (a < b ? a : b)
+ 
+@@ -113,7 +114,56 @@
+ 
+ 	a->passphrases.last = &a->passphrases.first;
+ 
++	/* Kernir patch 0016 */
++	a->kernir_max_entries = KERNIR_READ_MAX_ENTRIES;
++	a->kernir_names_bytes = KERNIR_READ_NAMES_BYTES;
++	a->kernir_name_bytes_per_entry = KERNIR_READ_NAME_BYTES_PER_ENTRY;
++
+ 	return (&a->archive);
++}
++
++/*
++ * Kernir patch 0016: the limits the 7zip and xar readers hold a whole
++ * header or TOC to (kernir_names.h).
++ */
++int
++kernir_read_set_name_limits(struct archive *_a, uint64_t max_entries,
++    uint64_t names_bytes, uint64_t name_bytes_per_entry)
++{
++	struct archive_read *a = (struct archive_read *)_a;
++
++	archive_check_magic(_a, ARCHIVE_READ_MAGIC, ARCHIVE_STATE_NEW,
++	    "kernir_read_set_name_limits");
++	a->kernir_max_entries = max_entries;
++	a->kernir_names_bytes = names_bytes;
++	a->kernir_name_bytes_per_entry = name_bytes_per_entry;
++	return (ARCHIVE_OK);
++}
++
++int
++kernir_read_get_name_limits(struct archive *_a, uint64_t *max_entries,
++    uint64_t *names_bytes, uint64_t *name_bytes_per_entry)
++{
++	struct archive_read *a = (struct archive_read *)_a;
++
++	archive_check_magic(_a, ARCHIVE_READ_MAGIC, ARCHIVE_STATE_ANY,
++	    "kernir_read_get_name_limits");
++	*max_entries = a->kernir_max_entries;
++	*names_bytes = a->kernir_names_bytes;
++	*name_bytes_per_entry = a->kernir_name_bytes_per_entry;
++	return (ARCHIVE_OK);
++}
++
++uint64_t
++__archive_read_kernir_names_allowance(struct archive_read *a,
++    uint64_t entries)
++{
++	uint64_t per = a->kernir_name_bytes_per_entry;
++
++	if (per != 0 && entries > UINT64_MAX / per)
++		return (UINT64_MAX);
++	return (per * entries > a->kernir_names_bytes ?
++	    per * entries : a->kernir_names_bytes);
+ }
+ 
+ /*
+--- a/libarchive/archive_read_support_format_7zip.c
++++ b/libarchive/archive_read_support_format_7zip.c
+@@ -269,6 +269,8 @@
+ 
+ 	int			 header_is_being_read;
+ 	int			 header_is_encoded;
++	/* Kernir patch 0016: kernir_7z_refuse set the error. */
++	int			 kernir_refused;
+ 	int64_t			 header_bytes_remaining;
+ 	unsigned long		 header_crc32;
+ 	/* Header offset to check that reading points of the file contents
+@@ -460,8 +462,20 @@
+  * KERNIR_7Z_REFUSED with the error set.
+  */
+ #define KERNIR_7Z_NAME_UNITS	65536
+-#define KERNIR_7Z_NAMES_BYTES	((uint64_t)512 << 20)
+-#define KERNIR_7Z_REFUSED	(-2)
++#define KERNIR_7Z_REFUSED	(-2)
++
++/*
++ * Kernir patch 0016: the counts read_Header allocates by are held to the
++ * archive's entry limit (kernir_read_set_name_limits) before anything is
++ * allocated: numFiles, the folders and the unpack streams to
++ * kernir_max_entries, the pack streams to 4 times that (a BCJ2 folder has
++ * 4; saturated). The names block limit stays twice kernir_names_bytes
++ * plus each name's terminator: it does not grow with numFiles. Each
++ * refusal sets the error with kernir_7z_refuse and returns
++ * KERNIR_7Z_REFUSED; a caller that only passes on -1 is caught by
++ * zip->kernir_refused.
++ */
++static int	kernir_7z_refuse(struct archive_read *, const char *);
+ 
+ /* Don't try to read more than 16 MB at a time */
+ #define MAX_READ	16 * 1024 * 1024
+@@ -2403,6 +2417,12 @@
+ 	 */
+ 	if (parse_7zip_size(a, &(pi->numPackStreams)) < 0)
+ 		return (-1);
++	/* Kernir patch 0016 */
++	if ((uint64_t)pi->numPackStreams >
++	    (a->kernir_max_entries > UINT64_MAX / 4 ?
++	    UINT64_MAX : 4 * a->kernir_max_entries))
++		return (kernir_7z_refuse(a, "7-Zip archive has more folders or"
++		    " streams than the entry limit"));
+ 	if (pi->numPackStreams == 0)
+ 		return (-1);
+ 
+@@ -2645,6 +2665,10 @@
+ 	 */
+ 	if (parse_7zip_size(a, &(ci->numFolders)) < 0)
+ 		goto failed;
++	/* Kernir patch 0016 */
++	if ((uint64_t)ci->numFolders > a->kernir_max_entries)
++		return (kernir_7z_refuse(a, "7-Zip archive has more folders or"
++		    " streams than the entry limit"));
+ 	/*
+ 	 * Each folder is encoded by at least one byte in the coders
+ 	 * list that follows, so a folder count larger than the bytes
+@@ -2797,6 +2821,10 @@
+ 
+ 	if (unpack_streams > UMAX_ENTRY)
+ 		return (-1);
++	/* Kernir patch 0016 */
++	if ((uint64_t)unpack_streams > a->kernir_max_entries)
++		return (kernir_7z_refuse(a, "7-Zip archive has more folders or"
++		    " streams than the entry limit"));
+ 
+ 	if (type != kSize) {
+ 		for (i = 0; i < numFolders; i++) {
+@@ -2992,7 +3020,19 @@
+  * Files without unpack streams must be described by the EmptyStream bitmap,
+  * which consumes one bit for every file entry in FilesInfo.
+  */
++/* Kernir patch 0016: refuse the header with ARCHIVE_ERRNO_FILE_FORMAT and
++ * msg, and remember that the error is set. */
+ static int
++kernir_7z_refuse(struct archive_read *a, const char *msg)
++{
++	struct _7zip *zip = (struct _7zip *)a->format->data;
++
++	archive_set_error(&a->archive, ARCHIVE_ERRNO_FILE_FORMAT, "%s", msg);
++	zip->kernir_refused = 1;
++	return (KERNIR_7Z_REFUSED);
++}
++
++static int
+ files_info_numfiles_is_sane(const struct _7zip *zip)
+ {
+ 	int64_t empty_stream_map_bytes;
+@@ -3085,6 +3125,10 @@
+ 		return (-1);
+ 	if (!files_info_numfiles_is_sane(zip))
+ 		return (-1);
++	/* Kernir patch 0016 */
++	if ((uint64_t)zip->numFiles > a->kernir_max_entries)
++		return (kernir_7z_refuse(a,
++		    "7-Zip archive has more entries than the entry limit"));
+ 
+ 	zip->entries = calloc(zip->numFiles, sizeof(*zip->entries));
+ 	if (zip->entries == NULL)
+@@ -3170,6 +3214,7 @@
+ 			unsigned char *np;
+ 			size_t nl, nb;
+ 			size_t units;	/* Kernir patch 0014 */
++			uint64_t names;	/* Kernir patch 0016 */
+ 
+ 			/* Skip one byte. */
+ 			if ((p = header_bytes(a, 1)) == NULL)
+@@ -3178,15 +3223,20 @@
+ 
+ 			if ((ll & 1) || ll < zip->numFiles * 4)
+ 				return (-1);
+-			/* Kernir patch 0014: the names block limit. */
+-			if ((uint64_t)ll > KERNIR_7Z_NAMES_BYTES +
+-			    2 * (uint64_t)zip->numFiles) {
+-				archive_set_error(&a->archive,
+-				    ARCHIVE_ERRNO_FILE_FORMAT,
+-				    "7-Zip entry names take more than"
+-				    " 512 MiB of UTF-16");
+-				return (KERNIR_7Z_REFUSED);
+-			}
++			/* Kernir patch 0014: the names block limit, twice
++			 * the names limit plus the terminators (512 MiB + 2
++			 * bytes per entry by default). Patch 0016 keeps it
++			 * fixed: it must not grow with numFiles, which the
++			 * header only claims. Grown by 512 bytes per claimed
++			 * entry, a ~1 MB LZMA header of zeros could get a
++			 * 4.1 GB block malloc'd and filled before the first
++			 * header: jetsam on iOS and in Quick Look instead of
++			 * this refusal. */
++			names = a->kernir_names_bytes;
++			if (names < UINT64_MAX / 4 && (uint64_t)ll > 2 * names +
++			    2 * (uint64_t)zip->numFiles)
++				return (kernir_7z_refuse(a, "7-Zip entry names"
++				    " take more UTF-16 than the names limit"));
+ 
+ 			if (zip->entry_names != NULL)
+ 				return (-1);
+@@ -3467,6 +3517,8 @@
+ 
+ 	errno = 0;
+ 	if (read_StreamsInfo(a, si) < 0) {
++		if (zip->kernir_refused)	/* Kernir patch 0016 */
++			return (ARCHIVE_FATAL);
+ 		if (errno == ENOMEM)
+ 			archive_set_error(&a->archive, -1,
+ 			    "Couldn't allocate memory");
+@@ -3662,7 +3714,8 @@
+ 		 */
+ 		errno = 0;
+ 		r = read_Header(a, header, zip->header_is_encoded);
+-		if (r == KERNIR_7Z_REFUSED)	/* Kernir patch 0014 */
++		/* Kernir patches 0014 and 0016 */
++		if (r == KERNIR_7Z_REFUSED || zip->kernir_refused)
+ 			return (ARCHIVE_FATAL);
+ 		if (r < 0) {
+ 			if (errno == ENOMEM)
+--- a/libarchive/archive_read_support_format_xar.c
++++ b/libarchive/archive_read_support_format_xar.c
+@@ -204,6 +204,7 @@
+ 	struct archive_string	 hardlink;
+ 	struct xattr		*xattr_list;
+ 	int			 kernir_depth;	/* Kernir patch 0015 */
++	uint64_t		 kernir_eas;	/* Kernir patch 0016 */
+ };
+ 
+ struct hdlink {
+@@ -315,20 +316,32 @@
+  * time: a 14 KB xar of 4,000 nested folders cost 2.6 GB. While the TOC is
+  * parsed, an entry nested more than KERNIR_XAR_DEPTH levels deep, a
+  * pathname or link target over KERNIR_XAR_NAME_BYTES, and pathnames, link
+- * targets and hardlink target copies over KERNIR_XAR_NAMES_BYTES in all
++ * targets and hardlink target copies over the names limit in all
+  * are refused (kernir_xar_refuse). These sit at or above what Kernir
+  * lists: 200 path components, 16 KiB per path, 64 KiB per name or link
+  * target and 256 MiB of names and link targets per archive (as in 0014).
+  */
+ #define KERNIR_XAR_DEPTH	200
+ #define KERNIR_XAR_NAME_BYTES	65536
+-#define KERNIR_XAR_NAMES_BYTES	((uint64_t)256 << 20)
++/*
++ * Kernir patch 0016: the names total grows with the <file> elements so far
++ * (__archive_read_kernir_names_allowance, 256 MiB or 512 bytes each by
++ * default), and the TOC may hold at most kernir_max_entries <file> elements
++ * (each one is allocated before Kernir sees any) and as many <ea> elements,
++ * and at most KERNIR_XAR_EAS_PER_FILE <ea> in one <file>: xattr_new keeps
++ * them sorted by id, walking the file's list for each one, so a file's
++ * <ea> elements cost time that grows with the square of their count (20,000
++ * of them in a 47 KB xar took 0.6 s). A real file has a few dozen at most.
++ */
++#define KERNIR_XAR_EAS_PER_FILE	1024
+ 
+ struct xar {
+ 	uint64_t		 offset; /* Current position in the file. */
+ 	uint64_t		 h_base;
+ 	int			 end_of_file;
+ 	uint64_t		 kernir_name_bytes;	/* Kernir patch 0015 */
++	uint64_t		 kernir_files;	/* Kernir patch 0016 */
++	uint64_t		 kernir_eas;	/* Kernir patch 0016 */
+ #define OUTBUFF_SIZE	(1024 * 64)
+ 	unsigned char		*outbuff;
+ 
+@@ -672,9 +685,13 @@
+ 				/* Kernir patch 0015: charge the copies first. */
+ 				xar->kernir_name_bytes += (uint64_t)(*hdlink)->cnt *
+ 				    archive_strlen(&(file->pathname));
+-				if (xar->kernir_name_bytes > KERNIR_XAR_NAMES_BYTES)
++				/* Kernir patch 0016: the grown total. */
++				if (xar->kernir_name_bytes >
++				    __archive_read_kernir_names_allowance(a,
++				    xar->kernir_files))
+ 					return (kernir_xar_refuse(a, "xar hardlink "
+-					    "targets take the entry names past 256 MiB"));
++					    "targets take the entry names past the "
++					    "names limit"));
+ 				file->nlink = nlink;
+ 				for (f2 = (*hdlink)->files; f2 != NULL;
+ 				    f2 = f2->hdnext) {
+@@ -1841,6 +1858,10 @@
+ 	if (depth > KERNIR_XAR_DEPTH)
+ 		return (kernir_xar_refuse(a,
+ 		    "xar entry nests more than 200 directories deep"));
++	/* Kernir patch 0016 */
++	if (++xar->kernir_files > a->kernir_max_entries)
++		return (kernir_xar_refuse(a,
++		    "xar archive has more entries than the entry limit"));
+ 	file = calloc(1, sizeof(*file));
+ 	if (file == NULL) {
+ 		archive_set_error(&a->archive, ENOMEM, "Out of memory");
+@@ -1917,6 +1938,13 @@
+ 	struct xattr *xattr, **nx;
+ 	struct xmlattr *attr;
+ 
++	/* Kernir patch 0016 */
++	if (++xar->file->kernir_eas > KERNIR_XAR_EAS_PER_FILE)
++		return (kernir_xar_refuse(a, "xar entry has more than 1024"
++		    " extended attributes"));
++	if (++xar->kernir_eas > a->kernir_max_entries)
++		return (kernir_xar_refuse(a, "xar archive has more extended"
++		    " attributes than the entry limit"));
+ 	xattr = calloc(1, sizeof(*xattr));
+ 	if (xattr == NULL) {
+ 		archive_set_error(&a->archive, ENOMEM, "Out of memory");
+@@ -2828,9 +2856,11 @@
+ 			return (kernir_xar_refuse(a,
+ 			    "xar entry name is longer than 65536 bytes"));
+ 		xar->kernir_name_bytes += archive_strlen(&(xar->file->pathname));
+-		if (xar->kernir_name_bytes > KERNIR_XAR_NAMES_BYTES)
++		/* Kernir patch 0016: the grown total. */
++		if (xar->kernir_name_bytes >
++		    __archive_read_kernir_names_allowance(a, xar->kernir_files))
+ 			return (kernir_xar_refuse(a, "xar entry names and "
+-			    "link targets take more than 256 MiB"));
++			    "link targets take more than the names limit"));
+ 		break;
+ 	case FILE_LINK:
+ 		/* Kernir patch 0015: each piece replaces the last one. */
+@@ -2841,9 +2871,11 @@
+ 		xar->file->has |= HAS_SYMLINK;
+ 		archive_strncpy(&(xar->file->symlink), s, len);
+ 		xar->kernir_name_bytes += archive_strlen(&(xar->file->symlink));
+-		if (xar->kernir_name_bytes > KERNIR_XAR_NAMES_BYTES)
++		/* Kernir patch 0016: the grown total. */
++		if (xar->kernir_name_bytes >
++		    __archive_read_kernir_names_allowance(a, xar->kernir_files))
+ 			return (kernir_xar_refuse(a, "xar entry names and "
+-			    "link targets take more than 256 MiB"));
++			    "link targets take more than the names limit"));
+ 		break;
+ 	case FILE_TYPE:
+ 		if (is_string("file", s, len) == 0 ||
+--- a/include/kernir_names.h
++++ b/include/kernir_names.h
+@@ -4,6 +4,7 @@
+ #define KERNIR_NAMES_H
+ 
+ #include <stddef.h>
++#include <stdint.h>
+ 
+ struct archive;
+ 
+@@ -43,4 +44,25 @@
+    ARCHIVE_FATAL if the writer is not zip or the length is over 0xffff. */
+ int kernir_write_zip_archive_comment(struct archive *a, const void *bytes, size_t length);
+ 
++/* Kernir patch 0016 (patches/0016-entry-count-limits.patch): the limits the 7zip and xar readers hold a whole
++   header or TOC to, which they parse before the first header is returned. libarchive/archive_read.c,
++   archive_read_support_format_7zip.c, archive_read_support_format_xar.c.
++   - max_entries: most 7z files (numFiles), folders and unpack streams (4 times as many pack streams), and most
++     xar <file> elements and <ea> elements; also most <ea> elements in one xar file: KERNIR_XAR_EAS_PER_FILE.
++   - names_bytes, name_bytes_per_entry: the xar names may take max(names_bytes, name_bytes_per_entry × the
++     <file> elements so far) bytes of UTF-8. A 7z names block may take 2 × names_bytes (UTF-16) plus 2 bytes per
++     entry, whatever numFiles claims: the block is allocated before any entry is parsed.
++   The defaults below are NestingLimits.standard's (maxEntries, maxTotalNameBytes, nameBytesPerEntry), which a
++   test checks. Set before archive_read_open; ARCHIVE_OK then. A call after it returns ARCHIVE_FATAL and also puts
++   the handle itself in ARCHIVE_STATE_FATAL (archive_check_magic), so the open read fails from then on; only
++   archive_read_free is left. */
++#define KERNIR_READ_MAX_ENTRIES 4000000
++#define KERNIR_READ_NAMES_BYTES 268435456
++#define KERNIR_READ_NAME_BYTES_PER_ENTRY 512
++int kernir_read_set_name_limits(struct archive *a, uint64_t max_entries, uint64_t names_bytes,
++                                uint64_t name_bytes_per_entry);
++/* The limits set on `a` (the defaults until kernir_read_set_name_limits). */
++int kernir_read_get_name_limits(struct archive *a, uint64_t *max_entries, uint64_t *names_bytes,
++                                uint64_t *name_bytes_per_entry);
++
+ #endif

@@ -1,0 +1,186 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "Android App Bundle" : {
+      "comment" : "Description of an imported file type (UTTypeDescription). The Files app shows it as the file's kind. Format and product names in it (such as ZIP, RAR or Android) are proper names.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Android App Bundle"
+          }
+        }
+      }
+    },
+    "Android Package" : {
+      "comment" : "Description of an imported file type (UTTypeDescription). The Files app shows it as the file's kind. Format and product names in it (such as ZIP, RAR or Android) are proper names.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Android Package"
+          }
+        }
+      }
+    },
+    "Archive" : {
+      "comment" : "Document type name (CFBundleTypeName). The Files app shows it as the file's kind. Format and product names in it (such as ZIP, RAR or Android) are proper names.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Archive"
+          }
+        }
+      }
+    },
+    "CFBundleDisplayName" : {
+      "comment" : "App name (CFBundleDisplayName). Shown under the app icon on the Home Screen. Lutik is the app name: do not translate it.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lutik"
+          }
+        }
+      }
+    },
+    "Editable Archive" : {
+      "comment" : "Document type name (CFBundleTypeName). The Files app shows it as the file's kind. Format and product names in it (such as ZIP, RAR or Android) are proper names.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Editable Archive"
+          }
+        }
+      }
+    },
+    "ISO Disk Image" : {
+      "comment" : "Description of an imported file type (UTTypeDescription). The Files app shows it as the file's kind. Format and product names in it (such as ZIP, RAR or Android) are proper names.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ISO Disk Image"
+          }
+        }
+      }
+    },
+    "Java Enterprise Archive" : {
+      "comment" : "Description of an imported file type (UTTypeDescription). The Files app shows it as the file's kind. Format and product names in it (such as ZIP, RAR or Android) are proper names.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Java Enterprise Archive"
+          }
+        }
+      }
+    },
+    "LHA Archive" : {
+      "comment" : "Description of an imported file type (UTTypeDescription). The Files app shows it as the file's kind. Format and product names in it (such as ZIP, RAR or Android) are proper names.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "LHA Archive"
+          }
+        }
+      }
+    },
+    "Mozilla Extension" : {
+      "comment" : "Description of an imported file type (UTTypeDescription). The Files app shows it as the file's kind. Format and product names in it (such as ZIP, RAR or Android) are proper names.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mozilla Extension"
+          }
+        }
+      }
+    },
+    "NuGet Package" : {
+      "comment" : "Description of an imported file type (UTTypeDescription). The Files app shows it as the file's kind. Format and product names in it (such as ZIP, RAR or Android) are proper names.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "NuGet Package"
+          }
+        }
+      }
+    },
+    "Python Wheel" : {
+      "comment" : "Description of an imported file type (UTTypeDescription). The Files app shows it as the file's kind. Format and product names in it (such as ZIP, RAR or Android) are proper names.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Python Wheel"
+          }
+        }
+      }
+    },
+    "RAR Archive" : {
+      "comment" : "Description of an imported file type (UTTypeDescription). The Files app shows it as the file's kind. Format and product names in it (such as ZIP, RAR or Android) are proper names.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "RAR Archive"
+          }
+        }
+      }
+    },
+    "Split Archive Part" : {
+      "comment" : "Description of an imported file type (UTTypeDescription). The Files app shows it as the file's kind. Format and product names in it (such as ZIP, RAR or Android) are proper names.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Split Archive Part"
+          }
+        }
+      }
+    },
+    "Visual Studio Extension" : {
+      "comment" : "Description of an imported file type (UTTypeDescription). The Files app shows it as the file's kind. Format and product names in it (such as ZIP, RAR or Android) are proper names.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Visual Studio Extension"
+          }
+        }
+      }
+    },
+    "Zstandard Archive" : {
+      "comment" : "Description of an imported file type (UTTypeDescription). The Files app shows it as the file's kind. Format and product names in it (such as ZIP, RAR or Android) are proper names.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zstandard Archive"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

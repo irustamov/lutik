@@ -1,0 +1,14 @@
+# Keys the code looks up that their table's catalog lacks, on main (check 5 of
+# check-catalogs.py; the extracted forms are in code_keys.py's header). One per line:
+# <table><TAB><key as the code makes it><TAB><Swift file relative to the repo root>.
+# In the key, a newline is \n, a tab \t and a backslash \; an interpolation whose type the
+# check can't tell is %?. No line numbers, so edits elsewhere in the file don't break it.
+# check-catalogs.py fails on any miss not listed here and warns when a listed one is gone:
+# delete the entry in the commit that fixes it. The baseline only shrinks: a new key goes in
+# its catalog in the same commit as the code, never here.
+# A call that only looks like a key (a custom help(_ s: String), an enum named Menu) isn't listed
+# here either: mark it in the Swift with `// l10n-lint: not-a-key — <reason>` at the end of the
+# call's line, or starting the comment line just above it. The reason is required: a bare marker
+# is ignored (the key is still checked) and gets a warning naming file:line.
+# A real drift (’ vs ', … vs ..., a typo) is marked with a comment line "real drift — fix the key".
+# Every entry below is a key that never reached its catalog.

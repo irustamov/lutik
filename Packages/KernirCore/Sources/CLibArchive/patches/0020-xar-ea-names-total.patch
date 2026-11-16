@@ -1,0 +1,68 @@
+Kernir patch 0020: xar <ea> names are charged to the names total and refused over 64 KiB with their own message
+
+Upstream: libarchive 3.8.10, libarchive/archive_read_support_format_xar.c (xml_data, FILE_EA_NAME). Applies on top
+of 0001-0019 (0018 lines included).
+
+Patch 0018 joined the pieces of an <ea>'s <name> within 0015's 65,536-byte per-name limit, but did not charge them to
+0016's names total, which every pathname and link target is charged to: a TOC of many <ea> elements (up to the entry
+limit) with long names held up to 4 million × 64 KiB of names, past the names limit. It also refused a long <ea>
+name with the entry-name message ("xar entry name is longer than 65536 bytes").
+
+An <ea>'s <name> is now charged to the names total by its joined length, as a <name> or <link> is, and refused past
+it with 0016's message ("xar entry names and link targets take more than the names limit"); a replaced <name> (the
+last one in an <ea> counts) is no longer charged, as 0017 does for <link>. One over 65,536 bytes is refused with
+"xar extended attribute name is longer than 65536 bytes" (Kernir maps it to the same path-length limit). Archives
+within the limits read as before; the names total now refuses slightly earlier on a xar with extended attributes,
+whose names Kernir's own count does not see.
+
+Apply from Sources/CLibArchive: patch -p1 < patches/0020-xar-ea-names-total.patch
+
+--- a/libarchive/archive_read_support_format_xar.c
++++ b/libarchive/archive_read_support_format_xar.c
+@@ -316,10 +316,11 @@
+  * time: a 14 KB xar of 4,000 nested folders cost 2.6 GB. While the TOC is
+  * parsed, an entry nested more than KERNIR_XAR_DEPTH levels deep, a
+  * pathname or link target over KERNIR_XAR_NAME_BYTES, and pathnames, link
+- * targets and hardlink target copies over the names limit in all
+- * are refused (kernir_xar_refuse). These sit at or above what Kernir
+- * lists: 200 path components, 16 KiB per path, 64 KiB per name or link
+- * target and 256 MiB of names and link targets per archive (as in 0014).
++ * targets, hardlink target copies and <ea> names (0020) over the names
++ * limit in all are refused (kernir_xar_refuse). These sit at or above what
++ * Kernir lists: 200 path components, 16 KiB per path, 64 KiB per name or
++ * link target and 256 MiB of names and link targets per archive (as in
++ * 0014).
+  */
+ #define KERNIR_XAR_DEPTH	200
+ #define KERNIR_XAR_NAME_BYTES	65536
+@@ -3185,16 +3186,28 @@
+ 		/*
+ 		 * Kernir patch 0018: join the pieces (the last <name> counts,
+ 		 * whole), within 0015's per-name limit.
++		 * Kernir patch 0020: refused there with its own message, and
++		 * charged to 0016's names total, as file names are (a
++		 * replaced <name> no longer is).
+ 		 */
+ 		if (!xar->kernir_ea_name_started) {
++			xar->kernir_name_bytes -=
++			    archive_strlen(&(xar->xattr->name));
+ 			archive_string_empty(&(xar->xattr->name));
+ 			xar->kernir_ea_name_started = 1;
+ 		}
+ 		if (archive_strlen(&(xar->xattr->name)) + len >
+ 		    KERNIR_XAR_NAME_BYTES)
+-			return (kernir_xar_refuse(a,
+-			    "xar entry name is longer than 65536 bytes"));
++			return (kernir_xar_refuse(a, "xar extended attribute "
++			    "name is longer than 65536 bytes"));
++		used = archive_strlen(&(xar->xattr->name));
+ 		archive_strncat(&(xar->xattr->name), s, len);
++		xar->kernir_name_bytes +=
++		    archive_strlen(&(xar->xattr->name)) - used;
++		if (xar->kernir_name_bytes >
++		    __archive_read_kernir_names_allowance(a, xar->kernir_files))
++			return (kernir_xar_refuse(a, "xar entry names and "
++			    "link targets take more than the names limit"));
+ 		break;
+ 	case FILE_EA_FSTYPE:
+ 		xar->file->has |= HAS_XATTR;

@@ -1,0 +1,186 @@
+Kernir patch 0015: the xar reader refuses deep, long or oversized TOCs while it parses them
+
+Upstream: libarchive 3.8.10, libarchive/archive_read_support_format_xar.c (read_toc, file_new, xml_data,
+expat_end_cb, expat_read_toc). Applies on top of 0001-0014 (touches no file they touch).
+
+read_toc inflates and parses the whole XML TOC before archive_read_next_header returns the first entry. It
+builds an entry for every <file> and copies each entry's parent pathname into its own, so the stored
+pathnames grow with the square of the depth, and then copies the original's pathname into every hardlink.
+No limit in the caller comes in time: a 14 KB xar of 4,000 nested folders with 255-byte names cost
+2.6 GB and 12-21 s; 5,000 hardlinks to a 65,000-byte pathname cost 325 MB of copies.
+
+While the TOC is parsed:
+- An entry nested more than KERNIR_XAR_DEPTH (200) levels deep is refused in file_new, before it is
+  allocated. Folders with only a name and a type are never listed, but they nest and cost the same, so
+  they count too.
+- A pathname (after the parent's is prepended) or a symlink target over KERNIR_XAR_NAME_BYTES (65,536)
+  bytes is refused in xml_data; a link target before it is copied.
+- The stored pathnames (full, parent prefix included) and symlink targets are added up, and a total over
+  KERNIR_XAR_NAMES_BYTES (256 MiB) is refused; the hardlink connect loop in read_toc charges each
+  original's pathname once per hardlink before it copies it.
+These sit at or above what Kernir lists: 200 path components, 16 KiB per path, 64 KiB per name or link
+target and 256 MiB of names and link targets per archive (the limits patch 0014 is justified by). A path
+over 64 KiB raw is still over 16 KiB after NFC, so the path limit refuses nothing the caller would list.
+One caveat: the total sees raw TOC bytes, before the NFC of patch 0003, which can shrink decomposed text
+up to threefold, so names padded with decomposed characters can be over 256 MiB here and within it after
+NFC; and it charges folders the caller never sees.
+
+Each refusal sets ARCHIVE_ERRNO_FILE_FORMAT with its own message ("xar entry nests more than 200
+directories deep", "xar entry name is longer than 65536 bytes", "xar link target is longer than 65536
+bytes", "xar entry names and link targets take more than 256 MiB", "xar hardlink targets take the entry
+names past 256 MiB"), returns ARCHIVE_FATAL and sets the archive format to xar (read_toc sets it only
+once the TOC is read, so the refusal would otherwise read as an unknown format). With expat, a callback's
+error is kept when XML_Parse later fails in the same chunk, and no end callback runs after it.
+Archives within the limits read as before.
+
+Apply from Sources/CLibArchive: patch -p1 < patches/0015-xar-toc-limits.patch
+
+--- a/libarchive/archive_read_support_format_xar.c
++++ b/libarchive/archive_read_support_format_xar.c
+@@ -203,6 +203,7 @@
+ 	unsigned int		 nlink;
+ 	struct archive_string	 hardlink;
+ 	struct xattr		*xattr_list;
++	int			 kernir_depth;	/* Kernir patch 0015 */
+ };
+ 
+ struct hdlink {
+@@ -306,11 +307,28 @@
+ 	struct unknown_tag	*next;
+ 	struct archive_string	 name;
+ };
++
++/*
++ * Kernir patch 0015: read_toc parses the whole TOC, building an entry for
++ * every <file> and each entry's full pathname from its parent's, before
++ * the first header is returned, so the caller cannot stop a crafted TOC in
++ * time: a 14 KB xar of 4,000 nested folders cost 2.6 GB. While the TOC is
++ * parsed, an entry nested more than KERNIR_XAR_DEPTH levels deep, a
++ * pathname or link target over KERNIR_XAR_NAME_BYTES, and pathnames, link
++ * targets and hardlink target copies over KERNIR_XAR_NAMES_BYTES in all
++ * are refused (kernir_xar_refuse). These sit at or above what Kernir
++ * lists: 200 path components, 16 KiB per path, 64 KiB per name or link
++ * target and 256 MiB of names and link targets per archive (as in 0014).
++ */
++#define KERNIR_XAR_DEPTH	200
++#define KERNIR_XAR_NAME_BYTES	65536
++#define KERNIR_XAR_NAMES_BYTES	((uint64_t)256 << 20)
+ 
+ struct xar {
+ 	uint64_t		 offset; /* Current position in the file. */
+ 	uint64_t		 h_base;
+ 	int			 end_of_file;
++	uint64_t		 kernir_name_bytes;	/* Kernir patch 0015 */
+ #define OUTBUFF_SIZE	(1024 * 64)
+ 	unsigned char		*outbuff;
+ 
+@@ -409,6 +427,7 @@
+ static void	xmlattr_cleanup(struct xmlattr_list *);
+ static int	file_new(struct archive_read *,
+     struct xar *, struct xmlattr_list *);
++static int	kernir_xar_refuse(struct archive_read *, const char *);
+ static void	file_free(struct xar_file *);
+ static int	xattr_new(struct archive_read *,
+     struct xar *, struct xmlattr_list *);
+@@ -650,6 +669,12 @@
+ 				struct xar_file *f2;
+ 				int nlink = (*hdlink)->cnt + 1;
+ 
++				/* Kernir patch 0015: charge the copies first. */
++				xar->kernir_name_bytes += (uint64_t)(*hdlink)->cnt *
++				    archive_strlen(&(file->pathname));
++				if (xar->kernir_name_bytes > KERNIR_XAR_NAMES_BYTES)
++					return (kernir_xar_refuse(a, "xar hardlink "
++					    "targets take the entry names past 256 MiB"));
+ 				file->nlink = nlink;
+ 				for (f2 = (*hdlink)->files; f2 != NULL;
+ 				    f2 = f2->hdnext) {
+@@ -1810,12 +1835,18 @@
+ {
+ 	struct xar_file *file;
+ 	struct xmlattr *attr;
++	int depth;	/* Kernir patch 0015 */
+ 
++	depth = xar->file != NULL ? xar->file->kernir_depth + 1 : 1;
++	if (depth > KERNIR_XAR_DEPTH)
++		return (kernir_xar_refuse(a,
++		    "xar entry nests more than 200 directories deep"));
+ 	file = calloc(1, sizeof(*file));
+ 	if (file == NULL) {
+ 		archive_set_error(&a->archive, ENOMEM, "Out of memory");
+ 		return (ARCHIVE_FATAL);
+ 	}
++	file->kernir_depth = depth;
+ 	file->parent = xar->file;
+ 	file->mode = 0777 | AE_IFREG;
+ 	file->atime =  0;
+@@ -1843,6 +1874,20 @@
+ 	return (ARCHIVE_OK);
+ }
+ 
++/*
++ * Kernir patch 0015: refuse the TOC with ARCHIVE_ERRNO_FILE_FORMAT and
++ * msg. read_toc sets the archive format only once the TOC is read; set it
++ * here, so the caller sees a damaged xar rather than an unknown format.
++ */
++static int
++kernir_xar_refuse(struct archive_read *a, const char *msg)
++{
++	archive_set_error(&a->archive, ARCHIVE_ERRNO_FILE_FORMAT, "%s", msg);
++	a->archive.archive_format = ARCHIVE_FORMAT_XAR;
++	a->archive.archive_format_name = "xar";
++	return (ARCHIVE_FATAL);
++}
++
+ static void
+ file_free(struct xar_file *file)
+ {
+@@ -2777,10 +2822,28 @@
+ 			    &(xar->file->pathname), s, len);
+ 		} else
+ 			archive_strncat(&(xar->file->pathname), s, len);
++		/* Kernir patch 0015 */
++		if (archive_strlen(&(xar->file->pathname)) >
++		    KERNIR_XAR_NAME_BYTES)
++			return (kernir_xar_refuse(a,
++			    "xar entry name is longer than 65536 bytes"));
++		xar->kernir_name_bytes += archive_strlen(&(xar->file->pathname));
++		if (xar->kernir_name_bytes > KERNIR_XAR_NAMES_BYTES)
++			return (kernir_xar_refuse(a, "xar entry names and "
++			    "link targets take more than 256 MiB"));
+ 		break;
+ 	case FILE_LINK:
++		/* Kernir patch 0015: each piece replaces the last one. */
++		if (len > KERNIR_XAR_NAME_BYTES)
++			return (kernir_xar_refuse(a,
++			    "xar link target is longer than 65536 bytes"));
++		xar->kernir_name_bytes -= archive_strlen(&(xar->file->symlink));
+ 		xar->file->has |= HAS_SYMLINK;
+ 		archive_strncpy(&(xar->file->symlink), s, len);
++		xar->kernir_name_bytes += archive_strlen(&(xar->file->symlink));
++		if (xar->kernir_name_bytes > KERNIR_XAR_NAMES_BYTES)
++			return (kernir_xar_refuse(a, "xar entry names and "
++			    "link targets take more than 256 MiB"));
+ 		break;
+ 	case FILE_TYPE:
+ 		if (is_string("file", s, len) == 0 ||
+@@ -3382,6 +3445,8 @@
+ {
+ 	struct expat_userData *ud = (struct expat_userData *)userData;
+ 
++	if (ud->state != ARCHIVE_OK)	/* Kernir patch 0015 */
++		return;
+ 	xml_end(ud->archive, (const char *)name);
+ }
+ 
+@@ -3440,6 +3505,10 @@
+ 		__archive_read_consume(a, used);
+ 		if (xr == XML_STATUS_ERROR) {
+ 			XML_ParserFree(parser);
++			/* Kernir patch 0015: a callback failed first; keep
++			 * its error. */
++			if (ud.state != ARCHIVE_OK)
++				return (ud.state);
+ 			archive_set_error(&a->archive, ARCHIVE_ERRNO_MISC,
+ 			    "XML Parsing failed");
+ 			return (ARCHIVE_FATAL);

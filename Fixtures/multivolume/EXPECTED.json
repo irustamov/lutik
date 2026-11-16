@@ -1,0 +1,390 @@
+{
+  "version": 1,
+  "generatedBy": "scripts/fixtures/build_corpus.py",
+  "password": "kernir",
+  "sets": {
+    "s7": {
+      "format": "7z",
+      "directory": "multivolume",
+      "first": "s7.7z.001",
+      "volumes": [
+        "s7.7z.001",
+        "s7.7z.002",
+        "s7.7z.003"
+      ],
+      "volumeSize": 24576,
+      "entries": [
+        {
+          "path": "data",
+          "dir": true
+        },
+        {
+          "path": "data/alpha.bin",
+          "dir": false,
+          "size": 26000,
+          "sha256": "c6cf33456e89a39ac5a6ea2d8320dc3534fd520c630d8756050815602e496a14"
+        },
+        {
+          "path": "data/beta.bin",
+          "dir": false,
+          "size": 20000,
+          "sha256": "7f7d7a17e35f31399d331694ade5dba4e393c2608db5c77454f249c6a78eb971"
+        },
+        {
+          "path": "gamma.bin",
+          "dir": false,
+          "size": 14000,
+          "sha256": "f35e5f10ac93233278ebf414af7d345f494cee6bd35b5380f8484aab9f2dcf84"
+        }
+      ],
+      "password": null
+    },
+    "s7e": {
+      "format": "7z",
+      "directory": "multivolume",
+      "first": "s7e.7z.001",
+      "volumes": [
+        "s7e.7z.001",
+        "s7e.7z.002",
+        "s7e.7z.003"
+      ],
+      "volumeSize": 24576,
+      "entries": [
+        {
+          "path": "data",
+          "dir": true
+        },
+        {
+          "path": "data/alpha.bin",
+          "dir": false,
+          "size": 26000,
+          "sha256": "c6cf33456e89a39ac5a6ea2d8320dc3534fd520c630d8756050815602e496a14"
+        },
+        {
+          "path": "data/beta.bin",
+          "dir": false,
+          "size": 20000,
+          "sha256": "7f7d7a17e35f31399d331694ade5dba4e393c2608db5c77454f249c6a78eb971"
+        },
+        {
+          "path": "gamma.bin",
+          "dir": false,
+          "size": 14000,
+          "sha256": "f35e5f10ac93233278ebf414af7d345f494cee6bd35b5380f8484aab9f2dcf84"
+        }
+      ],
+      "password": "kernir",
+      "headersEncrypted": true
+    },
+    "sz": {
+      "format": "zip-split",
+      "directory": "multivolume",
+      "first": "sz.zip.001",
+      "volumes": [
+        "sz.zip.001",
+        "sz.zip.002",
+        "sz.zip.003"
+      ],
+      "volumeSize": 24576,
+      "entries": [
+        {
+          "path": "data",
+          "dir": true
+        },
+        {
+          "path": "data/alpha.bin",
+          "dir": false,
+          "size": 26000,
+          "sha256": "c6cf33456e89a39ac5a6ea2d8320dc3534fd520c630d8756050815602e496a14"
+        },
+        {
+          "path": "data/beta.bin",
+          "dir": false,
+          "size": 20000,
+          "sha256": "7f7d7a17e35f31399d331694ade5dba4e393c2608db5c77454f249c6a78eb971"
+        },
+        {
+          "path": "gamma.bin",
+          "dir": false,
+          "size": 14000,
+          "sha256": "f35e5f10ac93233278ebf414af7d345f494cee6bd35b5380f8484aab9f2dcf84"
+        }
+      ],
+      "password": null
+    },
+    "sz-comment": {
+      "format": "zip-split",
+      "directory": "multivolume",
+      "first": "sz-comment.zip.001",
+      "volumes": [
+        "sz-comment.zip.001",
+        "sz-comment.zip.002",
+        "sz-comment.zip.003"
+      ],
+      "volumeSize": 24576,
+      "entries": [
+        {
+          "path": "data",
+          "dir": true
+        },
+        {
+          "path": "data/alpha.bin",
+          "dir": false,
+          "size": 26000,
+          "sha256": "c6cf33456e89a39ac5a6ea2d8320dc3534fd520c630d8756050815602e496a14"
+        },
+        {
+          "path": "data/beta.bin",
+          "dir": false,
+          "size": 20000,
+          "sha256": "7f7d7a17e35f31399d331694ade5dba4e393c2608db5c77454f249c6a78eb971"
+        },
+        {
+          "path": "gamma.bin",
+          "dir": false,
+          "size": 14000,
+          "sha256": "f35e5f10ac93233278ebf414af7d345f494cee6bd35b5380f8484aab9f2dcf84"
+        }
+      ],
+      "password": null,
+      "comment": "Kernir split-volume fixture.\nThis comment lives in the last part.",
+      "notes": "Python zipfile output with an archive comment, split by bytes; the comment is in the last part."
+    },
+    "span": {
+      "format": "zip-spanned",
+      "directory": "multivolume",
+      "first": "span.zip",
+      "volumes": [
+        "span.z01",
+        "span.z02",
+        "span.zip"
+      ],
+      "volumeSize": 65536,
+      "entries": [
+        {
+          "path": "data",
+          "dir": true
+        },
+        {
+          "path": "data/alpha.bin",
+          "dir": false,
+          "size": 26000,
+          "sha256": "c6cf33456e89a39ac5a6ea2d8320dc3534fd520c630d8756050815602e496a14"
+        },
+        {
+          "path": "data/beta.bin",
+          "dir": false,
+          "size": 20000,
+          "sha256": "7f7d7a17e35f31399d331694ade5dba4e393c2608db5c77454f249c6a78eb971"
+        },
+        {
+          "path": "data/delta.bin",
+          "dir": false,
+          "size": 100000,
+          "sha256": "6d207851491fab904cc0d5aefe675823df23bd26355a73138b96e431343c7754"
+        },
+        {
+          "path": "gamma.bin",
+          "dir": false,
+          "size": 14000,
+          "sha256": "f35e5f10ac93233278ebf414af7d345f494cee6bd35b5380f8484aab9f2dcf84"
+        }
+      ],
+      "password": null
+    },
+    "spane": {
+      "format": "zip-spanned",
+      "directory": "multivolume",
+      "first": "spane.zip",
+      "volumes": [
+        "spane.z01",
+        "spane.z02",
+        "spane.zip"
+      ],
+      "volumeSize": 65536,
+      "entries": [
+        {
+          "path": "data",
+          "dir": true
+        },
+        {
+          "path": "data/alpha.bin",
+          "dir": false,
+          "size": 26000,
+          "sha256": "c6cf33456e89a39ac5a6ea2d8320dc3534fd520c630d8756050815602e496a14"
+        },
+        {
+          "path": "data/beta.bin",
+          "dir": false,
+          "size": 20000,
+          "sha256": "7f7d7a17e35f31399d331694ade5dba4e393c2608db5c77454f249c6a78eb971"
+        },
+        {
+          "path": "data/delta.bin",
+          "dir": false,
+          "size": 100000,
+          "sha256": "6d207851491fab904cc0d5aefe675823df23bd26355a73138b96e431343c7754"
+        },
+        {
+          "path": "gamma.bin",
+          "dir": false,
+          "size": 14000,
+          "sha256": "f35e5f10ac93233278ebf414af7d345f494cee6bd35b5380f8484aab9f2dcf84"
+        }
+      ],
+      "password": "kernir",
+      "encryption": "ZipCrypto"
+    },
+    "rar5-multi": {
+      "format": "rar5",
+      "first": "rar5-multi.part01.rar",
+      "volumes": [
+        "rar5-multi.part01.rar",
+        "rar5-multi.part02.rar",
+        "rar5-multi.part03.rar",
+        "rar5-multi.part04.rar",
+        "rar5-multi.part05.rar",
+        "rar5-multi.part06.rar",
+        "rar5-multi.part07.rar",
+        "rar5-multi.part08.rar"
+      ],
+      "source": "test_read_format_rar5_multiarchive.partNN.rar.uu",
+      "entries": [
+        {
+          "path": "home/antek/temp/build/unrar5/libarchive/bin/bsdcat_test",
+          "dir": false,
+          "size": 144608,
+          "crc32": "35277473"
+        },
+        {
+          "path": "home/antek/temp/build/unrar5/libarchive/bin/bsdtar_test",
+          "dir": false,
+          "size": 365672,
+          "crc32": "E59665F8"
+        }
+      ],
+      "directory": "third-party/rar-multivolume",
+      "password": null
+    },
+    "rar4-multi": {
+      "format": "rar4",
+      "first": "rar4-multi.part0001.rar",
+      "volumes": [
+        "rar4-multi.part0001.rar",
+        "rar4-multi.part0002.rar",
+        "rar4-multi.part0003.rar",
+        "rar4-multi.part0004.rar"
+      ],
+      "source": "test_read_format_rar_multivolume.part000N.rar.uu",
+      "listingOnly": true,
+      "notes": "First file inflates to 241 MB: list only, never extract in tests.",
+      "entries": [
+        {
+          "path": "ppmd_lzss_conversion_test.txt",
+          "dir": false,
+          "size": 241647978
+        },
+        {
+          "path": "LibarchiveAddingTest.html",
+          "dir": false,
+          "size": 20111
+        },
+        {
+          "path": "testlink",
+          "dir": false,
+          "size": 25,
+          "symlink": true
+        },
+        {
+          "path": "testdir/test.txt",
+          "dir": false,
+          "size": 20
+        },
+        {
+          "path": "testdir/LibarchiveAddingTest.html",
+          "dir": false,
+          "size": 20111
+        },
+        {
+          "path": "testdir",
+          "dir": true
+        },
+        {
+          "path": "testemptydir",
+          "dir": true
+        }
+      ],
+      "directory": "third-party/rar-multivolume",
+      "password": null
+    },
+    "rar4-files": {
+      "format": "rar4",
+      "first": "rar4-files.part1.rar",
+      "volumes": [
+        "rar4-files.part1.rar",
+        "rar4-files.part2.rar",
+        "rar4-files.part3.rar",
+        "rar4-files.part4.rar",
+        "rar4-files.part5.rar",
+        "rar4-files.part6.rar"
+      ],
+      "source": "test_rar_multivolume_multiple_files.partN.rar.uu",
+      "entries": [
+        {
+          "path": "LibarchiveAddingTest2.html",
+          "dir": false,
+          "size": 20111,
+          "sha256": "ee16390e87152d7dec632ae2b37566da6135966e46b5166e6f40a1c827fa61ad"
+        },
+        {
+          "path": "LibarchiveAddingTest.html",
+          "dir": false,
+          "size": 20111,
+          "sha256": "ee16390e87152d7dec632ae2b37566da6135966e46b5166e6f40a1c827fa61ad"
+        }
+      ],
+      "directory": "third-party/rar-multivolume",
+      "password": null
+    },
+    "rar4-old": {
+      "format": "rar4",
+      "first": "rar4-old.rar",
+      "volumes": [
+        "rar4-old.rar",
+        "rar4-old.r00",
+        "rar4-old.r01",
+        "rar4-old.r02",
+        "rar4-old.r03",
+        "rar4-old.r04"
+      ],
+      "source": "rar4-files set renamed to old-style .rar/.r00..r04 naming",
+      "notes": "Same bytes as rar4-files. The headers carry the new-numbering flag, so 7zz reports 'Missing volume' for this naming; the engine must pick the next name from the file name.",
+      "entries": [
+        {
+          "path": "LibarchiveAddingTest2.html",
+          "dir": false,
+          "size": 20111,
+          "sha256": "ee16390e87152d7dec632ae2b37566da6135966e46b5166e6f40a1c827fa61ad"
+        },
+        {
+          "path": "LibarchiveAddingTest.html",
+          "dir": false,
+          "size": 20111,
+          "sha256": "ee16390e87152d7dec632ae2b37566da6135966e46b5166e6f40a1c827fa61ad"
+        }
+      ],
+      "directory": "third-party/rar-multivolume",
+      "password": null
+    },
+    "missing": {
+      "directory": "multivolume/missing",
+      "notes": "s7 without .002 and span without span.z01, for app tests of the missing-volume path.",
+      "files": [
+        "s7.7z.001",
+        "s7.7z.003",
+        "span.z02",
+        "span.zip"
+      ]
+    }
+  }
+}

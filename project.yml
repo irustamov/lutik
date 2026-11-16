@@ -1,0 +1,874 @@
+name: Kernir
+options:
+  bundleIdPrefix: com.kernir.app
+  deploymentTarget:
+    macOS: "14.0"
+    iOS: "17.0"
+  createIntermediateGroups: true
+  # Build number (commit count) and commit for About: writes App/Version.generated.xcconfig.
+  preGenCommand: /bin/bash scripts/build/stamp-version.sh
+# Project-level base configuration: CURRENT_PROJECT_VERSION and KERNIR_GIT_COMMIT (stamped by the above).
+configFiles:
+  Debug: App/Version.xcconfig
+  Release: App/Version.xcconfig
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    MARKETING_VERSION: "0.1.0"
+    DEVELOPMENT_TEAM: ""   # set for release builds; empty = local ad-hoc builds
+    CODE_SIGN_STYLE: Automatic
+    ENABLE_USER_SCRIPT_SANDBOXING: YES
+    SWIFT_EMIT_LOC_STRINGS: YES
+    LOCALIZATION_PREFERS_STRING_CATALOGS: YES
+packages:
+  KernirCore:
+    path: Packages/KernirCore
+
+targets:
+  # ---- macOS app ----
+  KernirMac:
+    type: application
+    platform: macOS
+    sources:
+      - App/Shared
+      - App/macOS
+      - path: THIRD_PARTY_NOTICES.md
+        buildPhase: resources
+    scheme:
+      testTargets: [KernirMacTests]
+    dependencies:
+      - package: KernirCore
+      - target: KernirQuickLookMac
+        embed: true
+      - target: KernirThumbnailMac
+        embed: true
+    postBuildScripts:   # Mac document icons (DocIcon-<art>.icns), built from the 1024 masters, never committed
+      - name: Document icons
+        script: /bin/bash "$SRCROOT/scripts/brand/make-doc-icons.sh"
+        inputFileLists: [$(SRCROOT)/scripts/brand/doc-icons-inputs.xcfilelist]
+        outputFileLists: [$(SRCROOT)/scripts/brand/doc-icons-outputs.xcfilelist]
+    info:
+      path: App/macOS/Info.plist
+      properties:
+        CFBundleDisplayName: Lutik
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        ITSAppUsesNonExemptEncryption: false
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        LSApplicationCategoryType: public.app-category.utilities
+        KernirGitCommit: $(KERNIR_GIT_COMMIT)   # About: "Version 0.1.0 (<build>, <commit>)"
+        NSPrincipalClass: NSApplication
+        # Finder Services. NSMessage names ServicesProvider's @objc methods
+        # extractHere(_:userData:error:) and compress(_:userData:error:); Extract Here's types are
+        # KernirDocumentTypes.identifiers plus .jar and .whl (ServicesRequest.extractablePackages).
+        # Tests/KernirMacTests/ServicesInfoPlistTests.swift checks both.
+        NSServices:
+          - NSMenuItem:
+              default: Extract Here with Lutik
+            NSMessage: extractHere
+            NSPortName: Lutik
+            NSRequiredContext: {}
+            NSSendFileTypes:
+              - public.zip-archive
+              - org.7-zip.7-zip-archive
+              - com.rarlab.rar-archive
+              - public.tar-archive
+              - org.gnu.gnu-tar-archive
+              - org.gnu.gnu-zip-archive
+              - org.gnu.gnu-zip-tar-archive
+              - public.bzip2-archive
+              - public.tar-bzip2-archive
+              - org.tukaani.xz-archive
+              - org.tukaani.tar-xz-archive
+              - com.facebook.zst-archive
+              - public.iso-image
+              - public.cpio-archive
+              - com.apple.xar-archive
+              - com.microsoft.cab
+              - cx.c3.lha-archive
+              - com.kernir.archive-volume
+              - com.sun.java-archive
+              - org.python.wheel
+          - NSMenuItem:
+              default: Compress with Lutik
+            NSMessage: compress
+            NSPortName: Lutik
+            NSRequiredContext: {}
+            NSSendFileTypes: [public.item]
+        # Archives (KernirDocumentTypes.identifiers): Editor when writable, Viewer otherwise.
+        # Zip-based developer packages (KernirDocumentTypes.packageTypes): Viewer, Alternate.
+        CFBundleDocumentTypes:
+          - CFBundleTypeName: ZIP Archive
+            CFBundleTypeRole: Editor
+            LSHandlerRank: Default
+            NSDocumentClass: $(PRODUCT_MODULE_NAME).ArchiveDocument
+            LSItemContentTypes: [public.zip-archive]
+            CFBundleTypeIconFile: DocIcon-zip
+          - CFBundleTypeName: 7-Zip Archive
+            CFBundleTypeRole: Editor
+            LSHandlerRank: Default
+            NSDocumentClass: $(PRODUCT_MODULE_NAME).ArchiveDocument
+            LSItemContentTypes: [org.7-zip.7-zip-archive]
+            CFBundleTypeIconFile: DocIcon-7z
+          - CFBundleTypeName: TAR Archive
+            CFBundleTypeRole: Editor
+            LSHandlerRank: Default
+            NSDocumentClass: $(PRODUCT_MODULE_NAME).ArchiveDocument
+            LSItemContentTypes: [public.tar-archive]
+            CFBundleTypeIconFile: DocIcon-tar
+          - CFBundleTypeName: Gzip TAR Archive
+            CFBundleTypeRole: Editor
+            LSHandlerRank: Default
+            NSDocumentClass: $(PRODUCT_MODULE_NAME).ArchiveDocument
+            LSItemContentTypes: [org.gnu.gnu-zip-tar-archive]
+            CFBundleTypeIconFile: DocIcon-tar-gz
+          - CFBundleTypeName: Bzip2 TAR Archive
+            CFBundleTypeRole: Editor
+            LSHandlerRank: Default
+            NSDocumentClass: $(PRODUCT_MODULE_NAME).ArchiveDocument
+            LSItemContentTypes: [public.tar-bzip2-archive]
+            CFBundleTypeIconFile: DocIcon-tar-bz2
+          - CFBundleTypeName: XZ TAR Archive
+            CFBundleTypeRole: Editor
+            LSHandlerRank: Default
+            NSDocumentClass: $(PRODUCT_MODULE_NAME).ArchiveDocument
+            LSItemContentTypes: [org.tukaani.tar-xz-archive]
+            CFBundleTypeIconFile: DocIcon-tar-xz
+          - CFBundleTypeName: RAR Archive
+            CFBundleTypeRole: Viewer
+            LSHandlerRank: Default
+            NSDocumentClass: $(PRODUCT_MODULE_NAME).ArchiveDocument
+            LSItemContentTypes: [com.rarlab.rar-archive]
+            CFBundleTypeIconFile: DocIcon-rar
+          - CFBundleTypeName: Split Archive Part
+            CFBundleTypeRole: Viewer
+            LSHandlerRank: Alternate
+            NSDocumentClass: $(PRODUCT_MODULE_NAME).ArchiveDocument
+            LSItemContentTypes: [com.kernir.archive-volume]
+            CFBundleTypeIconFile: DocIcon-other
+          - CFBundleTypeName: GNU TAR Archive
+            CFBundleTypeRole: Viewer
+            LSHandlerRank: Default
+            NSDocumentClass: $(PRODUCT_MODULE_NAME).ArchiveDocument
+            LSItemContentTypes: [org.gnu.gnu-tar-archive]
+            CFBundleTypeIconFile: DocIcon-tar
+          - CFBundleTypeName: Gzip Archive
+            CFBundleTypeRole: Viewer
+            LSHandlerRank: Default
+            NSDocumentClass: $(PRODUCT_MODULE_NAME).ArchiveDocument
+            LSItemContentTypes: [org.gnu.gnu-zip-archive]
+            CFBundleTypeIconFile: DocIcon-gz
+          - CFBundleTypeName: Bzip2 Archive
+            CFBundleTypeRole: Viewer
+            LSHandlerRank: Default
+            NSDocumentClass: $(PRODUCT_MODULE_NAME).ArchiveDocument
+            LSItemContentTypes: [public.bzip2-archive]
+            CFBundleTypeIconFile: DocIcon-bz2
+          - CFBundleTypeName: XZ Archive
+            CFBundleTypeRole: Viewer
+            LSHandlerRank: Default
+            NSDocumentClass: $(PRODUCT_MODULE_NAME).ArchiveDocument
+            LSItemContentTypes: [org.tukaani.xz-archive]
+            CFBundleTypeIconFile: DocIcon-xz
+          - CFBundleTypeName: Zstandard Archive
+            CFBundleTypeRole: Viewer
+            LSHandlerRank: Default
+            NSDocumentClass: $(PRODUCT_MODULE_NAME).ArchiveDocument
+            LSItemContentTypes: [com.facebook.zst-archive]
+            CFBundleTypeIconFile: DocIcon-tar-zst
+          - CFBundleTypeName: ISO Disk Image
+            CFBundleTypeRole: Viewer
+            LSHandlerRank: Default
+            NSDocumentClass: $(PRODUCT_MODULE_NAME).ArchiveDocument
+            LSItemContentTypes: [public.iso-image]
+            CFBundleTypeIconFile: DocIcon-iso
+          - CFBundleTypeName: CPIO Archive
+            CFBundleTypeRole: Viewer
+            LSHandlerRank: Default
+            NSDocumentClass: $(PRODUCT_MODULE_NAME).ArchiveDocument
+            LSItemContentTypes: [public.cpio-archive]
+            CFBundleTypeIconFile: DocIcon-cpio
+          - CFBundleTypeName: XAR Archive
+            CFBundleTypeRole: Viewer
+            LSHandlerRank: Default
+            NSDocumentClass: $(PRODUCT_MODULE_NAME).ArchiveDocument
+            LSItemContentTypes: [com.apple.xar-archive]
+            CFBundleTypeIconFile: DocIcon-other
+          - CFBundleTypeName: Cabinet Archive
+            CFBundleTypeRole: Viewer
+            LSHandlerRank: Default
+            NSDocumentClass: $(PRODUCT_MODULE_NAME).ArchiveDocument
+            LSItemContentTypes: [com.microsoft.cab]
+            CFBundleTypeIconFile: DocIcon-cab
+          - CFBundleTypeName: LHA Archive
+            CFBundleTypeRole: Viewer
+            LSHandlerRank: Default
+            NSDocumentClass: $(PRODUCT_MODULE_NAME).ArchiveDocument
+            LSItemContentTypes: [cx.c3.lha-archive]
+            CFBundleTypeIconFile: DocIcon-other
+          - CFBundleTypeName: Java Archive
+            CFBundleTypeRole: Viewer
+            LSHandlerRank: Alternate
+            NSDocumentClass: $(PRODUCT_MODULE_NAME).ArchiveDocument
+            LSItemContentTypes: [com.sun.java-archive]
+            CFBundleTypeIconFile: DocIcon-jar
+          - CFBundleTypeName: Web Application Archive
+            CFBundleTypeRole: Viewer
+            LSHandlerRank: Alternate
+            NSDocumentClass: $(PRODUCT_MODULE_NAME).ArchiveDocument
+            LSItemContentTypes: [com.sun.web-application-archive]
+            CFBundleTypeIconFile: DocIcon-jar
+          - CFBundleTypeName: Java Enterprise Archive
+            CFBundleTypeRole: Viewer
+            LSHandlerRank: Alternate
+            NSDocumentClass: $(PRODUCT_MODULE_NAME).ArchiveDocument
+            LSItemContentTypes: [com.sun.enterprise-archive]
+            CFBundleTypeIconFile: DocIcon-jar
+          - CFBundleTypeName: Android Package
+            CFBundleTypeRole: Viewer
+            LSHandlerRank: Alternate
+            NSDocumentClass: $(PRODUCT_MODULE_NAME).ArchiveDocument
+            LSItemContentTypes: [com.android.package-archive]
+            CFBundleTypeIconFile: DocIcon-apk
+          - CFBundleTypeName: Android App Bundle
+            CFBundleTypeRole: Viewer
+            LSHandlerRank: Alternate
+            NSDocumentClass: $(PRODUCT_MODULE_NAME).ArchiveDocument
+            LSItemContentTypes: [com.android.app-bundle]
+            CFBundleTypeIconFile: DocIcon-apk
+          - CFBundleTypeName: Mozilla Extension
+            CFBundleTypeRole: Viewer
+            LSHandlerRank: Alternate
+            NSDocumentClass: $(PRODUCT_MODULE_NAME).ArchiveDocument
+            LSItemContentTypes: [org.mozilla.xpinstall]
+            CFBundleTypeIconFile: DocIcon-xpi
+          - CFBundleTypeName: Python Wheel
+            CFBundleTypeRole: Viewer
+            LSHandlerRank: Alternate
+            NSDocumentClass: $(PRODUCT_MODULE_NAME).ArchiveDocument
+            LSItemContentTypes: [org.python.wheel]
+            CFBundleTypeIconFile: DocIcon-whl
+          - CFBundleTypeName: NuGet Package
+            CFBundleTypeRole: Viewer
+            LSHandlerRank: Alternate
+            NSDocumentClass: $(PRODUCT_MODULE_NAME).ArchiveDocument
+            LSItemContentTypes: [org.nuget.package]
+            CFBundleTypeIconFile: DocIcon-nupkg
+          - CFBundleTypeName: Visual Studio Extension
+            CFBundleTypeRole: Viewer
+            LSHandlerRank: Alternate
+            NSDocumentClass: $(PRODUCT_MODULE_NAME).ArchiveDocument
+            LSItemContentTypes: [com.microsoft.vsix]
+            CFBundleTypeIconFile: DocIcon-vsix
+          # Rank None, no NSDocumentClass: Kernir is no Open With choice for plain files and never a
+          # default; the type exists so the Dock icon accepts plain-file drops (LSCanURLAcceptURL;
+          # new archive window). A user can still pick Kernir via Open With > Other… (all
+          # apps); "Always Open With" then opens a new unsaved archive window holding the file with
+          # the Save sheet (not a compress). Tests: launchServicesOffersKernirForNoPlainItem.
+          - CFBundleTypeName: File or Folder
+            CFBundleTypeRole: Viewer
+            LSHandlerRank: None
+            LSItemContentTypes: [public.item]
+        UTExportedTypeDeclarations:
+          # The Kernir item Copy and Cut put on the pasteboard (ArchiveClipboard.typeIdentifier),
+          # declared so SwiftUI's onPasteCommand can name it as a UTType. (Below the drop type's entry, a
+          # comment line here would end it for test_doc_icons_mac_drop_type_is_rank_none's reader.)
+          - UTTypeIdentifier: com.kernir.app.archive-items
+            UTTypeDescription: Lutik Archive Items
+            UTTypeConformsTo: [public.data]
+        UTImportedTypeDeclarations:
+          - UTTypeIdentifier: com.rarlab.rar-archive
+            UTTypeDescription: RAR Archive
+            UTTypeConformsTo: [public.data, public.archive]
+            UTTypeTagSpecification:
+              public.filename-extension: &rarExtensions [rar, r00, r01, r02, r03, r04, r05, r06, r07, r08, r09, r10, r11, r12, r13, r14, r15, r16, r17, r18, r19, r20, r21, r22, r23, r24, r25, r26, r27, r28, r29, r30, r31, r32, r33, r34, r35, r36, r37, r38, r39, r40, r41, r42, r43, r44, r45, r46, r47, r48, r49, r50, r51, r52, r53, r54, r55, r56, r57, r58, r59, r60, r61, r62, r63, r64, r65, r66, r67, r68, r69, r70, r71, r72, r73, r74, r75, r76, r77, r78, r79, r80, r81, r82, r83, r84, r85, r86, r87, r88, r89, r90, r91, r92, r93, r94, r95, r96, r97, r98, r99]
+          - UTTypeIdentifier: com.kernir.archive-volume
+            UTTypeDescription: Split Archive Part
+            UTTypeConformsTo: [public.data, public.archive]
+            UTTypeTagSpecification:
+              public.filename-extension: &volumeExtensions ["001", "002", "003", "004", "005", "006", "007", "008", "009", "010", "011", "012", "013", "014", "015", "016", "017", "018", "019", "020", "021", "022", "023", "024", "025", "026", "027", "028", "029", "030", "031", "032", "033", "034", "035", "036", "037", "038", "039", "040", "041", "042", "043", "044", "045", "046", "047", "048", "049", "050", "051", "052", "053", "054", "055", "056", "057", "058", "059", "060", "061", "062", "063", "064", "065", "066", "067", "068", "069", "070", "071", "072", "073", "074", "075", "076", "077", "078", "079", "080", "081", "082", "083", "084", "085", "086", "087", "088", "089", "090", "091", "092", "093", "094", "095", "096", "097", "098", "099", "100", "101", "102", "103", "104", "105", "106", "107", "108", "109", "110", "111", "112", "113", "114", "115", "116", "117", "118", "119", "120", "121", "122", "123", "124", "125", "126", "127", "128", "129", "130", "131", "132", "133", "134", "135", "136", "137", "138", "139", "140", "141", "142", "143", "144", "145", "146", "147", "148", "149", "150", "151", "152", "153", "154", "155", "156", "157", "158", "159", "160", "161", "162", "163", "164", "165", "166", "167", "168", "169", "170", "171", "172", "173", "174", "175", "176", "177", "178", "179", "180", "181", "182", "183", "184", "185", "186", "187", "188", "189", "190", "191", "192", "193", "194", "195", "196", "197", "198", "199", "200", "201", "202", "203", "204", "205", "206", "207", "208", "209", "210", "211", "212", "213", "214", "215", "216", "217", "218", "219", "220", "221", "222", "223", "224", "225", "226", "227", "228", "229", "230", "231", "232", "233", "234", "235", "236", "237", "238", "239", "240", "241", "242", "243", "244", "245", "246", "247", "248", "249", "250", "251", "252", "253", "254", "255", "256", "257", "258", "259", "260", "261", "262", "263", "264", "265", "266", "267", "268", "269", "270", "271", "272", "273", "274", "275", "276", "277", "278", "279", "280", "281", "282", "283", "284", "285", "286", "287", "288", "289", "290", "291", "292", "293", "294", "295", "296", "297", "298", "299", "300", "301", "302", "303", "304", "305", "306", "307", "308", "309", "310", "311", "312", "313", "314", "315", "316", "317", "318", "319", "320", "321", "322", "323", "324", "325", "326", "327", "328", "329", "330", "331", "332", "333", "334", "335", "336", "337", "338", "339", "340", "341", "342", "343", "344", "345", "346", "347", "348", "349", "350", "351", "352", "353", "354", "355", "356", "357", "358", "359", "360", "361", "362", "363", "364", "365", "366", "367", "368", "369", "370", "371", "372", "373", "374", "375", "376", "377", "378", "379", "380", "381", "382", "383", "384", "385", "386", "387", "388", "389", "390", "391", "392", "393", "394", "395", "396", "397", "398", "399", "400", "401", "402", "403", "404", "405", "406", "407", "408", "409", "410", "411", "412", "413", "414", "415", "416", "417", "418", "419", "420", "421", "422", "423", "424", "425", "426", "427", "428", "429", "430", "431", "432", "433", "434", "435", "436", "437", "438", "439", "440", "441", "442", "443", "444", "445", "446", "447", "448", "449", "450", "451", "452", "453", "454", "455", "456", "457", "458", "459", "460", "461", "462", "463", "464", "465", "466", "467", "468", "469", "470", "471", "472", "473", "474", "475", "476", "477", "478", "479", "480", "481", "482", "483", "484", "485", "486", "487", "488", "489", "490", "491", "492", "493", "494", "495", "496", "497", "498", "499", "500", "501", "502", "503", "504", "505", "506", "507", "508", "509", "510", "511", "512", "513", "514", "515", "516", "517", "518", "519", "520", "521", "522", "523", "524", "525", "526", "527", "528", "529", "530", "531", "532", "533", "534", "535", "536", "537", "538", "539", "540", "541", "542", "543", "544", "545", "546", "547", "548", "549", "550", "551", "552", "553", "554", "555", "556", "557", "558", "559", "560", "561", "562", "563", "564", "565", "566", "567", "568", "569", "570", "571", "572", "573", "574", "575", "576", "577", "578", "579", "580", "581", "582", "583", "584", "585", "586", "587", "588", "589", "590", "591", "592", "593", "594", "595", "596", "597", "598", "599", "600", "601", "602", "603", "604", "605", "606", "607", "608", "609", "610", "611", "612", "613", "614", "615", "616", "617", "618", "619", "620", "621", "622", "623", "624", "625", "626", "627", "628", "629", "630", "631", "632", "633", "634", "635", "636", "637", "638", "639", "640", "641", "642", "643", "644", "645", "646", "647", "648", "649", "650", "651", "652", "653", "654", "655", "656", "657", "658", "659", "660", "661", "662", "663", "664", "665", "666", "667", "668", "669", "670", "671", "672", "673", "674", "675", "676", "677", "678", "679", "680", "681", "682", "683", "684", "685", "686", "687", "688", "689", "690", "691", "692", "693", "694", "695", "696", "697", "698", "699", "700", "701", "702", "703", "704", "705", "706", "707", "708", "709", "710", "711", "712", "713", "714", "715", "716", "717", "718", "719", "720", "721", "722", "723", "724", "725", "726", "727", "728", "729", "730", "731", "732", "733", "734", "735", "736", "737", "738", "739", "740", "741", "742", "743", "744", "745", "746", "747", "748", "749", "750", "751", "752", "753", "754", "755", "756", "757", "758", "759", "760", "761", "762", "763", "764", "765", "766", "767", "768", "769", "770", "771", "772", "773", "774", "775", "776", "777", "778", "779", "780", "781", "782", "783", "784", "785", "786", "787", "788", "789", "790", "791", "792", "793", "794", "795", "796", "797", "798", "799", "800", "801", "802", "803", "804", "805", "806", "807", "808", "809", "810", "811", "812", "813", "814", "815", "816", "817", "818", "819", "820", "821", "822", "823", "824", "825", "826", "827", "828", "829", "830", "831", "832", "833", "834", "835", "836", "837", "838", "839", "840", "841", "842", "843", "844", "845", "846", "847", "848", "849", "850", "851", "852", "853", "854", "855", "856", "857", "858", "859", "860", "861", "862", "863", "864", "865", "866", "867", "868", "869", "870", "871", "872", "873", "874", "875", "876", "877", "878", "879", "880", "881", "882", "883", "884", "885", "886", "887", "888", "889", "890", "891", "892", "893", "894", "895", "896", "897", "898", "899", "900", "901", "902", "903", "904", "905", "906", "907", "908", "909", "910", "911", "912", "913", "914", "915", "916", "917", "918", "919", "920", "921", "922", "923", "924", "925", "926", "927", "928", "929", "930", "931", "932", "933", "934", "935", "936", "937", "938", "939", "940", "941", "942", "943", "944", "945", "946", "947", "948", "949", "950", "951", "952", "953", "954", "955", "956", "957", "958", "959", "960", "961", "962", "963", "964", "965", "966", "967", "968", "969", "970", "971", "972", "973", "974", "975", "976", "977", "978", "979", "980", "981", "982", "983", "984", "985", "986", "987", "988", "989", "990", "991", "992", "993", "994", "995", "996", "997", "998", "999", z01, z02, z03, z04, z05, z06, z07, z08, z09, z10, z11, z12, z13, z14, z15, z16, z17, z18, z19, z20, z21, z22, z23, z24, z25, z26, z27, z28, z29, z30, z31, z32, z33, z34, z35, z36, z37, z38, z39, z40, z41, z42, z43, z44, z45, z46, z47, z48, z49, z50, z51, z52, z53, z54, z55, z56, z57, z58, z59, z60, z61, z62, z63, z64, z65, z66, z67, z68, z69, z70, z71, z72, z73, z74, z75, z76, z77, z78, z79, z80, z81, z82, z83, z84, z85, z86, z87, z88, z89, z90, z91, z92, z93, z94, z95, z96, z97, z98, z99]
+          - UTTypeIdentifier: com.facebook.zst-archive
+            UTTypeDescription: Zstandard Archive
+            UTTypeConformsTo: [public.data, public.archive]
+            UTTypeTagSpecification:
+              public.filename-extension: [zst, tzst]
+          - UTTypeIdentifier: cx.c3.lha-archive
+            UTTypeDescription: LHA Archive
+            UTTypeConformsTo: [public.data, public.archive]
+            UTTypeTagSpecification:
+              public.filename-extension: [lha, lzh]
+          - UTTypeIdentifier: com.sun.enterprise-archive
+            UTTypeDescription: Java Enterprise Archive
+            UTTypeConformsTo: [public.zip-archive, public.data, com.sun.java-archive]
+            UTTypeTagSpecification:
+              public.filename-extension: [ear]
+          - UTTypeIdentifier: com.android.package-archive
+            UTTypeDescription: Android Package
+            UTTypeConformsTo: [public.zip-archive, public.data]
+            UTTypeTagSpecification:
+              public.filename-extension: [apk]
+              public.mime-type: [application/vnd.android.package-archive]
+          - UTTypeIdentifier: com.android.app-bundle
+            UTTypeDescription: Android App Bundle
+            UTTypeConformsTo: [public.zip-archive, public.data]
+            UTTypeTagSpecification:
+              public.filename-extension: [aab]
+          - UTTypeIdentifier: org.mozilla.xpinstall
+            UTTypeDescription: Mozilla Extension
+            UTTypeConformsTo: [public.zip-archive, public.data]
+            UTTypeTagSpecification:
+              public.filename-extension: [xpi]
+              public.mime-type: [application/x-xpinstall]
+          - UTTypeIdentifier: org.python.wheel
+            UTTypeDescription: Python Wheel
+            UTTypeConformsTo: [public.zip-archive, public.data]
+            UTTypeTagSpecification:
+              public.filename-extension: [whl]
+          - UTTypeIdentifier: org.nuget.package
+            UTTypeDescription: NuGet Package
+            UTTypeConformsTo: [public.zip-archive, public.data]
+            UTTypeTagSpecification:
+              public.filename-extension: [nupkg]
+          - UTTypeIdentifier: com.microsoft.vsix
+            UTTypeDescription: Visual Studio Extension
+            UTTypeConformsTo: [public.zip-archive, public.data]
+            UTTypeTagSpecification:
+              public.filename-extension: [vsix]
+    entitlements:
+      path: App/macOS/KernirMac.entitlements
+      properties:
+        com.apple.security.app-sandbox: true
+        com.apple.security.files.user-selected.read-write: true
+        # Without it the sandbox quarantines every file the app writes (archives it creates, items it
+        # extracts: 0082;…;Lutik), and Gatekeeper then won't open them. QuarantinePropagation keeps a
+        # downloaded archive's quarantine on what is extracted from it.
+        com.apple.security.files.user-selected.executable: true
+        com.apple.security.files.bookmarks.app-scope: true
+    settings:
+      base:
+        PRODUCT_NAME: Lutik
+        # The module stays Kernir: `@testable import Kernir` and $(PRODUCT_MODULE_NAME) plist classes.
+        PRODUCT_MODULE_NAME: Kernir
+        SWIFT_EMIT_LOC_STRINGS: YES
+        # Debug builds get com.kernir.app.dev so Xcode's automatic Launch Services
+        # registration of every build cannot shadow the installed app's IDs.
+        PRODUCT_BUNDLE_IDENTIFIER: com.kernir.app$(KERNIR_BUNDLE_ID_SUFFIX)
+        KERNIR_BUNDLE_ID_SUFFIX: ""
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ENABLE_APP_SANDBOX: YES
+        ENABLE_USER_SELECTED_FILES: readwrite
+        ENABLE_HARDENED_RUNTIME: YES
+      configs:
+        Debug:
+          KERNIR_BUNDLE_ID_SUFFIX: .dev
+
+  KernirMacTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources: [Tests/KernirMacTests]
+    dependencies:
+      # No KernirCore here: the tests use the host app's copy through BUNDLE_LOADER. Linking it
+      # again loads a second copy when the app was relinked by another scheme's build, and then
+      # `ArchiveError` doesn't match `ArchiveError`.
+      - target: KernirMac
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        PRODUCT_BUNDLE_IDENTIFIER: com.kernir.app.tests
+        # Support/TestBundleSetup.swift: turns window frame autosaving off before any test runs.
+        INFOPLIST_KEY_NSPrincipalClass: KernirMacTestsSetup
+        TEST_HOST: $(BUILT_PRODUCTS_DIR)/Lutik.app/Contents/MacOS/Lutik
+        BUNDLE_LOADER: $(TEST_HOST)
+
+  # ---- macOS UI tests ----
+  # CI ONLY. These drive the real keyboard and mouse; never run them on a developer's Mac
+  # (no desktop automation). Locally: build-for-testing only.
+  # Own scheme, not in KernirMac's test action; every test skips unless the runner has
+  # KERNIR_MAC_UI_TESTS=1 (CI passes TEST_RUNNER_KERNIR_MAC_UI_TESTS=1).
+  KernirMacUITests:
+    type: bundle.ui-testing
+    platform: macOS
+    sources: [Tests/KernirMacUITests]
+    dependencies:
+      - target: KernirMac
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        PRODUCT_BUNDLE_IDENTIFIER: com.kernir.app.mac.uitests
+    # Scheme: top-level `schemes:` at the end (the target-level block can't set attachments).
+
+  # ---- iOS app ----
+  KernirIOS:
+    type: application
+    platform: iOS
+    sources:
+      - App/Shared
+      - App/iOS
+      - path: THIRD_PARTY_NOTICES.md
+        buildPhase: resources
+    dependencies:
+      - package: KernirCore
+      - target: KernirQuickLookIOS
+        embed: true
+      - target: KernirThumbnailIOS
+        embed: true
+    info:
+      path: App/iOS/Info.plist
+      properties:
+        CFBundleDisplayName: Lutik
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        ITSAppUsesNonExemptEncryption: false
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        KernirGitCommit: $(KERNIR_GIT_COMMIT)   # About: "Version 0.1.0 (<build>, <commit>)"
+        UILaunchScreen: {}
+        UIFileSharingEnabled: true
+        LSSupportsOpeningDocumentsInPlace: true
+        UISupportsDocumentBrowser: true
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        UISupportedInterfaceOrientations~ipad:
+          - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
+          - UIInterfaceOrientationLandscapeLeft
+          - UIInterfaceOrientationLandscapeRight
+        NSUserActivityTypes:
+          - com.kernir.app.open-archive
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: true
+          UISceneConfigurations:
+            UIWindowSceneSessionRoleApplication:
+              - UISceneConfigurationName: Default
+                UISceneDelegateClassName: $(PRODUCT_MODULE_NAME).SceneDelegate
+        CFBundleDocumentTypes:
+          - CFBundleTypeName: Editable Archive
+            CFBundleTypeRole: Editor
+            LSHandlerRank: Alternate
+            UIDocumentClass: $(PRODUCT_MODULE_NAME).ArchiveDocument
+            LSItemContentTypes:
+              - public.zip-archive
+              - org.7-zip.7-zip-archive
+              - public.tar-archive
+              - org.gnu.gnu-zip-tar-archive
+              - public.tar-bzip2-archive
+              - org.tukaani.tar-xz-archive
+          - CFBundleTypeName: Archive
+            CFBundleTypeRole: Viewer
+            LSHandlerRank: Alternate
+            UIDocumentClass: $(PRODUCT_MODULE_NAME).ArchiveDocument
+            LSItemContentTypes:
+              - com.rarlab.rar-archive
+              - com.kernir.archive-volume
+              - org.gnu.gnu-tar-archive
+              - org.gnu.gnu-zip-archive
+              - public.bzip2-archive
+              - org.tukaani.xz-archive
+              - com.facebook.zst-archive
+              - public.iso-image
+              - public.cpio-archive
+              - com.apple.xar-archive
+              - com.microsoft.cab
+              - cx.c3.lha-archive
+              - com.sun.java-archive
+              - com.sun.web-application-archive
+              - com.sun.enterprise-archive
+              - com.android.package-archive
+              - com.android.app-bundle
+              - org.mozilla.xpinstall
+              - org.python.wheel
+              - org.nuget.package
+              - com.microsoft.vsix
+        UTImportedTypeDeclarations:
+          - UTTypeIdentifier: com.rarlab.rar-archive
+            UTTypeDescription: RAR Archive
+            UTTypeConformsTo: [public.data, public.archive]
+            UTTypeTagSpecification:
+              public.filename-extension: *rarExtensions
+          - UTTypeIdentifier: com.kernir.archive-volume
+            UTTypeDescription: Split Archive Part
+            UTTypeConformsTo: [public.data, public.archive]
+            UTTypeTagSpecification:
+              public.filename-extension: *volumeExtensions
+          - UTTypeIdentifier: com.facebook.zst-archive
+            UTTypeDescription: Zstandard Archive
+            UTTypeConformsTo: [public.data, public.archive]
+            UTTypeTagSpecification:
+              public.filename-extension: [zst, tzst]
+          - UTTypeIdentifier: public.iso-image
+            UTTypeDescription: ISO Disk Image
+            UTTypeConformsTo: [public.data, public.archive]
+            UTTypeTagSpecification:
+              public.filename-extension: [iso]
+          - UTTypeIdentifier: cx.c3.lha-archive
+            UTTypeDescription: LHA Archive
+            UTTypeConformsTo: [public.data, public.archive]
+            UTTypeTagSpecification:
+              public.filename-extension: [lha, lzh]
+          - UTTypeIdentifier: com.sun.enterprise-archive
+            UTTypeDescription: Java Enterprise Archive
+            UTTypeConformsTo: [public.zip-archive, public.data, com.sun.java-archive]
+            UTTypeTagSpecification:
+              public.filename-extension: [ear]
+          - UTTypeIdentifier: com.android.package-archive
+            UTTypeDescription: Android Package
+            UTTypeConformsTo: [public.zip-archive, public.data]
+            UTTypeTagSpecification:
+              public.filename-extension: [apk]
+              public.mime-type: application/vnd.android.package-archive
+          - UTTypeIdentifier: com.android.app-bundle
+            UTTypeDescription: Android App Bundle
+            UTTypeConformsTo: [public.zip-archive, public.data]
+            UTTypeTagSpecification:
+              public.filename-extension: [aab]
+          - UTTypeIdentifier: org.mozilla.xpinstall
+            UTTypeDescription: Mozilla Extension
+            UTTypeConformsTo: [public.zip-archive, public.data]
+            UTTypeTagSpecification:
+              public.filename-extension: [xpi]
+              public.mime-type: application/x-xpinstall
+          - UTTypeIdentifier: org.python.wheel
+            UTTypeDescription: Python Wheel
+            UTTypeConformsTo: [public.zip-archive, public.data]
+            UTTypeTagSpecification:
+              public.filename-extension: [whl]
+          - UTTypeIdentifier: org.nuget.package
+            UTTypeDescription: NuGet Package
+            UTTypeConformsTo: [public.zip-archive, public.data]
+            UTTypeTagSpecification:
+              public.filename-extension: [nupkg]
+          - UTTypeIdentifier: com.microsoft.vsix
+            UTTypeDescription: Visual Studio Extension
+            UTTypeConformsTo: [public.zip-archive, public.data]
+            UTTypeTagSpecification:
+              public.filename-extension: [vsix]
+    settings:
+      base:
+        PRODUCT_NAME: Lutik
+        # The module stays Kernir: `@testable import Kernir` and $(PRODUCT_MODULE_NAME) plist classes.
+        PRODUCT_MODULE_NAME: Kernir
+        PRODUCT_BUNDLE_IDENTIFIER: com.kernir.app
+        GENERATE_INFOPLIST_FILE: NO
+        TARGETED_DEVICE_FAMILY: "1,2"
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+    scheme:
+      testTargets:
+        - KernirIOSTests
+        - KernirIOSUITests
+
+  KernirIOSTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - Tests/KernirIOSTests
+      # App/Shared logic, shared with KernirMacTests: the Text Encoding titles on iOS's own Foundation.
+      # A file under Tests/KernirMacTests: moving or renaming it breaks the iOS project generation.
+      - Tests/KernirMacTests/ArchiveNameEncodingTitleTests.swift
+      # Throwaway defaults suites whose plists stay in the temporary folder (Foundation only).
+      - Tests/KernirMacTests/Support/TestDefaults.swift
+    dependencies:
+      - target: KernirIOS
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.kernir.app.ios.tests
+        GENERATE_INFOPLIST_FILE: YES
+        # The app's PRODUCT_NAME is "Lutik", not the target name.
+        TEST_HOST: $(BUILT_PRODUCTS_DIR)/Lutik.app/Lutik
+        BUNDLE_LOADER: $(TEST_HOST)
+
+  KernirIOSUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - path: Tests/KernirIOSUITests
+        # The store fixtures are read from the checkout, not the bundle.
+        excludes: ["Screenshots/**"]
+    dependencies:
+      - target: KernirIOS
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.kernir.app.ios.uitests
+        GENERATE_INFOPLIST_FILE: YES
+
+  # ---- Quick Look extensions ----
+  KernirQuickLookMac:
+    type: app-extension
+    platform: macOS
+    sources: [Extensions/QuickLookMac, Extensions/Shared]
+    dependencies:
+      - package: KernirCore
+    info:
+      path: Extensions/QuickLookMac/Info.plist
+      properties:
+        CFBundleDisplayName: Lutik Quick Look
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.quicklook.preview
+          NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).PreviewViewController
+          NSExtensionAttributes:
+            QLIsDataBasedPreview: false
+            # The 27 archive types; KernirQuickLookIOS and both thumbnail extensions reuse this list (*qlTypes).
+            QLSupportedContentTypes: &qlTypes [com.kernir.archive-volume, public.zip-archive, org.7-zip.7-zip-archive, com.rarlab.rar-archive, public.tar-archive, org.gnu.gnu-tar-archive, org.gnu.gnu-zip-archive, org.gnu.gnu-zip-tar-archive, public.bzip2-archive, public.tar-bzip2-archive, org.tukaani.xz-archive, org.tukaani.tar-xz-archive, com.facebook.zst-archive, public.iso-image, public.cpio-archive, com.apple.xar-archive, com.microsoft.cab, cx.c3.lha-archive, com.sun.java-archive, com.sun.web-application-archive, com.sun.enterprise-archive, com.android.package-archive, com.android.app-bundle, org.mozilla.xpinstall, org.python.wheel, org.nuget.package, com.microsoft.vsix]
+        # Same declarations as the containing app: rar, lha, zst and the zip-based types are not system-declared on a clean macOS 26 / iOS 26.
+        UTImportedTypeDeclarations: &qlImportsMac   # also KernirThumbnailMac
+          - UTTypeIdentifier: com.rarlab.rar-archive
+            UTTypeDescription: RAR Archive
+            UTTypeConformsTo: [public.data, public.archive]
+            UTTypeTagSpecification:
+              public.filename-extension: *rarExtensions
+          - UTTypeIdentifier: com.kernir.archive-volume
+            UTTypeDescription: Split Archive Part
+            UTTypeConformsTo: [public.data, public.archive]
+            UTTypeTagSpecification:
+              public.filename-extension: *volumeExtensions
+          - UTTypeIdentifier: com.facebook.zst-archive
+            UTTypeDescription: Zstandard Archive
+            UTTypeConformsTo: [public.data, public.archive]
+            UTTypeTagSpecification:
+              public.filename-extension: [zst, tzst]
+          - UTTypeIdentifier: cx.c3.lha-archive
+            UTTypeDescription: LHA Archive
+            UTTypeConformsTo: [public.data, public.archive]
+            UTTypeTagSpecification:
+              public.filename-extension: [lha, lzh]
+          - UTTypeIdentifier: com.sun.enterprise-archive
+            UTTypeDescription: Java Enterprise Archive
+            UTTypeConformsTo: [public.zip-archive, public.data, com.sun.java-archive]
+            UTTypeTagSpecification:
+              public.filename-extension: [ear]
+          - UTTypeIdentifier: com.android.package-archive
+            UTTypeDescription: Android Package
+            UTTypeConformsTo: [public.zip-archive, public.data]
+            UTTypeTagSpecification:
+              public.filename-extension: [apk]
+              public.mime-type: [application/vnd.android.package-archive]
+          - UTTypeIdentifier: com.android.app-bundle
+            UTTypeDescription: Android App Bundle
+            UTTypeConformsTo: [public.zip-archive, public.data]
+            UTTypeTagSpecification:
+              public.filename-extension: [aab]
+          - UTTypeIdentifier: org.mozilla.xpinstall
+            UTTypeDescription: Mozilla Extension
+            UTTypeConformsTo: [public.zip-archive, public.data]
+            UTTypeTagSpecification:
+              public.filename-extension: [xpi]
+              public.mime-type: [application/x-xpinstall]
+          - UTTypeIdentifier: org.python.wheel
+            UTTypeDescription: Python Wheel
+            UTTypeConformsTo: [public.zip-archive, public.data]
+            UTTypeTagSpecification:
+              public.filename-extension: [whl]
+          - UTTypeIdentifier: org.nuget.package
+            UTTypeDescription: NuGet Package
+            UTTypeConformsTo: [public.zip-archive, public.data]
+            UTTypeTagSpecification:
+              public.filename-extension: [nupkg]
+          - UTTypeIdentifier: com.microsoft.vsix
+            UTTypeDescription: Visual Studio Extension
+            UTTypeConformsTo: [public.zip-archive, public.data]
+            UTTypeTagSpecification:
+              public.filename-extension: [vsix]
+    settings:
+      base:
+        # Must stay a child of KernirMac's ID: com.kernir.app.dev.quicklook in Debug.
+        PRODUCT_BUNDLE_IDENTIFIER: com.kernir.app$(KERNIR_BUNDLE_ID_SUFFIX).quicklook
+        KERNIR_BUNDLE_ID_SUFFIX: ""
+        ENABLE_APP_SANDBOX: YES
+        ENABLE_HARDENED_RUNTIME: YES
+      configs:
+        Debug:
+          KERNIR_BUNDLE_ID_SUFFIX: .dev
+
+  KernirQuickLookIOS:
+    type: app-extension
+    platform: iOS
+    sources: [Extensions/QuickLookIOS, Extensions/Shared]
+    dependencies:
+      - package: KernirCore
+      # Without it the appex crashes at connection time ("Unable to find NSExtensionContextClass").
+      - sdk: QuickLook.framework
+    info:
+      path: Extensions/QuickLookIOS/Info.plist
+      properties:
+        CFBundleDisplayName: Lutik Quick Look
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.quicklook.preview
+          NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).PreviewViewController
+          NSExtensionAttributes:
+            QLSupportedContentTypes: *qlTypes
+        # Same declarations as the containing app: rar, lha, zst and the zip-based types are not system-declared on a clean macOS 26 / iOS 26.
+        UTImportedTypeDeclarations: &qlImportsIOS   # also KernirThumbnailIOS; adds public.iso-image
+          - UTTypeIdentifier: com.rarlab.rar-archive
+            UTTypeDescription: RAR Archive
+            UTTypeConformsTo: [public.data, public.archive]
+            UTTypeTagSpecification:
+              public.filename-extension: *rarExtensions
+          - UTTypeIdentifier: com.kernir.archive-volume
+            UTTypeDescription: Split Archive Part
+            UTTypeConformsTo: [public.data, public.archive]
+            UTTypeTagSpecification:
+              public.filename-extension: *volumeExtensions
+          - UTTypeIdentifier: com.facebook.zst-archive
+            UTTypeDescription: Zstandard Archive
+            UTTypeConformsTo: [public.data, public.archive]
+            UTTypeTagSpecification:
+              public.filename-extension: [zst, tzst]
+          - UTTypeIdentifier: public.iso-image
+            UTTypeDescription: ISO Disk Image
+            UTTypeConformsTo: [public.data, public.archive]
+            UTTypeTagSpecification:
+              public.filename-extension: [iso]
+          - UTTypeIdentifier: cx.c3.lha-archive
+            UTTypeDescription: LHA Archive
+            UTTypeConformsTo: [public.data, public.archive]
+            UTTypeTagSpecification:
+              public.filename-extension: [lha, lzh]
+          - UTTypeIdentifier: com.sun.enterprise-archive
+            UTTypeDescription: Java Enterprise Archive
+            UTTypeConformsTo: [public.zip-archive, public.data, com.sun.java-archive]
+            UTTypeTagSpecification:
+              public.filename-extension: [ear]
+          - UTTypeIdentifier: com.android.package-archive
+            UTTypeDescription: Android Package
+            UTTypeConformsTo: [public.zip-archive, public.data]
+            UTTypeTagSpecification:
+              public.filename-extension: [apk]
+              public.mime-type: application/vnd.android.package-archive
+          - UTTypeIdentifier: com.android.app-bundle
+            UTTypeDescription: Android App Bundle
+            UTTypeConformsTo: [public.zip-archive, public.data]
+            UTTypeTagSpecification:
+              public.filename-extension: [aab]
+          - UTTypeIdentifier: org.mozilla.xpinstall
+            UTTypeDescription: Mozilla Extension
+            UTTypeConformsTo: [public.zip-archive, public.data]
+            UTTypeTagSpecification:
+              public.filename-extension: [xpi]
+              public.mime-type: application/x-xpinstall
+          - UTTypeIdentifier: org.python.wheel
+            UTTypeDescription: Python Wheel
+            UTTypeConformsTo: [public.zip-archive, public.data]
+            UTTypeTagSpecification:
+              public.filename-extension: [whl]
+          - UTTypeIdentifier: org.nuget.package
+            UTTypeDescription: NuGet Package
+            UTTypeConformsTo: [public.zip-archive, public.data]
+            UTTypeTagSpecification:
+              public.filename-extension: [nupkg]
+          - UTTypeIdentifier: com.microsoft.vsix
+            UTTypeDescription: Visual Studio Extension
+            UTTypeConformsTo: [public.zip-archive, public.data]
+            UTTypeTagSpecification:
+              public.filename-extension: [vsix]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.kernir.app.quicklook
+
+  # ---- Quick Look thumbnail extensions ----
+  # One bundled picture per type (Extensions/ThumbnailAssets), picked by file name (Extensions/ThumbnailShared,
+  # one provider for both). No Extensions/Shared and no KernirCore here, so the appex never reads the archive.
+  KernirThumbnailMac:
+    type: app-extension
+    platform: macOS
+    sources: [Extensions/ThumbnailMac, Extensions/ThumbnailShared, Extensions/ThumbnailAssets]
+    dependencies:
+      - sdk: QuickLookThumbnailing.framework
+    info:
+      path: Extensions/ThumbnailMac/Info.plist
+      properties:
+        CFBundleDisplayName: Lutik Thumbnails
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.quicklook.thumbnail
+          NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).ThumbnailProvider
+          NSExtensionAttributes:
+            QLSupportedContentTypes: *qlTypes
+            QLThumbnailMinimumDimension: 0
+        UTImportedTypeDeclarations: *qlImportsMac
+    settings:
+      base:
+        # Must stay a child of KernirMac's ID: com.kernir.app.dev.thumbnail in Debug.
+        PRODUCT_BUNDLE_IDENTIFIER: com.kernir.app$(KERNIR_BUNDLE_ID_SUFFIX).thumbnail
+        KERNIR_BUNDLE_ID_SUFFIX: ""
+        ENABLE_APP_SANDBOX: YES
+        ENABLE_HARDENED_RUNTIME: YES
+      configs:
+        Debug:
+          KERNIR_BUNDLE_ID_SUFFIX: .dev
+
+  KernirThumbnailIOS:
+    type: app-extension
+    platform: iOS
+    sources: [Extensions/ThumbnailIOS, Extensions/ThumbnailShared, Extensions/ThumbnailAssets]
+    dependencies:
+      - sdk: QuickLookThumbnailing.framework
+    info:
+      path: Extensions/ThumbnailIOS/Info.plist
+      properties:
+        CFBundleDisplayName: Lutik Thumbnails
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.quicklook.thumbnail
+          NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).ThumbnailProvider
+          NSExtensionAttributes:
+            QLSupportedContentTypes: *qlTypes
+            QLThumbnailMinimumDimension: 0
+        UTImportedTypeDeclarations: *qlImportsIOS
+    settings:
+      base:
+        # A literal, like KernirQuickLookIOS: the iOS app is always com.kernir.app (KernirIOS), and a
+        # suffix variable here could be overridden (KERNIR_BUNDLE_ID_SUFFIX=.dev) and break embedding.
+        PRODUCT_BUNDLE_IDENTIFIER: com.kernir.app.thumbnail
+
+  KernirQuickLookTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources: [Extensions/Shared, Extensions/QuickLookMac/ArchivePreviewView.swift, Extensions/QuickLookMac/PreviewViewController.swift, Extensions/ThumbnailShared/ThumbnailArt.swift, Extensions/ThumbnailShared/ThumbnailReplyFlavor.swift, Tests/QuickLookTests]
+    dependencies:
+      - package: KernirCore
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        PRODUCT_BUNDLE_IDENTIFIER: com.kernir.app.quicklook.tests
+    scheme:
+      testTargets: [KernirQuickLookTests]
+
+  KernirQuickLookIOSUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources: [Tests/QuickLookIOSUITests]
+    dependencies:
+      - target: KernirIOS
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.kernir.app.quicklook.uitests
+        GENERATE_INFOPLIST_FILE: YES
+    scheme:
+      testTargets: [KernirQuickLookIOSUITests]
+
+schemes:
+  # ---- macOS UI tests (was the target-level `scheme:` of KernirMacUITests) ----
+  # No automatic full-screen captures (screenshots, screen recordings) of the user's desktop:
+  # The UI tests' evidence is explicit window shots kept with .keepAlways, which keepNever doesn't drop.
+  # captureScreenshotsAutomatically: false is written as systemAttachmentLifetime = "keepNever"
+  # (XcodeGen 2.46 emits nothing for a systemAttachmentLifetime key on its own).
+  KernirMacUITests:
+    build:
+      targets:
+        KernirMacUITests: all
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets: [KernirMacUITests]
+      captureScreenshotsAutomatically: false
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+    archive:
+      config: Release

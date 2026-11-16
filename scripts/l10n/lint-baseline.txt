@@ -1,0 +1,8 @@
+# Known English-only plural ternaries on main (the patterns are in check-catalogs.py's header),
+# one per line: <path relative to the repo root><TAB><the matched line, stripped; a two-line
+# ternary is both lines joined by one space>. No line numbers, so edits elsewhere in the file do
+# not break it. check-catalogs.py fails on any hit not listed here and warns when a listed line
+# is gone: delete that entry in the commit that fixes it.
+# Only real plurals still to fix go here. A line that just looks like one opts out in the code
+# with `// l10n-lint: not-plural`.
+# Empty since both PreviewFormatting ternaries were removed.

@@ -1,0 +1,74 @@
+Kernir patch 0025: the seekable zip reader charges the central-directory comments it keeps to the names total
+
+Upstream: libarchive 3.8.10, libarchive/archive_read_support_format_zip.c (slurp_central_directory),
+include/kernir_names.h (its comment). Applies on top of 0001-0024 (0012 and 0022 lines included).
+
+Patch 0012 keeps every central-directory record's comment (up to 65,535 bytes each) in its zip_entry until the reader
+is freed, and slurp_central_directory reads the whole central directory before the first header, so a crafted zip of
+records with long comments had libarchive hold about its own size in comment bytes (a 1 GB zip, 1 GB), outside
+patch 0022's limits, whatever the caller's names total (Quick Look's preview: 64 MiB). Only the seekable zip reader
+keeps per-entry comments: the streaming zip reader skips them, and no other reader keeps one per entry.
+
+Each record's comment is now charged to 0022's names counter after its name, before it is copied, against the same
+allowance, max(names_bytes, name_bytes_per_entry × the listed records so far) (__archive_read_kernir_names_allowance);
+names plus comments over it are refused (ARCHIVE_FATAL, ARCHIVE_ERRNO_FILE_FORMAT, own message, "ZIP entry comments
+take the entry names past the names limit", which Kernir maps to its names limit). No new limit: the comments are
+held to what the names may take, so the reader holds at most the names total in names and comments together. The
+archive is refused rather than read without its comments: Kernir lists no entry comment, but a zip -> zip save copies
+them, and a save that dropped them would lose them silently; an honest zip with more than 64 MiB (preview) or
+256 MiB of entry comments is not known. Records whose local header offset repeats keep their comment too, so they are
+charged too. Archives within the limits read as before.
+
+Apply from Sources/CLibArchive: patch -p1 < patches/0025-zip-comments-names-total.patch
+
+--- a/include/kernir_names.h
++++ b/include/kernir_names.h
+@@ -55,7 +55,8 @@
+      entry, whatever numFiles claims: the block is allocated before any entry is parsed.
+    Patch 0022: the seekable zip reader holds its central-directory records to max_entries (records with a new local
+    header offset: the headers it returns) and 2 × max_entries (every record, saturated, before it is allocated), and
+-   the record names to max(names_bytes, name_bytes_per_entry × the listed records so far).
++   the record names to max(names_bytes, name_bytes_per_entry × the listed records so far). Patch 0025: the record
++   comments it keeps (patch 0012) are charged to that names total too, before they are copied.
+    The defaults below are NestingLimits.standard's (maxEntries, maxTotalNameBytes, nameBytesPerEntry), which a
+    test checks. Set before archive_read_open; ARCHIVE_OK then. A call after it returns ARCHIVE_FATAL and also puts
+    the handle itself in ARCHIVE_STATE_FATAL (archive_check_magic), so the open read fails from then on; only
+--- a/libarchive/archive_read_support_format_zip.c
++++ b/libarchive/archive_read_support_format_zip.c
+@@ -4649,10 +4649,14 @@
+ 		 * order. So a crafted central directory whose long names come
+ 		 * before the records that grow the allowance (or whose names
+ 		 * are longer than the local headers') can be refused here
+-		 * though Kernir would take the headers. Names within
+-		 * names_bytes are never refused, and a central directory in
+-		 * offset order, with no repeated offset and the local headers'
+-		 * names, only where Kernir refuses its headers too. */
++		 * though Kernir would take the headers. Names and comments
++		 * (patch 0025) within names_bytes are never refused, and a
++		 * central directory in offset order, with no repeated offset
++		 * and the local headers' names, only where Kernir refuses its
++		 * headers too. The comments count too (patch 0025), so when
++		 * earlier comments use up the allowance, the next record's
++		 * name is refused with the names message below; the Swift
++		 * error is the same .totalPathBytes. */
+ 		if (kernir_listed > a->kernir_max_entries)
+ 			return (kernir_zip_refuse(a,
+ 			    "ZIP archive has more entries than the entry limit"));
+@@ -4664,6 +4668,17 @@
+ 
+ 		/* Kernir patch 0012: keep the comment bytes. */
+ 		if (comment_length > 0) {
++			/* Kernir patch 0025: they are kept for every record
++			 * until the reader is freed (up to 65535 bytes each,
++			 * about the central directory's size in all), so they
++			 * are charged to the names total with the names,
++			 * before they are copied. */
++			kernir_names += comment_length;
++			if (kernir_names > __archive_read_kernir_names_allowance(
++			    a, kernir_listed))
++				return (kernir_zip_refuse(a,
++				    "ZIP entry comments take the entry names "
++				    "past the names limit"));
+ 			p = __archive_read_ahead(a,
+ 			    filename_length + extra_length + comment_length,
+ 			    NULL);

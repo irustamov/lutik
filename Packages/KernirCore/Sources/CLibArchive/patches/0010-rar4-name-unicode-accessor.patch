@@ -1,0 +1,127 @@
+Kernir patch 0010: RAR4 entry-name accessor (name taken as Unicode)
+
+Upstream: libarchive 3.8.10, libarchive/archive_read_support_format_rar.c (struct rar,
+archive_read_format_rar_read_header, read_header). Applies on top of patch 0009, whose
+include/kernir_names.h gains the declaration.
+
+kernir_read_rar_entry_name_declared() returns 1 when the RAR4 reader took the current file
+header's name as Unicode: FHD_UNICODE is set and either the encoded UTF-16 part after the OEM
+name's NUL was decoded, or there is no NUL and the name bytes were read as UTF-8. It returns 0
+when the reader used the OEM bytes (no FHD_UNICODE, decoded through the default or hdrcharset
+converter), and 0 when the archive is not being read as RAR4 (the active format's read_header is
+not archive_read_format_rar_read_header; RAR5 has its own reader). Unlike 0009's zip accessor,
+"not this format" is 0, not -1. This reader has no Unicode-to-OEM fallback: a malformed encoded
+name fails the header, and a name the locale cannot convert is ARCHIVE_WARN with the Unicode
+converter already chosen, so the value stays 1 there.
+
+The per-header value is reset at the top of archive_read_format_rar_read_header(), before any
+header (marker, main, NEWSUB, file) is read, so it never carries over from the previous entry
+and every return before the name is parsed (EOF, CRC errors, bad sizes) leaves 0. read_header()
+sets it to 1 where it commits to the Unicode converter (sconv_utf16be or sconv_utf8). A file
+header that fails after that point (unknown host OS, bad salt/exttime sizes, multivolume name
+mismatch, allocation or symlink failures) returns below ARCHIVE_WARN, and the FILE_HEAD case
+resets the value to 0 then. The multivolume paths that read a continuation header from
+read_data, read_data_skip or seek_data go through the same function, so the value is recomputed
+from that header (same name bytes and flags). Without the call the reader behaves as upstream.
+
+Apply from Sources/CLibArchive (after 0009): patch -p1 < patches/0010-rar4-name-unicode-accessor.patch
+
+--- a/libarchive/archive_read_support_format_rar.c
++++ b/libarchive/archive_read_support_format_rar.c
+@@ -44,6 +44,7 @@
+ #include "archive_ppmd7_private.h"
+ #include "archive_private.h"
+ #include "archive_read_private.h"
++#include "kernir_names.h"	/* Kernir patch 0010 */
+ 
+ /* RAR signature, also known as the mark header */
+ #define RAR_SIGNATURE "\x52\x61\x72\x21\x1A\x07\x00"
+@@ -371,6 +372,9 @@
+   struct archive_string_conv *opt_sconv;
+   struct archive_string_conv *sconv_utf8;
+   struct archive_string_conv *sconv_utf16be;
++  /* Kernir patch 0010: the current file header's name was taken as
++   * Unicode (FHD_UNICODE: decoded UTF-16, or UTF-8 with no NUL). */
++  int kernir_name_declared;
+ 
+   /*
+    * Bit stream reader.
+@@ -915,6 +919,10 @@
+   unsigned flags;
+   unsigned long crc32_expected;
+ 
++  /* Kernir patch 0010: per header; set again only where read_header()
++   * takes a Unicode name. */
++  rar->kernir_name_declared = 0;
++
+   a->archive.archive_format = ARCHIVE_FORMAT_RAR;
+   if (a->archive.archive_format_name == NULL)
+     a->archive.archive_format_name = "RAR";
+@@ -1018,7 +1026,11 @@
+       break;
+ 
+     case FILE_HEAD:
+-      return read_header(a, entry, head_type);
++      ret = read_header(a, entry, head_type);
++      /* Kernir patch 0010: a failed header declares nothing. */
++      if (ret < ARCHIVE_WARN)
++        rar->kernir_name_declared = 0;
++      return ret;
+ 
+     case COMM_HEAD:
+     case AV_HEAD:
+@@ -1646,6 +1658,7 @@
+           return (ARCHIVE_FATAL);
+       }
+       fn_sconv = rar->sconv_utf16be;
++      rar->kernir_name_declared = 1;	/* Kernir patch 0010 */
+ 
+       strp = filename;
+       while (memcmp(strp, "\x00\x00", 2))
+@@ -1668,6 +1681,7 @@
+           return (ARCHIVE_FATAL);
+       }
+       fn_sconv = rar->sconv_utf8;
++      rar->kernir_name_declared = 1;	/* Kernir patch 0010 */
+       strp = filename;
+       while ((strp = strchr(strp, '\\')) != NULL)
+         *strp++ = '/';
+@@ -3938,4 +3952,24 @@
+ vm_read_32(struct rar_virtual_machine* vm, size_t offset)
+ {
+   return archive_le32dec(vm->memory + offset);
++}
++
++/*
++ * Kernir patch 0010: 1 when the RAR4 reader took the current file header's
++ * name as Unicode (FHD_UNICODE, and either the encoded UTF-16 part was
++ * decoded or the name was read as UTF-8 for want of a NUL separator), 0
++ * when it used the OEM bytes or the archive is not being read as RAR4.
++ */
++int
++kernir_read_rar_entry_name_declared(struct archive *_a)
++{
++  struct archive_read *a = (struct archive_read *)_a;
++  struct rar *rar;
++
++  if (_a == NULL || _a->magic != ARCHIVE_READ_MAGIC ||
++      a->format == NULL ||
++      a->format->read_header != archive_read_format_rar_read_header)
++    return (0);
++  rar = (struct rar *)a->format->data;
++  return (rar->kernir_name_declared);
+ }
+--- a/include/kernir_names.h
++++ b/include/kernir_names.h
+@@ -15,4 +15,11 @@
+    The flag resets at the start of every archive_write_header, whether that header succeeds or fails. */
+ int kernir_write_zip_next_name_raw(struct archive *a, int utf8_flag);
+ 
++/* Kernir patch 0010 (patches/0010-rar4-name-unicode-accessor.patch), libarchive/archive_read_support_format_rar.c.
++   1: libarchive's RAR4 reader used a Unicode name for the current header (FHD_UNICODE set and either the
++   encoded UTF-16 part was decoded, or the name was taken as plain UTF-8 because there is no NUL separator).
++   0: the reader used the OEM bytes, or the archive is not being read as RAR4 (RAR5 included).
++   Reset at the start of every header read, and 0 after a header that fails. */
++int kernir_read_rar_entry_name_declared(struct archive *a);
++
+ #endif

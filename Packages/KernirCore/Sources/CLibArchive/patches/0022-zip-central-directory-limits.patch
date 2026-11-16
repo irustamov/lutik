@@ -1,0 +1,198 @@
+Kernir patch 0022: the seekable zip reader holds its central directory to the entry and names limits, and a zip64
+end record's central directory offset to the bytes before it
+
+Upstream: libarchive 3.8.10, libarchive/archive_read_support_format_zip.c (read_zip64_eocd,
+slurp_central_directory), include/kernir_names.h (its comment). Applies on top of 0001-0020 (0012, 0016 and 0020
+lines included).
+
+The seekable reader reads the whole central directory before the first header: it callocs a zip_entry (about 190
+bytes) for every 46-byte record and parses every record's extra fields, records whose local header offset repeats
+included, which the offset tree drops and the reader never returns. A 23 MB zip of 500,000 such records held 120 MB
+before its first header, whatever Kernir's entry limit; the claimed entry count and (zip64) size are not used. Each
+record's Info-ZIP Unicode Path field (0x7075) was also parsed against the archive_entry, whose pathname nothing in
+the central directory sets, so one record's 65,000-byte Unicode path stayed there and every later 56-byte record
+with a 0x7075 field whose CRC did not match hashed it again: an 11 MB zip of 200,000 such records cost 5.3 s of CPU
+before its first header. read_zip64_eocd took any central directory offset.
+
+The records are now held to 0016's limits: the ones with a new local header offset (the headers returned, which
+Kernir counts) to max_entries, every record to 2 × max_entries (saturated at UINT64_MAX) before it is allocated, and
+the record names to max(names_bytes, name_bytes_per_entry × the listed records so far)
+(__archive_read_kernir_names_allowance); ARCHIVE_FATAL, ARCHIVE_ERRNO_FILE_FORMAT, own messages ("ZIP archive has
+more entries than the entry limit", "ZIP entry names take more than the names limit"), which Kernir maps to its entry
+and names limits. With mac-ext (Kernir turns it off) a resource fork record is not listed and expose_parent_dirs'
+moves are not counted; the 2 × bound still holds. The names charged are the records' (the local headers' may
+differ), in central directory order, against the allowance of the records listed so far and without link targets,
+where Kernir charges the headers' names, link targets included, in local header offset order: a crafted central
+directory whose long names come before the records that grow the allowance can be refused though Kernir would take
+its headers (names within names_bytes never are; nor is one in offset order, with no repeated offset and the local
+headers' names, unless Kernir refuses its headers too). slurp_central_directory passes no archive_entry to
+process_extra: the central directory's 0x7075 names were never used (zip_read_local_file_header sets the pathname
+from the local header and its own fields). A zip64 end record whose central directory offset is past the record's own
+offset gets no seekable bid from it (the streaming reader then reads the local headers); its size is not checked, as
+nothing reads it (slurp_central_directory starts at the offset and stops at an end record), so a wrong size keeps the
+seekable reader and the central directory's data. Archives within the limits read as before.
+
+Apply from Sources/CLibArchive: patch -p1 < patches/0022-zip-central-directory-limits.patch
+
+--- a/libarchive/archive_read_support_format_zip.c
++++ b/libarchive/archive_read_support_format_zip.c
+@@ -4197,6 +4197,15 @@
+ 	/* CD can't be split. */
+ 	if (archive_le64dec(p + 24) != archive_le64dec(p + 32))
+ 		return 0;
++	/* Kernir patch 0022: the central directory can't start beyond the
++	 * start of the zip64 EOCD record (upstream took any offset). Its size
++	 * is not checked: nothing reads it (slurp_central_directory starts at
++	 * the offset and stops at an end record), so a wrong size costs no
++	 * work and keeps the seekable reader and the central directory's
++	 * data. */
++	if (eocd64_offset < 0 ||
++	    archive_le64dec(p + 48) > (uint64_t)eocd64_offset)
++		return 0;
+ 
+ 	/* Save the central directory offset for later use. */
+ 	zip->central_directory_offset = archive_le64dec(p + 48);
+@@ -4370,7 +4379,27 @@
+ 	archive_string_free(&str);
+ }
+ 
++/*
++ * Kernir patch 0022: the central directory is read whole before the first
++ * header, an entry allocated for every record (records whose local header
++ * offset repeats, which are never returned, included) and every record's
++ * extra fields parsed, so a zip of tiny records cost about 4 times its size
++ * in memory, whatever Kernir's entry limit. The records are held to the
++ * limits of patch 0016 as the 7zip and xar readers are: the listed ones (a
++ * new local header offset: the headers Kernir counts) to the entry limit,
++ * every record to twice it (saturated) before it is allocated, and the
++ * record names to the names total, max(names_bytes, name_bytes_per_entry ×
++ * the listed records so far) (ARCHIVE_FATAL, ARCHIVE_ERRNO_FILE_FORMAT, own
++ * messages).
++ */
+ static int
++kernir_zip_refuse(struct archive_read *a, const char *message)
++{
++	archive_set_error(&a->archive, ARCHIVE_ERRNO_FILE_FORMAT, "%s", message);
++	return (ARCHIVE_FATAL);
++}
++
++static int
+ slurp_central_directory(struct archive_read *a, struct archive_entry* entry,
+     struct zip *zip)
+ {
+@@ -4379,7 +4408,14 @@
+ 	int64_t correction;
+ 	ssize_t bytes_avail;
+ 	const char *p;
++	/* Kernir patch 0022: records, listed records, record name bytes. */
++	uint64_t kernir_records = 0, kernir_listed = 0, kernir_names = 0;
++	const uint64_t kernir_records_cap =
++	    a->kernir_max_entries > UINT64_MAX / 2 ?
++	    UINT64_MAX : 2 * a->kernir_max_entries;
+ 
++	(void)entry; /* Kernir patch 0022: no longer used, see below. */
++
+ 	/*
+ 	 * Find the start of the central directory.  The end-of-CD
+ 	 * record has our starting point, but there are lots of
+@@ -4451,6 +4487,12 @@
+ 		if ((p = __archive_read_ahead(a, 46, NULL)) == NULL)
+ 			return ARCHIVE_FATAL;
+ 
++		/* Kernir patch 0022: before it is allocated. */
++		if (kernir_records >= kernir_records_cap)
++			return (kernir_zip_refuse(a,
++			    "ZIP archive has more entries than the entry limit"));
++		kernir_records++;
++
+ 		zip_entry = calloc(1, sizeof(struct zip_entry));
+ 		if (zip_entry == NULL) {
+ 			archive_set_error(&a->archive, ENOMEM,
+@@ -4520,7 +4562,12 @@
+ 			    "Truncated ZIP file header");
+ 			return ARCHIVE_FATAL;
+ 		}
+-		if (ARCHIVE_OK != process_extra(a, entry, p + filename_length,
++		/* Kernir patch 0022: no archive_entry here. Its only use was the
++		 * Info-ZIP Unicode Path field (0x7075), whose name the local
++		 * header replaces; and since nothing here sets the pathname,
++		 * each record's field hashed the one an earlier record's field
++		 * left (up to 64 KiB for a 56-byte record). */
++		if (ARCHIVE_OK != process_extra(a, NULL, p + filename_length,
+ 		    extra_length, zip_entry)) {
+ 			return ARCHIVE_FATAL;
+ 		}
+@@ -4532,8 +4579,9 @@
+ 		 */
+ 		if (!zip->process_mac_extensions) {
+ 			/* Treat every entry as a regular entry. */
+-			__archive_rb_tree_insert_node(&zip->tree,
+-			    &zip_entry->node);
++			if (__archive_rb_tree_insert_node(&zip->tree,
++			    &zip_entry->node))
++				kernir_listed++;
+ 		} else {
+ 			name = p;
+ 			r = rsrc_basename(name, filename_length);
+@@ -4547,8 +4595,9 @@
+ 				 * resource fork file to expose it. */
+ 				if (name[filename_length-1] != '/' &&
+ 				    (name_end - r < 2 || r[0] != '.' || r[1] != '_')) {
+-					__archive_rb_tree_insert_node(
+-					    &zip->tree, &zip_entry->node);
++					if (__archive_rb_tree_insert_node(
++					    &zip->tree, &zip_entry->node))
++						kernir_listed++;
+ 					/* Expose its parent directories. */
+ 					expose_parent_dirs(zip, name,
+ 					    filename_length);
+@@ -4584,11 +4633,35 @@
+ 				    tmp_length - (r - name));
+ 				/* Register an entry to RB tree to sort it by
+ 				 * file offset. */
+-				__archive_rb_tree_insert_node(&zip->tree,
+-				    &zip_entry->node);
++				if (__archive_rb_tree_insert_node(&zip->tree,
++				    &zip_entry->node))
++					kernir_listed++;
+ 			}
+ 		}
+ 
++		/* Kernir patch 0022: the listed records and the names. A
++		 * resource fork record (mac-ext, which Kernir turns off) is
++		 * not listed; expose_parent_dirs' moves are not counted.
++		 * The names are the records' and are charged in central
++		 * directory order against the allowance of the records listed
++		 * so far; Kernir charges the headers' names (the local
++		 * headers', link targets included) in local header offset
++		 * order. So a crafted central directory whose long names come
++		 * before the records that grow the allowance (or whose names
++		 * are longer than the local headers') can be refused here
++		 * though Kernir would take the headers. Names within
++		 * names_bytes are never refused, and a central directory in
++		 * offset order, with no repeated offset and the local headers'
++		 * names, only where Kernir refuses its headers too. */
++		if (kernir_listed > a->kernir_max_entries)
++			return (kernir_zip_refuse(a,
++			    "ZIP archive has more entries than the entry limit"));
++		kernir_names += filename_length;
++		if (kernir_names >
++		    __archive_read_kernir_names_allowance(a, kernir_listed))
++			return (kernir_zip_refuse(a,
++			    "ZIP entry names take more than the names limit"));
++
+ 		/* Kernir patch 0012: keep the comment bytes. */
+ 		if (comment_length > 0) {
+ 			p = __archive_read_ahead(a,
+--- a/include/kernir_names.h
++++ b/include/kernir_names.h
+@@ -53,6 +53,9 @@
+    - names_bytes, name_bytes_per_entry: the xar names (pathnames, link targets, hardlink target copies and <ea> names, patch 0020) may take max(names_bytes, name_bytes_per_entry × the
+      <file> elements so far) bytes of UTF-8; the allowance stops growing at max_entries elements. A 7z names block may take 2 × names_bytes (UTF-16) plus 2 bytes per
+      entry, whatever numFiles claims: the block is allocated before any entry is parsed.
++   Patch 0022: the seekable zip reader holds its central-directory records to max_entries (records with a new local
++   header offset: the headers it returns) and 2 × max_entries (every record, saturated, before it is allocated), and
++   the record names to max(names_bytes, name_bytes_per_entry × the listed records so far).
+    The defaults below are NestingLimits.standard's (maxEntries, maxTotalNameBytes, nameBytesPerEntry), which a
+    test checks. Set before archive_read_open; ARCHIVE_OK then. A call after it returns ARCHIVE_FATAL and also puts
+    the handle itself in ARCHIVE_STATE_FATAL (archive_check_magic), so the open read fails from then on; only

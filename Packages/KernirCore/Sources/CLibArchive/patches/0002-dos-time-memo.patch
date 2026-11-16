@@ -1,0 +1,46 @@
+Kernir patch 0002: memoize __archive_dos_to_unix
+
+Upstream: libarchive 3.8.10, libarchive/archive_time.c (__archive_dos_to_unix).
+
+The zip reader converts every entry's DOS date/time with mktime(), which dominates listing
+time for archives with hundreds of thousands of entries (neighbouring entries nearly always
+share one stamp). The patch caches the last conversion in thread-local storage (the result
+depends only on the dos value and the process time zone, never on the archive), so
+concurrent opens on different threads cannot see each other's memo.
+
+Apply from Sources/CLibArchive: patch -p1 < patches/0002-dos-time-memo.patch
+
+--- a/libarchive/archive_time.c
++++ b/libarchive/archive_time.c
+@@ -65,7 +65,19 @@
+ 	uint16_t msTime, msDate;
+ 	struct tm ts;
+ 	time_t t;
++	/*
++	 * Kernir patch 0002 (patches/0002-dos-time-memo.patch): mktime() is the hot
++	 * spot when listing zips with hundreds of thousands of entries, and neighbouring
++	 * entries almost always share one stamp. Memoize the last conversion per thread
++	 * (the result depends on the process time zone only, not on the archive).
++	 */
++	static _Thread_local int memo_valid;
++	static _Thread_local uint32_t memo_dos;
++	static _Thread_local int64_t memo_result;
+ 
++	if (memo_valid && memo_dos == dos_time)
++		return memo_result;
++
+ 	msTime = (0xFFFF & dos_time);
+ 	msDate = (dos_time >> 16);
+ 
+@@ -78,7 +90,10 @@
+ 	ts.tm_sec = (msTime << 1) & 0x3e;
+ 	ts.tm_isdst = -1;
+ 	t = mktime(&ts);
+-	return (int64_t)(t == (time_t)-1 ? INT32_MAX : t);
++	memo_result = (int64_t)(t == (time_t)-1 ? INT32_MAX : t);
++	memo_dos = dos_time;
++	memo_valid = 1;
++	return memo_result;
+ }
+ 
+ /* Convert into MSDOS-style date/time. */

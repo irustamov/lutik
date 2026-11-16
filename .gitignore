@@ -1,0 +1,15 @@
+.DS_Store
+.superpowers/
+*.xcodeproj/
+build/
+!scripts/build/
+DerivedData/
+.build/
+.swiftpm/
+xcuserdata/
+*.dmg
+dist/
+# Raw Recraft output before normalising stays local; only the normalised masters are committed (Thumbnails.xcassets).
+docs/brand/file-icons/source/
+# scripts/build/stamp-version.sh output (build number + commit), written by every xcodegen run.
+App/Version.generated.xcconfig*

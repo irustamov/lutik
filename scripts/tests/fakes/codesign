@@ -1,0 +1,2 @@
+#!/bin/bash
+printf 'codesign %s\n' "$*" >> "${FAKE_LOG:-/dev/null}"

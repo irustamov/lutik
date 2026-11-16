@@ -1,0 +1,37 @@
+#!/bin/bash
+# Fake xcodebuild: logs argv. archive records the -destination in the archive dir;
+# -exportArchive emits only what the export plist's method implies:
+#   developer-id -> Lutik.app; app-store-connect -> Lutik.pkg (macOS) or Lutik.ipa (iOS).
+# archive also creates <archive>/Products/Applications/Lutik.app (empty dir).
+# FAKE_EXPORT_EMPTY=1 emits nothing.
+printf 'xcodebuild %s\n' "$*" >> "${FAKE_LOG:-/dev/null}"
+archive="" dest="" export="" plist="" prev="" is_export=0
+for a in "$@"; do
+  case "$prev" in
+    -archivePath) archive="$a" ;;
+    -destination) dest="$a" ;;
+    -exportPath) export="$a" ;;
+    -exportOptionsPlist) plist="$a" ;;
+  esac
+  [ "$a" = -exportArchive ] && is_export=1
+  prev="$a"
+done
+if [ "$is_export" -eq 0 ]; then
+  if [ -n "$archive" ]; then mkdir -p "$archive"; printf '%s\n' "$dest" > "$archive/destination"; mkdir -p "$archive/Products/Applications/Lutik.app"; fi
+  exit 0
+fi
+[ -z "$plist" ] || printf 'plist-destination: %s\n' "$(/usr/libexec/PlistBuddy -c 'Print :destination' "$plist" 2>/dev/null)" >> "${FAKE_LOG:-/dev/null}"
+[ -n "$export" ] || exit 0
+mkdir -p "$export"
+[ "${FAKE_EXPORT_EMPTY:-}" != 1 ] || exit 0
+method="$(/usr/libexec/PlistBuddy -c 'Print :method' "$plist" 2>/dev/null)"
+case "$method" in
+  developer-id)
+    mkdir -p "$export/Lutik.app/Contents"; echo fake > "$export/Lutik.app/Contents/Info.plist" ;;
+  app-store-connect)
+    if grep -q 'platform=iOS' "$archive/destination" 2>/dev/null; then
+      echo fake > "$export/Lutik.ipa"
+    else
+      echo fake > "$export/Lutik.pkg"
+    fi ;;
+esac

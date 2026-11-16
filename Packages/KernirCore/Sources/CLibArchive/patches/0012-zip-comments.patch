@@ -1,0 +1,403 @@
+Kernir patch 0012: zip comments, raw bytes (entry-comment reader accessor and writer hook, archive-comment writer)
+
+Upstream: libarchive 3.8.10, libarchive/archive_read_support_format_zip.c (struct zip_entry,
+archive_read_format_zip_seekable_bid, slurp_central_directory, cleanup), libarchive/archive_write.c
+(_archive_write_header, _archive_write_free), libarchive/archive_write_private.h (struct archive_write) and libarchive/archive_write_set_format_zip.c
+(struct zip, archive_write_zip_header, archive_write_zip_finish_entry, archive_write_zip_close,
+archive_write_zip_free). Declarations in include/kernir_names.h (added by 0009). Applies on top of 0009.
+
+Upstream reads every zip comment length and skips the bytes, and its writer writes neither entry comments
+(central-directory comment length 0) nor an archive comment (end-of-central-directory comment length 0), so a
+repack through libarchive drops both. Kernir copies them zip -> zip, byte for byte, with no charset conversion.
+
+Reader: slurp_central_directory() keeps each central-directory record's comment bytes in its zip_entry
+(freed in cleanup). kernir_read_zip_entry_comment(a, &bytes, &length) returns 1 with the current entry's
+comment (length 0: none) when the seekable reader read it from the central directory, 0 for the streaming
+reader (no central directory) or when there is no current entry, and -1 when the archive is not being read
+as zip.
+
+Reader, end-record search: upstream's seekable bidder looks for the end-of-central-directory record in the
+last 16 KiB only, so behind an archive comment over about 16 KiB (the format allows 65 535 bytes, Kernir's
+editor 16 000 characters) the streaming reader opens the zip and every entry comment is lost.
+archive_read_format_zip_seekable_bid() now reads the last 20 + 22 + 65 535 bytes (zip64 locator, end record,
+longest comment). A signature in the last 16 KiB is taken by upstream's rule, unchanged (the same candidate,
+no comment-length check). A signature further from EOF is taken only when 22 + its comment length reaches
+EOF exactly; others are skipped and the search goes on. The record found is checked as before (read_eocd, and
+the zip64 locator 20 bytes before it, which the wider window now always contains), so 0011 still applies.
+A zip with more than 16 KiB of data after an end record without a matching comment is still not taken.
+
+Writer, entry comment: kernir_write_zip_next_comment(a, bytes, length) (at most 0xffff bytes; 0 clears)
+arms the next archive_write_header() only. The request is kept in struct archive_write and taken by
+_archive_write_header() before anything else, next to 0009's raw-name request, so it is used up by the next
+header whether that header succeeds, fails in the zip writer, or returns early before the format runs.
+archive_write_zip_header() moves the taken bytes into the zip writer before any return (the previous entry
+was already finished); archive_write_zip_finish_entry() appends them to the central-directory record after
+the extra fields (UT, zip64), once the extra length is fixed, and sets the record's comment length.
+
+Writer, archive comment: kernir_write_zip_archive_comment(a, bytes, length) (at most 0xffff bytes; 0: none;
+any time before close, a later call replaces it). archive_write_zip_close() writes its length into the end
+record and the bytes right after it; zip64 end records come before the end record, so they are unchanged.
+
+Both writer calls return ARCHIVE_FATAL (and set an error) when the handle is not a zip writer or the length
+is over 0xffff. Without the calls the reader and writer write exactly what upstream writes.
+
+Apply from Sources/CLibArchive: patch -p1 < patches/0012-zip-comments.patch
+
+--- a/libarchive/archive_read_support_format_zip.c
++++ b/libarchive/archive_read_support_format_zip.c
+@@ -95,6 +95,9 @@
+ 	int64_t			gid;
+ 	int64_t			uid;
+ 	struct archive_string	rsrcname;
++	/* Kernir patch 0012: the central-directory comment (seekable
++	 * reader only). */
++	struct archive_string	kernir_comment;
+ 	time_t			mtime;
+ 	time_t			atime;
+ 	time_t			ctime;
+@@ -3724,6 +3727,7 @@
+ 		while (zip_entry != NULL) {
+ 			next_zip_entry = zip_entry->next;
+ 			archive_string_free(&zip_entry->rsrcname);
++			archive_string_free(&zip_entry->kernir_comment);
+ 			free(zip_entry);
+ 			zip_entry = next_zip_entry;
+ 		}
+@@ -4220,8 +4224,15 @@
+ 		return 0;
+ 
+ 	/* Search last 16k of file for end-of-central-directory
+-	 * record (which starts with PK\005\006) */
+-	tail = (int)zipmin(1024 * 16, file_size);
++	 * record (which starts with PK\005\006)
++	 * Kernir patch 0012: search the last 20 + 22 + 65535 bytes (zip64
++	 * locator, end record and the longest archive comment). A signature
++	 * in the last 16k is taken by upstream's rule, unchanged; one further
++	 * from EOF only when its comment length makes the record end exactly
++	 * at EOF, so archive comments over 16k still get the seekable reader
++	 * and its central directory (entry comments) while trailing data
++	 * after an end record keeps upstream's behaviour. */
++	tail = (int)zipmin(20 + 22 + 65535, file_size);
+ 	current_offset = __archive_read_seek(a, -tail, SEEK_END);
+ 	if (current_offset < 0)
+ 		return 0;
+@@ -4238,6 +4249,12 @@
+ 	for (i = tail - 22; i >= 0;) {
+ 		switch (h[i]) {
+ 		case 'P':
++			if (memcmp(h + i, "PK\005\006", 4) == 0 &&
++			    tail - i > 1024 * 16 &&
++			    22 + archive_le16dec(h + i + 20) != tail - i) {
++				i -= 4;
++				break;
++			}
+ 			if (memcmp(h + i, "PK\005\006", 4) == 0) {
+ 				int ret = read_eocd(zip, h + i,
+ 				    current_offset + i);
+@@ -4569,6 +4586,26 @@
+ 				 * file offset. */
+ 				__archive_rb_tree_insert_node(&zip->tree,
+ 				    &zip_entry->node);
++			}
++		}
++
++		/* Kernir patch 0012: keep the comment bytes. */
++		if (comment_length > 0) {
++			p = __archive_read_ahead(a,
++			    filename_length + extra_length + comment_length,
++			    NULL);
++			if (p == NULL) {
++				archive_set_error(&a->archive,
++				    ARCHIVE_ERRNO_FILE_FORMAT,
++				    "Truncated ZIP file header");
++				return ARCHIVE_FATAL;
++			}
++			if (archive_array_append(&zip_entry->kernir_comment,
++			    p + filename_length + extra_length,
++			    comment_length) == NULL) {
++				archive_set_error(&a->archive, ENOMEM,
++				    "Can't allocate zip entry comment");
++				return ARCHIVE_FATAL;
+ 			}
+ 		}
+ 
+@@ -4913,4 +4950,43 @@
+ 	return (zip->kernir_name_declared);
+ }
+ 
++/*
++ * Kernir patch 0012: the current entry's central-directory comment. 1 with
++ * *bytes and *length set (length 0: no comment) when the seekable reader
++ * read the entry from the central directory; 0 when the entry has no
++ * central-directory record here (the streaming reader, or no current
++ * entry); -1 when the archive is not being read as zip.
++ */
++int
++kernir_read_zip_entry_comment(struct archive *_a, const void **bytes,
++    size_t *length)
++{
++	struct archive_read *a = (struct archive_read *)_a;
++	struct zip *zip;
++
++	if (bytes != NULL)
++		*bytes = NULL;
++	if (length != NULL)
++		*length = 0;
++	if (_a == NULL || _a->magic != ARCHIVE_READ_MAGIC ||
++	    a->format == NULL ||
++	    (a->format->read_header !=
++	     archive_read_format_zip_streamable_read_header &&
++	     a->format->read_header !=
++	     archive_read_format_zip_seekable_read_header))
++		return (-1);
++	if (a->format->read_header !=
++	    archive_read_format_zip_seekable_read_header)
++		return (0);
++	zip = (struct zip *)a->format->data;
++	if (zip->entry == NULL ||
++	    (zip->entry->flags & LA_FROM_CENTRAL_DIRECTORY) == 0)
++		return (0);
++	if (bytes != NULL)
++		*bytes = zip->entry->kernir_comment.s;
++	if (length != NULL)
++		*length = zip->entry->kernir_comment.length;
++	return (1);
++}
++
+ /*# vim:set noet:*/
+--- a/libarchive/archive_write.c
++++ b/libarchive/archive_write.c
+@@ -758,6 +758,9 @@
+ 	/* Release various dynamic buffers. */
+ 	free((void *)(uintptr_t)(const void *)a->nulls);
+ 	archive_string_free(&a->archive.error_string);
++	/* Kernir patch 0012 */
++	archive_string_free(&a->kernir_zip_comment_request);
++	archive_string_free(&a->kernir_zip_comment);
+ 	if (a->passphrase != NULL) {
+ 		/* A passphrase should be cleaned. */
+ 		memset(a->passphrase, 0, strlen(a->passphrase));
+@@ -784,6 +787,14 @@
+ 	 * consuming after the check would leak the request on a state-error return. */
+ 	a->kernir_zip_raw_name = a->kernir_zip_raw_request;
+ 	a->kernir_zip_raw_request = 0;
++	/* Kernir patch 0012: an entry-comment request is taken the same
++	 * way (swapped, so no allocation can fail here). */
++	{
++		struct archive_string t = a->kernir_zip_comment;
++		a->kernir_zip_comment = a->kernir_zip_comment_request;
++		a->kernir_zip_comment_request = t;
++		archive_string_empty(&a->kernir_zip_comment_request);
++	}
+ 
+ 	archive_check_magic(&a->archive, ARCHIVE_WRITE_MAGIC,
+ 	    ARCHIVE_STATE_DATA | ARCHIVE_STATE_HEADER, "archive_write_header");
+--- a/libarchive/archive_write_private.h
++++ b/libarchive/archive_write_private.h
+@@ -86,6 +86,11 @@
+ 	int		  kernir_zip_raw_request;
+ 	int		  kernir_zip_raw_name;
+ 
++	/* Kernir patch 0012: zip entry-comment bytes for the next
++	 * archive_write_header, and the bytes that header took. */
++	struct archive_string kernir_zip_comment_request;
++	struct archive_string kernir_zip_comment;
++
+ 	/* Utility:  Pointer to a block of nulls. */
+ 	const unsigned char	*nulls;
+ 	size_t			 null_length;
+--- a/libarchive/archive_write_set_format_zip.c
++++ b/libarchive/archive_write_set_format_zip.c
+@@ -219,6 +219,14 @@
+ #endif
+ 	size_t len_buf;
+ 	unsigned char *buf;
++
++	/* Kernir patch 0012: the current entry's central-directory
++	 * comment (taken from the archive_write request by
++	 * archive_write_zip_header, written by finish_entry) and the
++	 * archive comment written after the end-of-central-directory
++	 * record. Raw bytes, at most 0xffff each. */
++	struct archive_string kernir_entry_comment;
++	struct archive_string kernir_archive_comment;
+ };
+ 
+ /* Don't call this min or MIN, since those are already defined
+@@ -788,6 +796,17 @@
+ 	/* Kernir patch 0009: taken by _archive_write_header. */
+ 	int raw_name = a->kernir_zip_raw_name;
+ #define MIN_VERSION_NEEDED(x) do { if (version_needed < x) { version_needed = x; } } while (0)
++
++	/* Kernir patch 0012: this entry's comment is the one
++	 * _archive_write_header took (empty: none). The previous entry
++	 * was finished before this call, so its comment is no longer
++	 * needed. Swapped first, before any return. */
++	{
++		struct archive_string t = zip->kernir_entry_comment;
++		zip->kernir_entry_comment = a->kernir_zip_comment;
++		a->kernir_zip_comment = t;
++		archive_string_empty(&a->kernir_zip_comment);
++	}
+ 
+ 	/* Sanity check. */
+ 	if (archive_entry_pathname(entry) == NULL
+@@ -2174,6 +2193,25 @@
+ 		(uint32_t)zipmin(zip->entry_offset,
+ 				 ZIP_4GB_MAX));
+ 
++	/* Kernir patch 0012: the entry comment follows the name and the
++	 * extra fields in the central-directory record, so it is appended
++	 * last, after the extra length above was fixed. */
++	if (zip->kernir_entry_comment.length > 0) {
++		unsigned char *c;
++
++		c = cd_alloc(zip, zip->kernir_entry_comment.length);
++		if (c == NULL) {
++			archive_set_error(&a->archive, ENOMEM,
++				"Can't allocate zip data");
++			return (ARCHIVE_FATAL);
++		}
++		memcpy(c, zip->kernir_entry_comment.s,
++		    zip->kernir_entry_comment.length);
++		archive_le16enc(zip->file_header + 32,
++		    (uint16_t)zip->kernir_entry_comment.length);
++		archive_string_empty(&zip->kernir_entry_comment);
++	}
++
+ 	return (ARCHIVE_OK);
+ }
+ 
+@@ -2242,10 +2280,20 @@
+ 		(uint32_t)zipmin(ZIP_4GB_MAX, (offset_end - offset_start)));
+ 	archive_le32enc(buff + 16,
+ 		(uint32_t)zipmin(ZIP_4GB_MAX, offset_start));
++	/* Kernir patch 0012: the archive comment ends the file. */
++	archive_le16enc(buff + 20,
++	    (uint16_t)zip->kernir_archive_comment.length);
+ 	ret = __archive_write_output(a, buff, 22);
+ 	if (ret != ARCHIVE_OK)
+ 		return (ARCHIVE_FATAL);
+ 	zip->written_bytes += 22;
++	if (zip->kernir_archive_comment.length > 0) {
++		ret = __archive_write_output(a, zip->kernir_archive_comment.s,
++		    zip->kernir_archive_comment.length);
++		if (ret != ARCHIVE_OK)
++			return (ARCHIVE_FATAL);
++		zip->written_bytes += zip->kernir_archive_comment.length;
++	}
+ 	return (ARCHIVE_OK);
+ }
+ 
+@@ -2263,6 +2311,9 @@
+ 	}
+ 	free(zip->buf);
+ 	archive_entry_free(zip->entry);
++	/* Kernir patch 0012 */
++	archive_string_free(&zip->kernir_entry_comment);
++	archive_string_free(&zip->kernir_archive_comment);
+ 	if (zip->cctx_valid)
+ 		archive_encrypto_aes_ctr_release(&zip->cctx);
+ 	if (zip->hctx_valid)
+@@ -2558,3 +2609,67 @@
+ 	a->kernir_zip_raw_request = utf8_flag ? 2 : 1;
+ 	return (ARCHIVE_OK);
+ }
++
++/*
++ * Kernir patch 0012: the next archive_write_header's entry gets these bytes
++ * as its central-directory comment, verbatim (length 0: no comment).
++ */
++int
++kernir_write_zip_next_comment(struct archive *_a, const void *bytes,
++    size_t length)
++{
++	struct archive_write *a = (struct archive_write *)_a;
++
++	if (_a == NULL || _a->magic != ARCHIVE_WRITE_MAGIC ||
++	    a->format_write_header != archive_write_zip_header) {
++		if (_a != NULL)
++			archive_set_error(_a, ARCHIVE_ERRNO_MISC,
++			    "Entry comments need a zip writer");
++		return (ARCHIVE_FATAL);
++	}
++	if (length > 0xffff || (length > 0 && bytes == NULL)) {
++		archive_set_error(_a, ARCHIVE_ERRNO_MISC,
++		    "Invalid zip entry comment");
++		return (ARCHIVE_FATAL);
++	}
++	archive_string_empty(&a->kernir_zip_comment_request);
++	if (length > 0 && archive_array_append(&a->kernir_zip_comment_request,
++	    bytes, length) == NULL) {
++		archive_set_error(_a, ENOMEM, "Can't allocate zip data");
++		return (ARCHIVE_FATAL);
++	}
++	return (ARCHIVE_OK);
++}
++
++/*
++ * Kernir patch 0012: the archive comment written after the
++ * end-of-central-directory record at close, verbatim (length 0: none).
++ */
++int
++kernir_write_zip_archive_comment(struct archive *_a, const void *bytes,
++    size_t length)
++{
++	struct archive_write *a = (struct archive_write *)_a;
++	struct zip *zip;
++
++	if (_a == NULL || _a->magic != ARCHIVE_WRITE_MAGIC ||
++	    a->format_write_header != archive_write_zip_header) {
++		if (_a != NULL)
++			archive_set_error(_a, ARCHIVE_ERRNO_MISC,
++			    "Archive comments need a zip writer");
++		return (ARCHIVE_FATAL);
++	}
++	if (length > 0xffff || (length > 0 && bytes == NULL)) {
++		archive_set_error(_a, ARCHIVE_ERRNO_MISC,
++		    "Invalid zip archive comment");
++		return (ARCHIVE_FATAL);
++	}
++	zip = (struct zip *)a->format_data;
++	archive_string_empty(&zip->kernir_archive_comment);
++	if (length > 0 && archive_array_append(&zip->kernir_archive_comment,
++	    bytes, length) == NULL) {
++		archive_set_error(_a, ENOMEM, "Can't allocate zip data");
++		return (ARCHIVE_FATAL);
++	}
++	return (ARCHIVE_OK);
++}
+--- a/include/kernir_names.h
++++ b/include/kernir_names.h
+@@ -3,6 +3,8 @@
+ #ifndef KERNIR_NAMES_H
+ #define KERNIR_NAMES_H
+ 
++#include <stddef.h>
++
+ struct archive;
+ 
+ /* 1: the current zip entry's name was declared Unicode (bit 11, or an Info-ZIP Unicode Path field 0x7075 was used).
+@@ -22,4 +24,23 @@
+    Reset at the start of every header read, and 0 after a header that fails. */
+ int kernir_read_rar_entry_name_declared(struct archive *a);
+ 
++/* Kernir patch 0012 (patches/0012-zip-comments.patch): zip comments, raw bytes.
++   libarchive/archive_read_support_format_zip.c, archive_write_set_format_zip.c, archive_write.c. */
++
++/* The current zip entry's central-directory comment. 1: *bytes and *length are set (length 0: no comment; the bytes
++   stay valid until the next header read). 0: no central-directory record for this entry (the streaming reader,
++   which libarchive uses when it cannot find the end record, or no current entry). -1: not being read as zip. */
++int kernir_read_zip_entry_comment(struct archive *a, const void **bytes, size_t *length);
++
++/* For the next archive_write_header only (zip writer): store `length` bytes (at most 0xffff; 0: none) verbatim as
++   that entry's central-directory comment. Taken at the start of every archive_write_header, like
++   kernir_write_zip_next_name_raw, whether that header succeeds or fails. ARCHIVE_FATAL if the writer is not zip or
++   the length is over 0xffff. */
++int kernir_write_zip_next_comment(struct archive *a, const void *bytes, size_t length);
++
++/* The zip archive comment (at most 0xffff bytes, verbatim; 0: none), written after the end-of-central-directory
++   record when the archive is closed. Call any time before archive_write_close; a later call replaces it.
++   ARCHIVE_FATAL if the writer is not zip or the length is over 0xffff. */
++int kernir_write_zip_archive_comment(struct archive *a, const void *bytes, size_t length);
++
+ #endif
