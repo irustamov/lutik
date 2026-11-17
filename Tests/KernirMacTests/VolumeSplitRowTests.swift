@@ -38,7 +38,7 @@ struct VolumeSplitRowTests {
     }
 
     /// The English ZIP note is one line at the accessory's 420 pt. It adds exactly
-    /// as much height as a one-word secondary line does. A translation may wrap (l10n D1), so the
+    /// as much height as a one-word secondary line does. A translation may wrap, so the
     /// test runs only when the host app shows English.
     @Test(.enabled(if: Bundle.main.preferredLocalizations.first == "en", "the one-line rule is for English"))
     func theZipNoteIsOneLineAt420Points() {

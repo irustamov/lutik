@@ -94,7 +94,7 @@ struct TriageTests {
         #expect(EntryPath.normalize("../\u{0301}/..") == "\u{0301}")
     }
 
-    @Test func ws7Rar4UnicodeByListedAndDecomposedPath() async throws {
+    @Test func rar4UnicodeByListedAndDecomposedPath() async throws {
         let url = ReaderListingTests.fixture("third-party/rar/rar4-unicode.rar")
         try #require(FileManager.default.fileExists(atPath: url.path), "corpus missing")
         let r = try await LibArchiveReader.open(at: url, password: nil)
@@ -119,7 +119,7 @@ struct TriageTests {
         try? FileManager.default.destinationOfSymbolicLink(atPath: url.path)
     }
 
-    @Test func ws7Rar5SymlinkExtractsAll() async throws {
+    @Test func rar5SymlinkExtractsAll() async throws {
         let url = ReaderListingTests.fixture("third-party/rar/rar5-symlink.rar")
         try #require(FileManager.default.fileExists(atPath: url.path), "corpus missing")
         let r = try await LibArchiveReader.open(at: url, password: nil)
@@ -252,7 +252,7 @@ struct TriageTests {
         #expect(LibArchiveReader.detectFormat(at: url) == .tarGzip)
     }
 
-    @Test func ws7TruncatedFixturesAreDetected() throws {
+    @Test func truncatedFixturesAreDetected() throws {
         for (f, expected) in [("corrupt/truncated.tar.gz", ArchiveFormat.tarGzip),
                               ("corrupt/truncated.tar.xz", .tarXz)] {
             let url = ReaderListingTests.fixture(f)

@@ -5,7 +5,7 @@ import Testing
 
 /// `previewListing` holds an archive to `NestingLimits.preview`, tighter than the app's `standard` limits: the Quick
 /// Look extension that calls it is killed at about 1.3 GB, and a listing inside the standard limits peaked at up to
-/// 8.2 GB (D2). The preview limits are fixed totals (no per-entry growth), so its peak is bounded by them alone.
+/// 8.2 GB. The preview limits are fixed totals (no per-entry growth), so its peak is bounded by them alone.
 @Suite("Preview budget")
 struct PreviewBudgetTests {
     @Test func previewLimitsAreFixedAndTighter() {

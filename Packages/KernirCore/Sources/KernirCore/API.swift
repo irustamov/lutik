@@ -349,6 +349,71 @@ extension Archive {
 /// Fraction 0...1 plus the entry currently processed. Called from a background thread.
 public typealias ArchiveProgressHandler = @Sendable (_ fraction: Double, _ currentPath: String?) -> Void
 
+// MARK: - Testing
+
+/// What a test of an archive can vouch for.
+public enum ArchiveIntegrityCoverage: Sendable, Equatable {
+    /// The format stores per-entry data checksums, and they were verified.
+    case dataChecksums
+    /// Only structure/headers could be verified.
+    case headersOnly
+    /// Nothing verifiable.
+    case none
+}
+
+/// One entry that could not be read to its end during a test.
+public struct ArchiveTestFailure: Sendable, Equatable {
+    public let path: String
+    public let error: ArchiveError
+    /// Paths of the other entries in the same solid block/compressed stream, which are unreadable because
+    /// of this failure (folded into this failure rather than listed separately). May be empty when the
+    /// engine cannot tell; those entries then appear as their own failures or in `notChecked`, never omitted.
+    public let sameBlockPaths: [String]
+
+    public init(path: String, error: ArchiveError, sameBlockPaths: [String]) {
+        self.path = path
+        self.error = error
+        self.sameBlockPaths = sameBlockPaths
+    }
+}
+
+/// The result of `ArchiveReading.test(progress:)`.
+public struct ArchiveTestReport: Sendable, Equatable {
+    /// Regular entries read to the end without error.
+    public let checkedCount: Int
+    public let failures: [ArchiveTestFailure]
+    /// Regular entries never reached, after a fatal error (I/O, truncation, missing volume) once at least
+    /// one entry had been read. A report with entries here is returned, not thrown.
+    public let notChecked: [String]
+    /// What the test could vouch for: the weakest coverage of any checked entry. Without a password,
+    /// encrypted entries fail with `.passwordRequired`, which is not damage: UIs should not label them
+    /// damaged.
+    public let coverage: ArchiveIntegrityCoverage
+    /// No failures and every entry reached.
+    public var isClean: Bool { failures.isEmpty && notChecked.isEmpty }
+    /// Every entry path that could not be verified as readable: the failing entries, the other entries in
+    /// their solid blocks, and the entries never reached. Regular entries outside this set read to their end
+    /// without error, verified only as far as `coverage` says. Directories and non-regular entries are never
+    /// read. A caller that extracts the complement must pass only non-directory paths (plus empty folders),
+    /// never a directory, because `extract` expands a directory to its whole contents.
+    public var affectedPaths: Set<String> {
+        var paths = Set(notChecked)
+        for failure in failures {
+            paths.insert(failure.path)
+            paths.formUnion(failure.sameBlockPaths)
+        }
+        return paths
+    }
+
+    public init(checkedCount: Int, failures: [ArchiveTestFailure], notChecked: [String],
+                coverage: ArchiveIntegrityCoverage) {
+        self.checkedCount = checkedCount
+        self.failures = failures
+        self.notChecked = notChecked
+        self.coverage = coverage
+    }
+}
+
 // MARK: - Reading
 
 /// An opened archive: listing plus on-demand extraction. Immutable snapshot of the file on disk.
@@ -397,9 +462,20 @@ public protocol ArchiveReading: Sendable {
     /// Symlink entries resolve inside the archive and return the target file's bytes as a regular file.
     /// Never applies setuid, setgid or sticky bits; only `mode & 0o777` is written.
     func extractToTemporaryFile(_ path: String) async throws -> URL
+
+    /// Reads every regular entry to its end without writing anything, and reports what could not be read.
+    /// Per-entry damage lands in `ArchiveTestReport.failures`. It throws only when no entry could be read
+    /// (password required before any entry, I/O, unsupported format); cancellation always throws. Once any
+    /// entry was read, a fatal error (I/O, truncation, missing volume) returns a report with the remaining
+    /// regular entries in `ArchiveTestReport.notChecked`.
+    func test(progress: ArchiveProgressHandler?) async throws -> ArchiveTestReport
 }
 
 public extension ArchiveReading {
+    /// Defaults to throwing `.notImplemented`.
+    func test(progress: ArchiveProgressHandler?) async throws -> ArchiveTestReport {
+        throw ArchiveError.notImplemented
+    }
     /// Defaults to the opened file alone.
     var volumeURLs: [URL] { [url] }
     /// Defaults to AES-256 for encrypted archives, since the real scheme is unknown.

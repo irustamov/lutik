@@ -49,7 +49,7 @@ final class ExtractHereUITests: KernirMacUITestCase {
                        "nothing else, no hidden staging, next to the archive")
     }
 
-    /// Owner, 2026-11-10: a Python wheel (a ZIP) is extracted like any ZIP, and ⌥⌘E is File >
+    /// A Python wheel (a ZIP) is extracted like any ZIP, and ⌥⌘E is File >
     /// Extract Here's visible shortcut. project.zip renamed "tool-1.0-py3-none-any.whl" comes out as
     /// "tool-1.0-py3-none-any" next to it.
     func testOptionCommandEExtractsAWheelHere() throws {

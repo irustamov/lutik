@@ -3,6 +3,7 @@
 # -exportArchive emits only what the export plist's method implies:
 #   developer-id -> Lutik.app; app-store-connect -> Lutik.pkg (macOS) or Lutik.ipa (iOS).
 # archive also creates <archive>/Products/Applications/Lutik.app (empty dir).
+# -exportArchive also logs 'export-rsync: <command -v rsync>' (Xcode's IPA copy step runs rsync from PATH).
 # FAKE_EXPORT_EMPTY=1 emits nothing.
 printf 'xcodebuild %s\n' "$*" >> "${FAKE_LOG:-/dev/null}"
 archive="" dest="" export="" plist="" prev="" is_export=0
@@ -20,6 +21,7 @@ if [ "$is_export" -eq 0 ]; then
   if [ -n "$archive" ]; then mkdir -p "$archive"; printf '%s\n' "$dest" > "$archive/destination"; mkdir -p "$archive/Products/Applications/Lutik.app"; fi
   exit 0
 fi
+printf 'export-rsync: %s\n' "$(command -v rsync || echo none)" >> "${FAKE_LOG:-/dev/null}"
 [ -z "$plist" ] || printf 'plist-destination: %s\n' "$(/usr/libexec/PlistBuddy -c 'Print :destination' "$plist" 2>/dev/null)" >> "${FAKE_LOG:-/dev/null}"
 [ -n "$export" ] || exit 0
 mkdir -p "$export"

@@ -82,6 +82,29 @@ ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ```
 
+## xz liblzma
+
+XZ Utils' liblzma, vendored as C source in `Packages/KernirCore/Sources/CLZMA` and compiled into the app. It reads and writes .xz and .lzma files and the LZMA/LZMA2 data inside 7z and zip archives. This software includes code from XZ Utils <https://tukaani.org/xz/>.
+
+- Version: 5.8.4
+- Project: https://tukaani.org/xz/, https://github.com/tukaani-project/xz
+- License: BSD Zero Clause License (0BSD, below). Copyright (C) The XZ Utils authors and contributors.
+- The authoritative texts are the verbatim `COPYING` and `COPYING.0BSD` files at `Packages/KernirCore/Sources/CLZMA`.
+
+```
+Permission to use, copy, modify, and/or distribute this
+software for any purpose with or without fee is hereby granted.
+
+THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL
+WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL
+THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR
+CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
+LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT,
+NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
+CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+```
+
 ## System libraries
 
-Compression codecs (zlib, bzip2, liblzma, libcompression) are the copies that ship with macOS and iOS. They are linked dynamically and are not redistributed with Kernir.
+Compression codecs (zlib, bzip2, libcompression) are the copies that ship with macOS and iOS. They are linked dynamically and are not redistributed with Kernir.

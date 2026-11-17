@@ -153,7 +153,7 @@ extension BrowserPresentationFlowTests {
         #expect(flow.transitionEnded() == nil)
     }
 
-    /// Fix-forward #3: a file replacing the shown archive drops the one waiting for its file's
+    /// A file replacing the shown archive drops the one waiting for its file's
     /// close (newest wins): that close landing later doesn't put the older file over it.
     @Test func replaceDropsTheFileWaitingForItsClose() {
         var flow = appeared()

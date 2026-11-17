@@ -741,7 +741,7 @@ import KernirCore
         await alertGoes(state)
     }
 
-    /// Review I-1: the next question comes only after the answered one's alert has gone, so each
+    /// The next question comes only after the answered one's alert has gone, so each
     /// alert is presented afresh; the question's data never changes while its alert is up.
     @Test func extractConflictNextQuestionWaitsForTheAlertToGo() async throws {
         let state = try await open()
@@ -760,7 +760,7 @@ import KernirCore
         await state.document.closeOnMain()
     }
 
-    /// Review I-1: an answer from a question that is no longer the one asked is dropped, so it can
+    /// An answer from a question that is no longer the one asked is dropped, so it can
     /// never land on the next item.
     @Test func extractConflictStaleAnswerIsIgnored() async throws {
         let state = try await open()
@@ -795,7 +795,7 @@ import KernirCore
         await state.document.closeOnMain()
     }
 
-    /// Review m-4: a second Extract while a question is open is ignored; the open question and its
+    /// A second Extract while a question is open is ignored; the open question and its
     /// answers stay, and the second folder is left alone.
     @Test func extractWhileAskingIgnoresTheSecondExtract() async throws {
         let state = try await open()
@@ -813,7 +813,7 @@ import KernirCore
         await state.document.closeOnMain()
     }
 
-    /// Review m-6: "Keep Both for All" after a single answer applies to the rest only.
+    /// "Keep Both for All" after a single answer applies to the rest only.
     @Test func extractSeveralConflictsForAllAfterOneAnswer() async throws {
         let state = try await open()
         let folder = try folderWithThreeConflicts()

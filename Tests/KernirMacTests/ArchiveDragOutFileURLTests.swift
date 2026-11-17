@@ -76,7 +76,7 @@ private final class ThreadLog: Sendable {
 
 @MainActor
 @Suite struct ArchiveDragOutFileURLTests {
-    @Test func theCapsAreTheOwnersNamedConstants() {
+    @Test func theCapsAreNamedConstants() {
         #expect(ArchiveDragOut.maxBytes == 32 * 1024 * 1024)
         #expect(ArchiveDragOut.maxEntries == 16)
         #expect(ArchiveDragOut.fileURLWait == 1)

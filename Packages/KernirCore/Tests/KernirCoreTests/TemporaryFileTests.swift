@@ -86,7 +86,7 @@ struct TemporaryFileTests {
         }
     }
 
-    @Test func ws7LinksTarSymlinks() async throws {
+    @Test func linksTarSymlinks() async throws {
         let r = try await LibArchiveReader.open(at: ReaderListingTests.fixture("tar/links.tar"), password: nil)
         let hello = try await r.extractToTemporaryFile("hello.txt")
         let link = try await r.extractToTemporaryFile("link-to-hello")
@@ -153,7 +153,7 @@ struct TemporaryFileTests {
         #expect(try Data(contentsOf: url) == Data("hello bytes".utf8))
     }
 
-    @Test func ws7LinksTarHardlinkViaTempFile() async throws {
+    @Test func linksTarHardlinkViaTempFile() async throws {
         let r = try await LibArchiveReader.open(at: ReaderListingTests.fixture("tar/links.tar"), password: nil)
         let link = try await r.extractToTemporaryFile("hardlink-to-hello")
         let target = try await r.extractToTemporaryFile("hello.txt")

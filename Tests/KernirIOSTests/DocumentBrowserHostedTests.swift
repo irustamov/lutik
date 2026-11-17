@@ -176,7 +176,7 @@ extension OpenDocumentsTests {
         try await tearDown(browser, window, documents: [first, second])
     }
 
-    /// Fix-forward #2: a window going away (its scene's disconnect) closes its document only
+    /// A window going away (its scene's disconnect) closes its document only
     /// once the document and the archive's controller have left UIKit's user-activity registry
     /// on the main thread (the same race as above, on an iPad window's close).
     @Test(.timeLimit(.minutes(1))) func disconnectedWindowsDocumentLeavesItsUserActivityOnTheMainThread() async throws {
@@ -326,7 +326,7 @@ extension OpenDocumentsTests {
         try await tearDown(browser, window, documents: [])
     }
 
-    /// Review fix: the browser's wait for its scene's activation (`NotificationObservation`) ends
+    /// The browser's wait for its scene's activation (`NotificationObservation`) ends
     /// when the observation is released, as it is with the browser, not only on the activation.
     @Test func activationObservationIsRemovedWhenReleased() {
         final class Runs: @unchecked Sendable {

@@ -150,7 +150,8 @@ else
   log "exporting $PLATFORM build"
 fi
 # shellcheck disable=SC2086
-$XCODEBUILD -exportArchive -quiet \
+# Xcode's IPA/pkg copy step runs rsync from PATH; Homebrew rsync 3.5.2 breaks it ("exportArchive Copy failed"), so system tools go first.
+PATH="/usr/bin:/bin:/usr/sbin:/sbin:$PATH" $XCODEBUILD -exportArchive -quiet \
   -archivePath "$ARCHIVE" \
   -exportPath "$EXPORT_DIR" \
   -exportOptionsPlist "$EXPORT_PLIST" $AUTH >&2

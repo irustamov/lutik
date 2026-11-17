@@ -1,2 +1,35 @@
 #!/bin/bash
+# Fake `codesign` for tests. Never signs anything. Logs argv; for display mode (-d...) prints what the
+# real tool prints: Authority= lines only at verbosity >= 2 (-dvv, -v -v, --verbose=2), as real codesign does
+# (plain -dv prints none). FAKE_CODESIGN_AUTHORITY overrides the first Authority line.
 printf 'codesign %s\n' "$*" >> "${FAKE_LOG:-/dev/null}"
+display=0; verbose=0; ents=0
+for a in "$@"; do
+  case "$a" in
+    --verbose=*) verbose="${a#--verbose=}" ;;
+    --verbose) verbose=$((verbose + 1)) ;;
+    --entitlements) ents=1 ;;
+    --*) ;;
+    -*) f="${a#-}"
+        case "$f" in *d*) display=1 ;; esac
+        v="${f//[^v]/}"; verbose=$((verbose + ${#v})) ;;
+  esac
+done
+[ "$display" = 1 ] || exit 0
+if [ "$ents" = 1 ]; then
+  printf '<?xml version="1.0" encoding="UTF-8"?>\n<plist><dict><key>com.apple.security.app-sandbox</key><true/></dict></plist>\n'
+  exit 0
+fi
+{
+  echo "Executable=/fake/Lutik.app/Contents/MacOS/Lutik"
+  echo "Identifier=io.lutik.Lutik"
+  echo "Format=app bundle with Mach-O universal (x86_64 arm64)"
+  echo "CodeDirectory v=20500 size=1000 flags=0x10000(runtime) hashes=30+7 location=embedded"
+  if [ "$verbose" -ge 2 ]; then
+    echo "Authority=${FAKE_CODESIGN_AUTHORITY:-Developer ID Application: Fake Owner (Q42GSJXJKF)}"
+    echo "Authority=Developer ID Certification Authority"
+    echo "Authority=Apple Root CA"
+  fi
+  echo "TeamIdentifier=Q42GSJXJKF"
+} >&2
+exit 0

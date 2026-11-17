@@ -1,0 +1,15 @@
+xz-utils liblzma 5.8.4 (0BSD; COPYING, COPYING.0BSD kept verbatim)
+  https://github.com/tukaani-project/xz/releases/download/v5.8.4/xz-5.8.4.tar.gz
+  sha256 0014c7886930454fe8bd4228665b51af55eeae560ea135c9c4cd33f55b2591d9 (matches the GitHub release asset digest)
+  xz-5.8.4.tar.gz.sig: good signature, RSA key 3690C240CE51B4670D30AD1C38EE757D69184620 (Lasse Collin, https://tukaani.org/misc/lasse_collin_pubkey.txt)
+files (unmodified copies from the tarball)
+  include/lzma.h, include/lzma/*.h      <- src/liblzma/api (the only lzma headers in the package; CLibArchive gets them through its dependency on CLZMA)
+  liblzma/{common,check,lz,lzma,rangecoder,delta,simple}/*.{c,h} <- src/liblzma, minus:
+    common/auto_decoder.c, file_info.c, lzip_decoder.{c,h}, microlzma_{de,en}coder.c, string_conversion.c (APIs libarchive does not call)
+    check/crc32_small.c, crc64_small.c (HAVE_SMALL off), *.S (no asm), *_tablegen.c, crc_clmul_consts_gen.c (generators)
+    lzma/fastpos_tablegen.c, rangecoder/price_tablegen.c (generators)
+  common/sysdefs.h, mythread.h, tuklib_{common,config,integer,cpucores,physmem}.{c,h} <- src/common
+local files
+  config.h (hand-written, see its header), include/module.modulemap, VERSION
+build: Package.swift defines HAVE_CONFIG_H and TUKLIB_SYMBOL_PREFIX=lzma_ (as src/liblzma/Makefile.am does); every filter, check and the
+  threaded encoder/decoder are on (libarchive's config.h has HAVE_LZMA_STREAM_ENCODER_MT 1)

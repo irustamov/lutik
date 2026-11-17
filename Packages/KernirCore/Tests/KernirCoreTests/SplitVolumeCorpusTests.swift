@@ -246,7 +246,7 @@ struct SplitVolumeCorpusTests {
 
     // MARK: - Rulings and row sets
 
-    @Test func ownerRulings() {
+    @Test func volumeLimitsAndFormats() {
         #expect(ArchiveWriteOptions.minimumVolumeSize == Self.mb, "1 MB is 1 000 000 B")
         #expect(ArchiveWriteOptions.maximumVolumeCount == 999)
         #expect(ArchiveFormat.allCases.filter(\.supportsVolumes) == [.zip, .sevenZip])

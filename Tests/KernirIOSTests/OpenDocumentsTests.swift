@@ -190,7 +190,7 @@ import UIKit
         #expect(log.calls.last == "now")
     }
 
-    /// Fix-forward #5: a file still closing in its window doesn't bring that window forward for
+    /// A file still closing in its window doesn't bring that window forward for
     /// another (it would show only its browser); the asker opens it once the close is done.
     /// The closing window itself still counts as showing it.
     @Test(.timeLimit(.minutes(1))) func fileClosingInItsWindowDoesNotBringThatWindowForward() async throws {
@@ -232,7 +232,7 @@ import UIKit
         await live.closeOnMain()
     }
 
-    /// Fix-forward #4: a document that has closed isn't kept alive by the close wait limit's
+    /// A document that has closed isn't kept alive by the close wait limit's
     /// timer (60 s): it goes as soon as nothing else holds it.
     @Test(.timeLimit(.minutes(1))) func closedDocumentIsNotKeptUntilTheCloseWaitLimit() async throws {
         let fixture = try Fixture.copy("zip/deflate.zip")

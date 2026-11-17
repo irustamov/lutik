@@ -2182,6 +2182,139 @@ def build_extract_here(stage_root):
            tags=["extract-here"], notes=note)
 
 
+def zip_tree_bytes(tree):
+    """A deterministic deflate zip of `tree` (files and explicit directories) as bytes."""
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, "w", compression=zipfile.ZIP_DEFLATED) as zf:
+        for p, kind in tree.ordered():
+            zi = zipfile.ZipInfo(p + "/" if kind == "dir" else p, DOS_TIME)
+            zi.create_system = 3
+            if kind == "dir":
+                zi.external_attr = (0o40755 << 16) | 0x10
+                zf.writestr(zi, b"")
+            else:
+                zi.external_attr = 0o100644 << 16
+                zi.compress_type = zipfile.ZIP_DEFLATED
+                zf.writestr(zi, tree.files[p])
+    return buf.getvalue()
+
+
+def encrypted_zip_matches(data, tree, work):
+    """Whether the AES zip `data` (password PASSWORD) holds exactly `tree`'s files: the same names, and each
+    file's bytes. 7-Zip prints no CRC for AES entries, so the bytes are extracted (`7zz x -so`) and compared."""
+    work.mkdir(parents=True, exist_ok=True)
+    path = work / "check.zip"
+    path.write_bytes(data)
+    r = subprocess.run(["7zz", "l", "-slt", "-bd", f"-p{PASSWORD}", str(path)], capture_output=True, text=True)
+    if r.returncode != 0:
+        return False
+    listed = set()
+    for block in r.stdout.split("\n\n"):
+        f = dict(line.split(" = ", 1) for line in block.splitlines() if " = " in line)
+        if f.get("Folder") == "-" and "Path" in f:
+            listed.add(f["Path"])
+    if listed != set(tree.files):
+        return False
+    for name, want in tree.files.items():
+        x = subprocess.run(["7zz", "x", "-so", "-spd", "-bd", f"-p{PASSWORD}", str(path), name],
+                           capture_output=True)
+        if x.returncode != 0 or x.stdout != want:
+            return False
+    return True
+
+
+def build_nested(stage_root, previous):
+    """Archives inside archives (issue 6, open nested archives). The inner archives are ordinary files of
+    the outer tree, so a test finds them as entries named like an archive (inner.zip, src.tgz, inner.zip.gz
+    -> inner.zip) and `docx-in-zip.zip` holds a .docx that is a ZIP by content but must not count as one."""
+    level3 = Tree(files={"deepest.txt": b"Third level.\n"})
+    inner = Tree(files={
+        "hello.txt": b"Hello from the inner archive.\n",
+        "docs/readme.md": b"# Inner\n\nOne archive inside another.\n",
+        "docs/notes.txt": text_blob(3_000),
+        "deeper/level3.zip": zip_tree_bytes(level3),
+    })
+    inner_zip = zip_tree_bytes(inner)
+
+    outer = Tree(files={"readme.txt": b"The release archive.\n", "archives/inner.zip": inner_zip},
+                 dirs={"archives"})
+    zip_with_python("nested/zip-in-zip.zip", outer)
+    record("nested/zip-in-zip.zip", "zip", outer.manifest_entries(), tags=["nested"],
+           notes="archives/inner.zip is a plain zip (hello.txt, docs/readme.md, docs/notes.txt, "
+                 "deeper/level3.zip), and deeper/level3.zip holds deepest.txt: three levels to click through.")
+
+    src = Tree(files={"src/main.swift": b"print(\"Hello, Kernir!\")\n", "src/data.txt": text_blob(4_000)},
+               dirs={"src"})
+    d = stage_root / "nested-tgz-in-7z"
+    d.mkdir()
+    (d / "src.tgz").write_bytes(gzip_compress(tar_bytes(src)))
+    (d / "readme.txt").write_bytes(b"Backup with a tar.gz inside.\n")
+    os.utime(d / "src.tgz", (MTIME, MTIME))
+    os.utime(d / "readme.txt", (MTIME, MTIME))
+    p = out("nested/tgz-in-7z.7z")
+    run("7zz", "a", "-t7z", "-m0=lzma2", "-ms=off", "-mtc=off", "-mta=off", "-bd", "-y", p, "readme.txt", "src.tgz", cwd=d)
+    tgz = (d / "src.tgz").read_bytes()
+    record("nested/tgz-in-7z.7z", "sevenZip", [
+        {"path": "readme.txt", "dir": False, "size": 29, "sha256": hashlib.sha256(b"Backup with a tar.gz inside.\n").hexdigest()},
+        {"path": "src.tgz", "dir": False, "size": len(tgz), "sha256": hashlib.sha256(tgz).hexdigest()},
+    ], mtime=MTIME, tags=["nested"],
+        notes="src.tgz is a tar.gz of src/main.swift and src/data.txt: the inner one is a compressed tar.")
+
+    # Raw gzip of a zip, no FNAME: the entry is the file name minus .gz, so the file is named inner.zip.gz
+    # and opens as the one entry inner.zip, which counts as an archive name (a name "zip.gz" would open as "zip").
+    out("nested/inner.zip.gz").write_bytes(gzip_compress(inner_zip))
+    record("nested/inner.zip.gz", "gzip",
+           [{"path": "inner.zip", "dir": False, "size": None, "sha256": hashlib.sha256(inner_zip).hexdigest()}],
+           tags=["nested", "single-stream"],
+           notes="gzip of inner.zip without FNAME (as a mail gateway writes a.zip.gz): one entry inner.zip, "
+                 "the same zip as in zip-in-zip.zip.")
+
+    # AES-256 inner zip. 7-Zip salts it at random, so a rerun reuses the committed bytes (the entry's sha256
+    # would change on every run otherwise), but only while they still hold the current `inner` tree.
+    enc_bytes = None
+    old = previous.get("nested/encrypted-inner.zip")
+    if old:
+        with zipfile.ZipFile(io.BytesIO(old[1])) as zf:
+            candidate = zf.read("secret/inner.zip")
+        if encrypted_zip_matches(candidate, inner, stage_root / "nested-encrypted-check"):
+            enc_bytes = candidate
+        else:
+            print("nested/encrypted-inner.zip: committed inner zip no longer matches the tree, rebuilding")
+    if enc_bytes is None:
+        d = stage_root / "nested-encrypted"
+        names = inner.stage(d)
+        enc = stage_root / "nested-encrypted-inner.zip"
+        run("7zz", "a", "-tzip", "-mem=AES256", f"-p{PASSWORD}", "-bd", "-y", enc, *names, cwd=d)
+        enc_bytes = enc.read_bytes()
+    outer = Tree(files={"readme.txt": b"The inner archive has a password.\n", "secret/inner.zip": enc_bytes},
+                 dirs={"secret"})
+    zip_with_python("nested/encrypted-inner.zip", outer)
+    record("nested/encrypted-inner.zip", "zip", outer.manifest_entries(), tags=["nested", "encrypted-inner"],
+           notes=f"Plain outer zip, no password. secret/inner.zip is a WinZip AES-256 zip with the same content as "
+                 f"zip-in-zip.zip's inner.zip, password '{PASSWORD}' (nothing in the outer manifest row is encrypted).")
+
+    docx = Tree(files={
+        "[Content_Types].xml": b'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n'
+            b'<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'
+            b'<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'
+            b'<Default Extension="xml" ContentType="application/xml"/>'
+            b'<Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.'
+            b'wordprocessingml.document.main+xml"/></Types>',
+        "_rels/.rels": b'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n'
+            b'<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+            b'<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/'
+            b'officeDocument" Target="word/document.xml"/></Relationships>',
+        "word/document.xml": b'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n'
+            b'<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>'
+            b'<w:p><w:r><w:t>Hello, Kernir!</w:t></w:r></w:p></w:body></w:document>',
+    })
+    outer = Tree(files={"report.docx": zip_tree_bytes(docx), "readme.txt": b"A .docx is a zip, but not an archive.\n"})
+    zip_with_python("nested/docx-in-zip.zip", outer)
+    record("nested/docx-in-zip.zip", "zip", outer.manifest_entries(), tags=["nested"],
+           notes="report.docx is a minimal Word file: a ZIP by content, so detectFormat says zip, but "
+                 "NestedArchive.isArchiveEntry says no and it opens in its own app.")
+
+
 # MARK: - Main
 
 
@@ -2232,6 +2365,7 @@ def main():
         build_macmeta(stage)
         build_preview_types(stage)
         build_extract_here(stage)
+        build_nested(stage, previous)
     build_third_party(args.libarchive_src)
     build_damaged()
     record_multivolume(build_multivolume())

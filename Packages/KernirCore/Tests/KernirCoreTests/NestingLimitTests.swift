@@ -397,7 +397,7 @@ struct NestingLimitTests {
     /// "Project 00000", "Project 00001", ... each a chain of 16 folders ("Folder level 01" ...) with `filesPerFolder`
     /// files in each, until `count` entries. 23 components and 347 bytes at most.
     static func timeMachineTree(count: Int, filesPerFolder: Int, _ body: (String) throws -> Void) rethrows {
-        let prefix = "Backups.backupdb/Mac-mini/2026-11-11-120000/Macintosh HD - Data/Users/x/Project "
+        let prefix = "Backups.backupdb/Mac-test/2026-11-11-120000/Macintosh HD - Data/Users/x/Project "
         let files = (0..<filesPerFolder).map { "/Document " + pad($0, 2) + " final.txt" }
         let levels = (1...16).map { "/Folder level " + pad($0, 2) }
         var emitted = 0

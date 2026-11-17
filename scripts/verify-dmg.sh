@@ -77,7 +77,8 @@ done
 if has_sandbox "$APP"; then ok "app app-sandbox"; else fail "app missing com.apple.security.app-sandbox"; fi
 
 if [ "$ADHOC" -eq 0 ]; then
-  SIGN_INFO="$($CODESIGN -dv "$APP" 2>&1 || true)"
+  # -dvv: Authority= lines only appear at verbosity 2 and up; plain -dv prints none.
+  SIGN_INFO="$($CODESIGN -dvv "$APP" 2>&1 || true)"
   if printf '%s\n' "$SIGN_INFO" | grep -q "Authority=Developer ID Application: .*($TEAM_ID)"; then
     ok "Developer ID authority"
   else

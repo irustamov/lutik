@@ -8,17 +8,38 @@ let package = Package(
         .library(name: "KernirCore", targets: ["KernirCore"]),
     ],
     targets: [
-        // Vendored libarchive 3.8.10 (BSD); codecs come from the system (z, bz2, lzma, iconv, expat),
-        // except zstd: no Apple SDK ships it, so zstd 1.5.7's decoder is vendored in zstd/ (BSD).
+        // Vendored xz-utils liblzma 5.8.4 (0BSD): iOS's system liblzma is private API (App Store
+        // validation rejects its lzma_* symbols), so both platforms build this copy.
+        .target(
+            name: "CLZMA",
+            path: "Sources/CLZMA",
+            exclude: ["COPYING", "COPYING.0BSD", "VERSION"],
+            cSettings: [
+                .define("HAVE_CONFIG_H"),
+                .define("TUKLIB_SYMBOL_PREFIX", to: "lzma_"),
+                .headerSearchPath("."),
+                .headerSearchPath("common"),
+                .headerSearchPath("liblzma/common"),
+                .headerSearchPath("liblzma/check"),
+                .headerSearchPath("liblzma/lz"),
+                .headerSearchPath("liblzma/rangecoder"),
+                .headerSearchPath("liblzma/lzma"),
+                .headerSearchPath("liblzma/delta"),
+                .headerSearchPath("liblzma/simple"),
+            ]
+        ),
+        // Vendored libarchive 3.8.10 (BSD); codecs come from the system (z, bz2, iconv, expat),
+        // except liblzma (CLZMA above) and zstd: no Apple SDK ships it, so zstd 1.5.7's decoder
+        // is vendored in zstd/ (BSD).
         .target(
             name: "CLibArchive",
+            dependencies: ["CLZMA"],
             path: "Sources/CLibArchive",
-            exclude: ["COPYING", "VERSION", "xz/COPYING", "zstd/LICENSE", "patches"],
+            exclude: ["COPYING", "VERSION", "zstd/LICENSE", "patches"],
             cSettings: [
                 .define("HAVE_CONFIG_H"),
                 .headerSearchPath("."),
                 .headerSearchPath("include"),
-                .headerSearchPath("xz"),
                 .headerSearchPath("zstd"),
                 // zstd: portable C only (no x86-64 asm), no trace hooks (weak symbols), no legacy formats.
                 .define("ZSTD_DISABLE_ASM"),
@@ -28,7 +49,6 @@ let package = Package(
             linkerSettings: [
                 .linkedLibrary("z"),
                 .linkedLibrary("bz2"),
-                .linkedLibrary("lzma"),
                 .linkedLibrary("iconv"),
                 .linkedLibrary("expat"),
             ]
@@ -40,7 +60,7 @@ let package = Package(
         ),
         .testTarget(
             name: "KernirCoreTests",
-            dependencies: ["KernirCore", "CLibArchive"],
+            dependencies: ["KernirCore", "CLibArchive", "CLZMA"],
             path: "Tests/KernirCoreTests"
         ),
     ]

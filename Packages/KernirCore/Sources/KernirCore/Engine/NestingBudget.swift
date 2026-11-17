@@ -73,7 +73,7 @@ struct NestingLimits: Sendable, Equatable {
 
     /// What `previewListing` holds an archive to: the Quick Look extension that calls it is killed at about 1.3 GB
     /// of footprint, and a listing inside `standard` peaked at up to 8.2 GB (4 million zip entries of 380-byte names)
-    /// in Release (D2). A preview's peak grows with the entry count (550-900 bytes per entry, by format: the walk's
+    /// in Release. A preview's peak grows with the entry count (550-900 bytes per entry, by format: the walk's
     /// headers and paths, the preview's path table, libarchive's own records) and with the name bytes (1.2-3.3 times
     /// them), so every total here is fixed, with no per-entry growth: 400,000 headers and 64 MiB of names keep the
     /// costliest shapes under about 550 MB. Real trees fit to the entry limit: 32 MiB of folders is 2.7 times the most

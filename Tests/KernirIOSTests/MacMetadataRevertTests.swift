@@ -5,7 +5,7 @@ import KernirCore
 
 /// A read of the file (UIDocument's revert after a change from outside) with nothing remembered for
 /// it drops a Remove the session holds. Another app or iCloud replaced the file (a new file ID), so the
-/// store rejects the record, and a stale Remove would strip contents the user never answered for (D4).
+/// store rejects the record, and a stale Remove would strip contents the user never answered for.
 /// The next save keeps the Mac metadata and the next Save asks again. A Keep stays: keeping loses
 /// nothing. Foundation only: the same file runs in a macOS SwiftPM mirror. `ArchiveDocument`
 /// calls `adoptMacMetadataChoice(readWithFile:)` from `read(from:)` (open and revert) only.

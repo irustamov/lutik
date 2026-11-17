@@ -18,8 +18,10 @@ detach_dmg() {
 
 test_scripts_help() {
   local s
+  local s out
   for s in release-mac.sh verify-dmg.sh; do
-    "$REPO_ROOT/scripts/$s" --help | grep -qi usage
+    out="$("$REPO_ROOT/scripts/$s" --help)"
+    grep -qi usage <<<"$out"
   done
 }
 
@@ -227,6 +229,61 @@ test_developer_id_uses_manual_signing() {
   grep '^codesign' "$log" | grep -q -- '--sign 0123456789ABCDEF0123456789ABCDEF01234567 --timestamp'
   [ "$(grep -c '^stapler staple ' "$log")" -eq 2 ]
   rm -rf "$tmp"
+}
+
+# verify-dmg's Developer ID check against fakes. Real `codesign -dv` prints no Authority= lines (only -dvv
+# and up do); the fake codesign mimics that, so a regression to plain -dv fails here.
+run_fake_verify_dmg() {
+  local tmp="$1" ; shift
+  mkdir -p "$tmp/mnt/Lutik.app/Contents/PlugIns/Ext.appex/Contents"
+  for p in "$tmp/mnt/Lutik.app" "$tmp/mnt/Lutik.app/Contents/PlugIns/Ext.appex"; do
+    /usr/libexec/PlistBuddy -c "Add :CFBundleShortVersionString string 1.0" "$p/Contents/Info.plist" >/dev/null
+  done
+  : > "$tmp/fake.dmg"
+  cat > "$tmp/hdiutil" <<'FAKE'
+#!/bin/bash
+case "$1" in
+  attach) while [ "$#" -gt 1 ]; do [ "$1" = -mountpoint ] && mp="$2"; shift; done; cp -R "$FAKE_MNT_SRC/." "$mp/" ;;
+esac
+exit 0
+FAKE
+  printf '#!/bin/bash\nexit 0\n' > "$tmp/spctl"
+  chmod +x "$tmp/hdiutil" "$tmp/spctl"
+  FAKE_MNT_SRC="$tmp/mnt" HDIUTIL="$tmp/hdiutil" SPCTL="$tmp/spctl" STAPLER="$FAKES/stapler" \
+    CODESIGN="$FAKES/codesign" FAKE_LOG="$tmp/fake.log" \
+    "$REPO_ROOT/scripts/verify-dmg.sh" "$tmp/fake.dmg" "$@" >/dev/null 2>"$tmp/err"
+}
+
+test_verify_dmg_developer_id_reads_authority() {
+  local tmp rc=0
+  tmp="$(mktemp -d)"
+  run_fake_verify_dmg "$tmp" || rc=$?
+  if [ "$rc" -ne 0 ]; then cat "$tmp/err" >&2; rm -rf "$tmp"; return 1; fi
+  grep -q 'ok: Developer ID authority' "$tmp/err"
+  # Authority lines are only available from -dvv up.
+  grep '^codesign -dv' "$tmp/fake.log" | grep -q -- '-dvv'
+  rm -rf "$tmp"
+}
+
+test_verify_dmg_rejects_wrong_authority() {
+  local tmp rc=0
+  tmp="$(mktemp -d)"
+  FAKE_CODESIGN_AUTHORITY="Apple Development: Someone (ABCDE12345)" run_fake_verify_dmg "$tmp" || rc=$?
+  [ "$rc" -ne 0 ] || { rm -rf "$tmp"; return 1; }
+  grep -q 'not signed by Developer ID Application' "$tmp/err" || { cat "$tmp/err" >&2; rm -rf "$tmp"; return 1; }
+  rm -rf "$tmp"
+}
+
+test_fake_codesign_authority_needs_dvv() {
+  [ -z "$("$FAKES/codesign" -dv /x 2>&1 | grep '^Authority=' || true)" ]
+  [ -z "$("$FAKES/codesign" -d -v /x 2>&1 | grep '^Authority=' || true)" ]
+  # Capture first: grep -q exits at the first match, and a later echo of the fake
+  # then dies of SIGPIPE, failing the pipeline under pipefail (seen on a test machine).
+  local out
+  out="$("$FAKES/codesign" -dvv /x 2>&1)"
+  grep -q '^Authority=Developer ID Application' <<<"$out"
+  out="$("$FAKES/codesign" --verbose=2 -d /x 2>&1)"
+  grep -q '^Authority=' <<<"$out"
 }
 
 # Count registered Launch Services paths under build/ or dist/ in a dump file.

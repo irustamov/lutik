@@ -563,6 +563,7 @@ targets:
       # App/Shared logic, shared with KernirMacTests: the Text Encoding titles on iOS's own Foundation.
       # A file under Tests/KernirMacTests: moving or renaming it breaks the iOS project generation.
       - Tests/KernirMacTests/ArchiveNameEncodingTitleTests.swift
+      - Tests/KernirMacTests/NestedArchiveTests.swift
       # Throwaway defaults suites whose plists stay in the temporary folder (Foundation only).
       - Tests/KernirMacTests/Support/TestDefaults.swift
     dependencies:

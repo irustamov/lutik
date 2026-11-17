@@ -103,7 +103,8 @@ else
       CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY="Developer ID Application" \
       DEVELOPMENT_TEAM="$TEAM_ID" >&2
     log "exporting Developer ID build"
-    $XCODEBUILD -exportArchive -quiet \
+    # Xcode's export copy step runs rsync from PATH; Homebrew rsync 3.5.2 breaks it ("exportArchive Copy failed"), so system tools go first.
+    PATH="/usr/bin:/bin:/usr/sbin:/sbin:$PATH" $XCODEBUILD -exportArchive -quiet \
       -archivePath "$BUILD/$APP_NAME.xcarchive" \
       -exportPath "$BUILD/export" \
       -exportOptionsPlist "$SCRIPT_DIR/export/DeveloperID.plist" >&2

@@ -2,7 +2,7 @@ import AppKit
 import Testing
 @testable import Kernir
 
-/// ⌘⌫ deletes the selected items, as Finder's Move to Trash (0.1.0 scope item #8), and keeps deleting to
+/// ⌘⌫ deletes the selected items, as Finder's Move to Trash, and keeps deleting to
 /// the line start in a text field (rename, search, comment). The plain Delete key stays with the outline's
 /// `onDeleteCommand`; both run Edit > Delete's rules (`ArchiveActions.canRemoveSelection`).
 @MainActor

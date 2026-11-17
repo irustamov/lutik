@@ -7993,6 +7993,195 @@
       "fileSha256": "603c9e29295fdaea96d911e13bab26849e84dcdeeb5de643976c6daa0291fc25"
     },
     {
+      "file": "nested/zip-in-zip.zip",
+      "format": "zip",
+      "detect": "zip",
+      "open": "ok",
+      "password": null,
+      "encrypted": false,
+      "extract": "ok",
+      "extractWithoutPassword": null,
+      "openWithWrongPassword": null,
+      "extractWithWrongPassword": null,
+      "extractExpect": null,
+      "mtime": null,
+      "entriesComplete": true,
+      "entryCount": 3,
+      "entries": [
+        {
+          "path": "archives",
+          "dir": true
+        },
+        {
+          "path": "archives/inner.zip",
+          "dir": false,
+          "size": 843,
+          "sha256": "3e36eeac7119244ed6c0d220d4b104fe622156d6792b9cb84e932a563c170914"
+        },
+        {
+          "path": "readme.txt",
+          "dir": false,
+          "size": 21,
+          "sha256": "52bcd6c36a0b9ed803e9881733e5171b2520f39fee223cfdd07517862934317b"
+        }
+      ],
+      "tags": [
+        "nested"
+      ],
+      "notes": "archives/inner.zip is a plain zip (hello.txt, docs/readme.md, docs/notes.txt, deeper/level3.zip), and deeper/level3.zip holds deepest.txt: three levels to click through.",
+      "source": "generated",
+      "bytes": 794,
+      "fileSha256": "10a4f0cf73477c2bee7502ae063907ca67145006e3d6854d477259d159e330fd"
+    },
+    {
+      "file": "nested/tgz-in-7z.7z",
+      "format": "sevenZip",
+      "detect": "sevenZip",
+      "open": "ok",
+      "password": null,
+      "encrypted": false,
+      "extract": "ok",
+      "extractWithoutPassword": null,
+      "openWithWrongPassword": null,
+      "extractWithWrongPassword": null,
+      "extractExpect": null,
+      "mtime": 1767323045,
+      "entriesComplete": true,
+      "entryCount": 2,
+      "entries": [
+        {
+          "path": "readme.txt",
+          "dir": false,
+          "size": 29,
+          "sha256": "ddba3fbf12eb6a9aae49701a5ebee0bbccea0a826bf5157bab1d06dbe7087d75"
+        },
+        {
+          "path": "src.tgz",
+          "dir": false,
+          "size": 265,
+          "sha256": "24330a8cb11123bbe45c4064a7bedad3b784eb26b78b9d44ac1b5c28f90f6090"
+        }
+      ],
+      "tags": [
+        "nested"
+      ],
+      "notes": "src.tgz is a tar.gz of src/main.swift and src/data.txt: the inner one is a compressed tar.",
+      "source": "generated",
+      "bytes": 476,
+      "fileSha256": "e5f7e0cf3e6d70b3fda176d3770052c211ba6ccf3321c86b93494e9f3bcb7f0d"
+    },
+    {
+      "file": "nested/inner.zip.gz",
+      "format": "gzip",
+      "detect": "gzip",
+      "open": "ok",
+      "password": null,
+      "encrypted": false,
+      "extract": "ok",
+      "extractWithoutPassword": null,
+      "openWithWrongPassword": null,
+      "extractWithWrongPassword": null,
+      "extractExpect": null,
+      "mtime": null,
+      "entriesComplete": true,
+      "entryCount": 1,
+      "entries": [
+        {
+          "path": "inner.zip",
+          "dir": false,
+          "size": null,
+          "sha256": "3e36eeac7119244ed6c0d220d4b104fe622156d6792b9cb84e932a563c170914"
+        }
+      ],
+      "tags": [
+        "nested",
+        "single-stream"
+      ],
+      "notes": "gzip of inner.zip without FNAME (as a mail gateway writes a.zip.gz): one entry inner.zip, the same zip as in zip-in-zip.zip.",
+      "source": "generated",
+      "bytes": 465,
+      "fileSha256": "7bee7d1bd2027d5711411d01944b920fb67661297c05024b9c287984469febb8"
+    },
+    {
+      "file": "nested/encrypted-inner.zip",
+      "format": "zip",
+      "detect": "zip",
+      "open": "ok",
+      "password": null,
+      "encrypted": false,
+      "extract": "ok",
+      "extractWithoutPassword": null,
+      "openWithWrongPassword": null,
+      "extractWithWrongPassword": null,
+      "extractExpect": null,
+      "mtime": null,
+      "entriesComplete": true,
+      "entryCount": 3,
+      "entries": [
+        {
+          "path": "readme.txt",
+          "dir": false,
+          "size": 34,
+          "sha256": "61eb0823a7ddadcb55e737eb3cbc3dc03195e8ee8bca0dc53cd10bd2feaf5bed"
+        },
+        {
+          "path": "secret",
+          "dir": true
+        },
+        {
+          "path": "secret/inner.zip",
+          "dir": false,
+          "size": 1277,
+          "sha256": "5752155459ce8f62a3cbb5f0f07d4022d0592f38e868bdf9befde0633e649ac0"
+        }
+      ],
+      "tags": [
+        "nested",
+        "encrypted-inner"
+      ],
+      "notes": "Plain outer zip, no password. secret/inner.zip is a WinZip AES-256 zip with the same content as zip-in-zip.zip's inner.zip, password 'kernir' (nothing in the outer manifest row is encrypted).",
+      "source": "generated",
+      "bytes": 1007,
+      "fileSha256": "b297bcce69ddcd58da87491df982ca162075e3f381fbc1e09c239f37ed54e97d"
+    },
+    {
+      "file": "nested/docx-in-zip.zip",
+      "format": "zip",
+      "detect": "zip",
+      "open": "ok",
+      "password": null,
+      "encrypted": false,
+      "extract": "ok",
+      "extractWithoutPassword": null,
+      "openWithWrongPassword": null,
+      "extractWithWrongPassword": null,
+      "extractExpect": null,
+      "mtime": null,
+      "entriesComplete": true,
+      "entryCount": 2,
+      "entries": [
+        {
+          "path": "readme.txt",
+          "dir": false,
+          "size": 38,
+          "sha256": "c71dbaea10326d94ab52ac5ff267df1a6ade1fe4d4fb0fa1806ac914311e38a6"
+        },
+        {
+          "path": "report.docx",
+          "dir": false,
+          "size": 1094,
+          "sha256": "4db8dbece158f2d1dba7302b26f36b1ee1943e00cbb346978be457d56c3c710d"
+        }
+      ],
+      "tags": [
+        "nested"
+      ],
+      "notes": "report.docx is a minimal Word file: a ZIP by content, so detectFormat says zip, but NestedArchive.isArchiveEntry says no and it opens in its own app.",
+      "source": "generated",
+      "bytes": 1059,
+      "fileSha256": "94c29f44e9f3a36b60c4859eaaf2991ef9b746a33529c425c05bfd15c774d27f"
+    },
+    {
       "file": "third-party/rar/rar4-basic.rar",
       "format": "rar",
       "detect": "rar",

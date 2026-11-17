@@ -206,7 +206,7 @@ final class EditUITests: XCTestCase {
     }
 
     /// Select and Save a Copy… sit in the same place at the root and at a pushed level: on the
-    /// bar itself on a regular-width iPad, in "More" on iPhone (lead finding 3x).
+    /// bar itself on a regular-width iPad, in "More" on iPhone.
     func testSelectPlacementSameOnEveryLevel() {
         let app = XCUIApplication()
         app.launchOpening(fixture: "zip/deflate.zip")

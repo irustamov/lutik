@@ -243,7 +243,7 @@ struct HiddenSlashContainmentTests {
         #expect(try Self.snapshot(both) == want)
     }
 
-    /// High #5: deleting `d` hides `d/\u{301}x` too (the writer drops it on save).
+    /// Deleting `d` hides `d/\u{301}x` too (the writer drops it on save).
     @Test(arguments: ["d/\u{301}x", "d/\u{200D}x", "d/e/\u{301}x"])
     func deletingAFolderHidesAnItemBehindAHiddenSlash(_ item: String) {
         let model = Self.model([Self.folder("d"), Self.file(item), Self.file("other")])
@@ -270,7 +270,7 @@ struct HiddenSlashContainmentTests {
         return (disk, model)
     }
 
-    /// High #6: a deleted child of a pending folder addition is not written, and its siblings still are.
+    /// A deleted child of a pending folder addition is not written, and its siblings still are.
     @Test(arguments: ["d/\u{301}x", "d/e/\u{301}z"])
     func aDeletedChildOfAPendingFolderIsNotWritten(_ deleted: String) throws {
         let (disk, model) = try Self.pendingFolder()

@@ -15,6 +15,9 @@ run_fake_appstore() {
   : > "$AS_TMP/AuthKey_FAKEKEY.p8"
   mkdir -p "$AS_TMP/bin" "$AS_TMP/tmp"
   ln -s "$AS_FAKES/xcodegen" "$AS_TMP/bin/xcodegen"
+  # A broken rsync first in PATH, like Homebrew's 3.5.2 ahead of /usr/bin/rsync.
+  printf '#!/bin/sh\necho "fake broken rsync" >&2\nexit 1\n' > "$AS_TMP/bin/rsync"
+  chmod +x "$AS_TMP/bin/rsync"
   AS_LOG="$AS_TMP/fake.log"; AS_ERR="$AS_TMP/err.txt"; AS_GEN_LOG="$AS_TMP/xcodegen.log"
   : > "$AS_LOG"; : > "$AS_GEN_LOG"
   AS_CHECKER_LOG="$AS_TMP/checker.log"; : > "$AS_CHECKER_LOG"
@@ -41,7 +44,20 @@ assert_no_temp_leftovers() {
 }
 
 test_appstore_help() {
-  "$AS_SCRIPT" --help | grep -qi usage
+  local out
+  out="$("$AS_SCRIPT" --help)"
+  grep -qi usage <<<"$out"
+}
+
+test_export_uses_system_rsync() {
+  # Homebrew rsync ahead of /usr/bin broke Xcode's IPA copy ("exportArchive Copy failed").
+  local plat
+  for plat in ios mac; do
+    run_fake_appstore -- "$plat" --version 1.2.3
+    [ "$AS_RC" -eq 0 ] || { echo "rc=$AS_RC" >&2; cat "$AS_ERR" >&2; return 1; }
+    grep -qx 'export-rsync: /usr/bin/rsync' "$AS_LOG" || { echo "export saw: $(grep '^export-rsync' "$AS_LOG")" >&2; return 1; }
+    rm -rf "$AS_TMP"
+  done
 }
 
 test_upload_requires_latch() {

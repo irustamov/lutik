@@ -215,7 +215,7 @@ struct ExtractTests {
         #expect(try Data(contentsOf: both.appendingPathComponent("link.txt")) == Data("hello bytes".utf8))
     }
 
-    @Test func ws7LinksTarHardlinkAloneGetsTargetBytes() async throws {
+    @Test func linksTarHardlinkAloneGetsTargetBytes() async throws {
         let r = try await LibArchiveReader.open(at: ReaderListingTests.fixture("tar/links.tar"), password: nil)
         let out = Self.dest()
         try await r.extract(["hardlink-to-hello"], to: out, progress: nil)

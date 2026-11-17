@@ -270,7 +270,7 @@ import KernirCore
     }
 
     /// iCloud or another app swaps in a file of its own after the save's swap, before the remember: a Remove
-    /// isn't stored for that file (stripping it would delete entries unasked, D4), and the session's goes,
+    /// isn't stored for that file (stripping it would delete entries unasked), and the session's goes,
     /// so the next save keeps the Mac metadata and the next Save asks. A Keep stays, and is remembered.
     @Test(arguments: [false, true]) func rememberingAfterAReplaceFromOutside(_ strips: Bool) throws {
         let test = try ChoiceStoreFixture()

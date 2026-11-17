@@ -1,7 +1,7 @@
 import AppKit
 import XCTest
 
-/// Quick Look on files inside an archive (#10): Kernir's own preview window
+/// Quick Look on files inside an archive: Kernir's own preview window
 /// opens on every type in `QuickLook/ql-types.zip`, follows ↑/↓, pages a multi-selection with
 /// ←/→, gives the window back its preview state when it closes, and its Share and Open With
 /// buttons act on the entry itself.

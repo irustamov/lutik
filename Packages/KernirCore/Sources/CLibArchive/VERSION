@@ -1,9 +1,7 @@
 libarchive 3.8.10
   https://github.com/libarchive/libarchive/releases/download/v3.8.10/libarchive-3.8.10.tar.xz
   sha256 56cad765459d5ee25a3b761f90c47d99379d28297fbfb72d908880d6b875fb96 (matches GitHub release asset digest)
-xz headers 5.8.1 (src/liblzma/api/lzma.h, lzma/*.h only; 0BSD)
-  https://github.com/tukaani-project/xz/releases/download/v5.8.1/xz-5.8.1.tar.gz
-  sha256 507825b599356c10dca1cd720c9d0d0c9d5400b9de300af00e4d1ea150795543 (GitHub publishes no digest for xz assets)
+liblzma: the CLZMA target (Sources/CLZMA, xz 5.8.4, see its VERSION); its include/ holds the only lzma.h copy
 local patches (Sources/CLibArchive/patches, applied in the vendored tree; reverse with patch -p1 -R)
   0001-write-disk-no-appledouble-fixup.patch: write_disk extracts "._" AppleDouble files raw
   0002-dos-time-memo.patch: __archive_dos_to_unix memoizes the last conversion per thread

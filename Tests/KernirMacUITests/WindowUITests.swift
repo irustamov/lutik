@@ -158,7 +158,7 @@ final class WindowUITests: KernirMacUITestCase {
     }
 
     /// ⌘⌫ deletes the selected rows, as in Finder (undoable); in the search and name fields it deletes the
-    /// text up to the caret instead, never a row (0.1.0 scope item #8).
+    /// text up to the caret instead, never a row.
     func testCommandDeleteRemovesRowsButEditsText() throws {
         try openFixture("zip/deflate.zip")
         let hello = app.row("hello.txt")

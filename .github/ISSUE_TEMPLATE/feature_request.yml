@@ -1,0 +1,29 @@
+name: Feature request
+description: Suggest an idea or improvement for Lutik
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What do you want to do?
+      description: "Describe the task or problem, not only the solution."
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Idea
+      description: "How could Lutik help? Lutik uses stock Apple controls only, so mention how it would fit the system look."
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      multiple: true
+      options:
+        - macOS
+        - iOS
+        - iPadOS
+  - type: input
+    id: format
+    attributes:
+      label: Archive format (if it matters)

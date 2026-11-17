@@ -1,0 +1,67 @@
+name: Bug report
+description: Something in Lutik does not work as expected
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. For security problems, do not use this form: see the contact link on the issue chooser or SECURITY.md.
+  - type: input
+    id: version
+    attributes:
+      label: Lutik version
+      description: "Lutik > About Lutik on the Mac, or the version shown in the App Store."
+      placeholder: "0.1.0"
+    validations:
+      required: true
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      options:
+        - macOS
+        - iOS
+        - iPadOS
+    validations:
+      required: true
+  - type: input
+    id: os-version
+    attributes:
+      label: OS version
+      placeholder: "macOS 15.1, iOS 18.1"
+    validations:
+      required: true
+  - type: input
+    id: format
+    attributes:
+      label: Archive format
+      description: "For example ZIP, 7z, RAR, TAR.GZ. Say if it is password protected or split into parts."
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open ...
+        2. Choose ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: "What happened instead. Add a screenshot or a crash log if you have one."
+    validations:
+      required: true
+  - type: textarea
+    id: sample
+    attributes:
+      label: Sample archive (optional)
+      description: "If the problem depends on a particular archive, describe it, or attach a small one made for this report. Never attach archives with private data."

@@ -343,11 +343,15 @@ final class ScreenshotTests: XCTestCase {
         let preview = app.previewController
         XCTAssertTrue(preview.waitForExistence(timeout: 15), "the preview did not come up\n\(app.debugDescription)")
         if image {
-            let canvas = preview.descendants(matching: .any)["QLMarkupImageItemViewControllerMarkupImageViewAccessibilityIdentifier"]
+            // The image view's identifier is the markup one on iOS 26 and the plain one on iOS 27.
+            let canvas = preview.descendants(matching: .any).matching(NSPredicate(format: "identifier IN %@", [
+                "QLMarkupImageItemViewControllerMarkupImageViewAccessibilityIdentifier",
+                "QLImageItemViewControllerImageViewAccessibilityIdentifier",
+            ])).firstMatch
             XCTAssertTrue(canvas.waitForExistence(timeout: 10), "the image did not load\n\(app.debugDescription)")
         }
         // An image preview opens with its bars hidden; one tap shows them (title, Done, share).
-        let bar = preview.navigationBars[title]
+        let bar = app.previewBar(title)
         if !bar.waitForExistence(timeout: 3) {
             preview.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
         }

@@ -7,6 +7,8 @@
  * Homebrew's libiconv header; not in the iOS SDK and unused on Apple platforms).
  * HAVE_ZSTD_H / HAVE_LIBZSTD enabled: zstd's decoder is vendored in zstd/ (decompression only,
  * so HAVE_ZSTD_compressStream stays undefined). Without them libarchive spawns `zstd -d -qq`.
+ * HAVE_LIBLZMA / HAVE_LZMA_H / HAVE_LZMA_STREAM_ENCODER_MT come from the vendored liblzma in the
+ * CLZMA target (xz 5.8.4, built with threads), not the system one (private API on iOS).
  */
 
 /* Kernir: quiet vendored-libarchive noise in CI logs. unsafeFlags is not allowed in a package
