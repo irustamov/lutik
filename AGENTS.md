@@ -17,7 +17,8 @@ IDs (`com.kernir.app...`) keep it. The shipped app, `.app`, `.dmg` and every use
 project.yml                  XcodeGen spec: the source of truth for targets, Info.plists, entitlements
 Packages/KernirCore/         Swift package, the archive engine (no UI)
   Sources/KernirCore/        public API in API.swift; libarchive wrappers in Engine/
-  Sources/CLibArchive/       vendored libarchive 3.8.10 + xz headers + zstd 1.5.7 decoder (C)
+  Sources/CLibArchive/       vendored libarchive 3.8.10 + zstd 1.5.7 decoder (C)
+  Sources/CLZMA/             vendored xz-utils liblzma 5.8.4 (C), used on both platforms
   Tests/KernirCoreTests/     engine tests (Swift Testing); Support/ holds synthetic archive builders
 App/Shared/                  code compiled into both apps (model, save settings, services, l10n "Shared" table)
 App/macOS/, App/iOS/         the KernirMac and KernirIOS app targets
@@ -126,6 +127,8 @@ There is no SwiftLint/SwiftFormat config in the repo.
 
 ## Release flow
 
+- Status: Mac 0.1.0 is on GitHub Releases. The Mac and iPhone/iPad App Store versions are submitted
+  to Apple and awaiting release.
 - Mac direct download: pushing a tag `vX.Y.Z` runs `.github/workflows/release.yml`. It runs
   `scripts/release-mac.sh --version X.Y.Z --sign developer-id` (archive, sign, notarize),
   `scripts/verify-dmg.sh dist/Lutik.dmg`, and creates a **draft** GitHub release with `Lutik.dmg` and

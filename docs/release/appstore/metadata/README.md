@@ -24,7 +24,7 @@ Some fields are shared by both platforms and live under App Information. Others 
 
 - Name and subtitle are shared, so they must be true on both platforms. Never put a feature that exists on only one platform there. Quick Look and Finder are Mac-only.
 - A platform-only feature goes only in that platform's keywords, promotional text and description.
-- Never claim password support for 7z or RAR. Only ZIP passwords work.
+- Password claims must match `ArchiveFormat.supportedEncryptions` in `API.swift`. ZIP and 7z passwords work, for opening and saving: ZIP with AES-256, AES-128 or ZipCrypto, 7z with AES-256 and encrypted file names. Never claim support for encrypted RAR or PKWARE Strong Encryption ZIPs.
 - Every claim in `description-ios.txt` must be backed by iOS code before the iOS version is submitted.
 
 ## Upload

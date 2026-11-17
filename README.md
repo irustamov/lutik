@@ -24,7 +24,7 @@ Archive Utility unpacks everything at once. Lutik opens an archive like a folder
 - **Open only:** RAR (v4, v5, multi-part), GZ, BZ2, XZ, ZST, TAR.ZST, ISO, CPIO, XAR, LHA, CAB.
 - **Passwords:** opens ZipCrypto and AES ZIPs and AES-256 7z archives (encrypted file names included). Saves ZIP with AES-256, AES-128 or ZipCrypto, and 7z with AES-256, which also hides the file names. Encrypted RAR and ZIPs with PKWARE Strong Encryption cannot be opened.
 - **Privacy:** no data collection, analytics or tracking, and no networking code. The Mac app runs in the App Sandbox without network access. A password is kept only if you choose to remember it, in your Keychain.
-- **Download:** [Lutik.dmg](https://github.com/irustamov/lutik/releases/latest/download/Lutik.dmg) for Mac (signed and notarized), from [GitHub Releases](https://github.com/irustamov/lutik/releases). The App Store versions are not live yet. See [lutik.io](https://lutik.io).
+- **Download:** [Lutik.dmg](https://github.com/irustamov/lutik/releases/latest/download/Lutik.dmg) for Mac (signed and notarized), from [GitHub Releases](https://github.com/irustamov/lutik/releases). The App Store versions are submitted to Apple and awaiting release. See [lutik.io](https://lutik.io).
 
 ## What it does
 
@@ -53,7 +53,7 @@ ZIP-based packages such as JAR, APK, AAB, XPI, WHL and NuGet open as ZIP. RAR is
 ## Get Lutik
 
 - **Mac, direct download:** Lutik 0.1.0 is out as a signed and notarized [`Lutik.dmg`](https://github.com/irustamov/lutik/releases/latest/download/Lutik.dmg) on [GitHub Releases](https://github.com/irustamov/lutik/releases).
-- **Mac App Store** and **App Store for iPhone and iPad**, listed as *Lutik: Zip, 7z & RAR Viewer*: coming, not available yet.
+- **Mac App Store** and **App Store for iPhone and iPad**, listed as *Lutik: Zip, 7z & RAR Viewer*: submitted to Apple, awaiting release.
 
 Requires macOS 14 or later, or iOS / iPadOS 17 or later. Check [lutik.io](https://lutik.io) for availability.
 

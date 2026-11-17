@@ -23,8 +23,8 @@ In Finder
 Formats
 - Read: ZIP, 7z, TAR, GZ, BZ2, XZ, ISO and RAR, including multi-part RAR and split ZIP sets.
 - Write: ZIP, 7z and the TAR family. RAR is read-only.
-- Password-protected ZIP archives ask for the password when you open them.
-- Save a ZIP with a password, using AES-256 encryption.
+- Password-protected ZIP and 7z archives ask for the password when you open them.
+- Save a ZIP or 7z with a password, using AES-256 encryption. A 7z also hides the file names.
 - Split a ZIP or 7z into parts when you save it.
 - Pick the text encoding when an older archive shows garbled file names.
 - Leave out the hidden __MACOSX and ._ files when you save.
